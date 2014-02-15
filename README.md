@@ -6,11 +6,11 @@ A project by:
 
 <br>
 
-<div style="float: left"><a href="http://opencityapps.org"><img src=http://opengovhacknight.org/images/sponsors/open-city-sm.jpg</img></a></div>
+<div style="float: left"><a href="http://opencityapps.org"><img src="http://opengovhacknight.org/images/sponsors/open-city-sm.jpg" alt="Open City"></a></div>
 
-<div style="float: left"><a href="http://betanyc.org">![Beta NYC](http://betanyc.us/images/apple70Gray.png)</a></div>
+<div style="float: left"><a href="http://betanyc.org"><img src="http://betanyc.us/images/apple70Gray.png" alt="Beta NYC"></a></div>
 
-<div style="float: left"><a href="http://codeforamerica.com">![Code for America](http://codeforamerica.org/assets/logo.png)</a></div>
+<div style="float: left"><a href="http://codeforamerica.com"><img src="http://codeforamerica.org/assets/logo.png" alt="Code for America"></a></div>
 
 <br><br><br><br>
 *For the story behind this API, [read this](https://hackpad.com/Civic.json-planning-meeting-EusFEMPgMio#:h=Chicago's-Open-Gov-Hack-Night-). For our design philosophy, [read this](https://hackpad.com/Civic.json-planning-meeting-EusFEMPgMio#:h=Civic-json-worker:-way-forward).*
