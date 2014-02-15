@@ -4,21 +4,34 @@ import requests
 from urlparse import urlparse
 from operator import itemgetter
 from itertools import groupby
-from git import Repo, GitCommandError
 from datetime import datetime
 
 GITHUB = 'https://api.github.com'
 GITHUB_TOKEN = os.environ['GITHUB_TOKEN']
 
-def backup_data():
-    os.setuid(1001)
-    repo_path = os.path.join(os.path.abspath(os.curdir), 'data')
-    repo = Repo(repo_path)
-    g = repo.git
-    g.add(repo_path)
-    g.commit(message="Backed up at %s" % datetime.now().isoformat(), author="eric.vanzanten@gmail.com")
-    g.push()
-    return None
+def update_projects():
+    f = open('data/projects.json', 'rb')
+    project_list = json.loads(f.read())
+    f.close()
+    details = []
+    for project_url in project_list:
+        try:
+            pj_details = update_project(project_url)
+        except IOError:
+            return 'Github is throttling. Just gonna try again after limit is reset.'
+        if pj_details:
+            details.append(pj_details)
+    f = open('data/project_details.json', 'wb')
+    f.write(json.dumps(details, indent=4))
+    f.close()
+    f = open('data/people.json', 'wb')
+    f.write(json.dumps(get_people_totals(details), indent=4))
+    f.close()
+    orgs = [d for d in details if d['owner']['type'] == 'Organization']
+    f = open('data/organizations.json', 'wb')
+    f.write(json.dumps(get_org_totals(orgs), indent=4))
+    f.close()
+    return 'Updated'
 
 def build_user(user):
     user_info = {}
