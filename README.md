@@ -1,18 +1,23 @@
 # civic-json-worker
 
-[Flask](http://flask.pocoo.org) app for tracking opengov projects in Chicago.
+[Flask](http://flask.pocoo.org) API for tracking civic tech projects across the world. Project data is stored / output using the [civic.json](https://github.com/BetaNYC/civic.json) data standard. (Soon!)
 
-## Objective
+<br>
 
-Keep track of all the civic tech projects worked on at the Chicago open gov hack night. Eventually this could track all civic projects in Chicago, or even nationally.
+<div style="float: left">![Open City](http://opengovhacknight.org/images/sponsors/open-city-sm.jpg)</div>
 
-## The plan
+<div style="float: left">![Beta NYC](http://betanyc.us/images/apple70Gray.png)</div>
 
-Curate a simple list of Github URLs for civic tech projects and leave filling in the rest to the [Github API](http://developer.github.com/). 
+<div style="float: left">![Code for America](http://codeforamerica.org/assets/logo.png)</div>
 
-Looking at [other civic tech listing projects](http://commons.codeforamerica.org/) like this that have [gone stale](http://digital.cityofchicago.org/index.php/open-data-applications/), the real sticking point is in maintaining and curating the list of projects. If we can make the maintenance part as simple as possible, we have a greater chance that this thing will live on.
+<br><br><br><br>
+*For the story behind this API, [read this](https://hackpad.com/Civic.json-planning-meeting-EusFEMPgMio#:h=Chicago's-Open-Gov-Hack-Night-). For our design philosophy, [read this](https://hackpad.com/Civic.json-planning-meeting-EusFEMPgMio#:h=Civic-json-worker:-way-forward).*
 
-So humans will be responsible for one thing: __deciding what gets tracked__. 
+## How It Works
+
+Looking at [other civic tech listing projects](http://commons.codeforamerica.org/) like this that have [gone stale](http://digital.cityofchicago.org/index.php/open-data-applications/), the real sticking point is keeping the list of projects - and their details - up to date. The less work people have to do, the more the archive will stay up to date and useful.
+
+The goal of this project is to make humans responsible for one thing: __deciding what gets tracked__. They submit github repo urls to this API, which curates a simple projects list:
 
 ```json
 [
@@ -22,7 +27,7 @@ So humans will be responsible for one thing: __deciding what gets tracked__.
 ]
 ```
 
-The rest is up to computers. When the ``/update-projects/`` path is hit on this app, it loops over the projects in the list and captures something like this:
+The rest is up to computers. When the ``/update-projects/`` endpoint is hit on API, it loops over the project urls in the list, and pings the Github API to gather the following fields for each project:
 
 ``` json
 [
@@ -69,12 +74,21 @@ The rest is up to computers. When the ``/update-projects/`` path is hit on this 
 ]
 ```
 
+**NOTE**: these fields will eventually reflect the proposed [civic.json](https://github.com/BetaNYC/civic.json) standard (see below.)
+
 This data is hosted on a publicly available endpoint as JSON with a CORS configuration that allows it to be loaded via 
-an Ajax call, for [use on this site](http://opengovhacknight.org/projects.html) for listing/sorting/searching projects. 
+an Ajax call, for use on [any projects list site](http://opengovhacknight.org/projects.html).
+
 __bonus:__ anyone can use [this JSON
 file](http://worker.opengovhacknight.org/data/project_details.json) for their
 own purposes. Details on setting up a CORS configuration for nginx can be found
 [here](https://github.com/open-city/civic-json-worker/issues/16#issuecomment-28759993)
+
+## Civic.json data standard
+[Civic.json](https://github.com/BetaNYC/civic.json) is proposed meta-data standard for describing civic tech projects. The goal is for this standard to be simple, and for the data fields that describe projects to be largely assembled programatically.
+
+The standard is still very much in planning phases, and we [welcome discussion](https://github.com/BetaNYC/civic.json/issues). Once we settle on v1, civic-json-worker will outputs - and potentially store - project data in this format.
+
 
 ## Benefits
 
@@ -85,9 +99,13 @@ By pushing everything on to Github, we will have very little to maintain, conten
 * make sure their description and website urls are up to date
 * use the issue tracker
 
-## Setup this app
+## Installation
 
-Propping this sucker up for oneself is pretty simple. Howver, there are some basic requirements which can be gotten 
+**NOTE**: *If you're a Code for America Brigade interested in setting up your own civic-json-worker API, **hold it**! Our goal is to make life easy for you: you shouldn't have to adapt, deploy, or maintain your own API, just read and write data from a single source. (This way, all the data is centralized, too!)*
+
+If you want to help out with development, or you don't want to play nice with the other kids in the schoolyard, read on...
+
+Propping this sucker up for oneself is pretty simple. However, there are some basic requirements which can be gotten 
 in the standard Python fashion (assuming you are working in a [virtualenv](https://pypi.python.org/pypi/virtualenv)):
 
 ``` bash
@@ -107,6 +125,8 @@ $ export AWS_SECRET_KEY=[Amazon Web Services Secret] # This will need access to 
 Probably easiest placed in the .bashrc (or the like) of 
 the user that the app is running as rather than manually set but you get the idea...
 
-### Want to help? Have ideas to make this better?
+## Contribute
+
+Get in touch with Andrew Hyder ([andrewh@codeforamerica.org](andrewh@codeforamerica.org)) from Code for America or Eric Van Zanten ([eric.vanzanten@gmail.com](eric.vanzanten@gmail.com)) from Open City.
 
 The issue tracker is actively watched and pull requests are welcome!
