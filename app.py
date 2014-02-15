@@ -6,6 +6,12 @@ import os
 import requests
 from tasks import update_project
 from run_update import update_projects as update_pjs
+from boto.s3.connection import S3Connection
+from boto.s3.key import Key
+
+BUCKET = os.environ['S3_BUCKET']
+AWS_KEY = os.environ['AWS_ACCESS_KEY']
+AWS_SECRET = os.environ['AWS_SECRET_KEY']
 
 THE_KEY = os.environ['FLASK_KEY']
 
@@ -68,17 +74,20 @@ def submit_project():
 def delete_project():
     if request.form.get('the_key') == THE_KEY:
         project_url = request.form.get('project_url')
-        f = open('data/projects.json', 'rb')
-        projects = json.loads(f.read())
-        f.close()
+        conn = S3Connection(AWS_KEY, AWS_SECRET)
+        bucket = conn.get_bucket(BUCKET)
+        pj_list = Key(bucket)
+        pj_list.key = 'projects.json'
+        project_list = json.loads(pj_list.get_contents_as_string())
         try:
-            projects.remove(project_url)
-            f = open('data/projects.json', 'wb')
-            f.write(json.dumps(projects))
-            f.close()
+            project_list.remove(project_url)
+            pj_list.set_contents_from_string(json.dumps(project_list))
+            pj_list.set_metadata('Content-Type', 'application/json')
+            pj_list.set_acl('public-read')
             resp = make_response('Deleted %s' % project_url)
         except ValueError:
             resp = make_response('%s is not in the registry', 400)
+        pj_list.close()
     else:
         resp = make_response("I can't do that Dave", 400)
     return resp

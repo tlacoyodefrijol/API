@@ -14,7 +14,7 @@ def update_projects():
     pj_list = Key(bucket)
     pj_list.key = 'projects.json'
     project_list = json.loads(pj_list.get_contents_as_string())
-    k.close()
+    pj_list.close()
     details = []
     for project_url in project_list:
         try:
