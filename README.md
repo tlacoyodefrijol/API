@@ -2,13 +2,15 @@
 
 [Flask](http://flask.pocoo.org) API for tracking civic tech projects across the world. Project data is stored / output using the [civic.json](https://github.com/BetaNYC/civic.json) data standard. (Soon!)
 
+A project by:
+
 <br>
 
-<div style="float: left">![Open City](http://opengovhacknight.org/images/sponsors/open-city-sm.jpg)</div>
+<div style="float: left"><a href="http://opencityapps.org"><img src=http://opengovhacknight.org/images/sponsors/open-city-sm.jpg</img></a></div>
 
-<div style="float: left">![Beta NYC](http://betanyc.us/images/apple70Gray.png)</div>
+<div style="float: left"><a href="http://betanyc.org">![Beta NYC](http://betanyc.us/images/apple70Gray.png)</a></div>
 
-<div style="float: left">![Code for America](http://codeforamerica.org/assets/logo.png)</div>
+<div style="float: left"><a href="http://codeforamerica.com">![Code for America](http://codeforamerica.org/assets/logo.png)</a></div>
 
 <br><br><br><br>
 *For the story behind this API, [read this](https://hackpad.com/Civic.json-planning-meeting-EusFEMPgMio#:h=Chicago's-Open-Gov-Hack-Night-). For our design philosophy, [read this](https://hackpad.com/Civic.json-planning-meeting-EusFEMPgMio#:h=Civic-json-worker:-way-forward).*
@@ -101,7 +103,7 @@ By pushing everything on to Github, we will have very little to maintain, conten
 
 ## Installation
 
-**NOTE**: *If you're a Code for America Brigade interested in setting up your own civic-json-worker API, **hold it**! Our goal is to make life easy for you: you shouldn't have to adapt, deploy, or maintain your own API, just read and write data from a single source. (This way, all the data is centralized, too!)*
+**NOTE**: *If you're a Code for America Brigade interested in setting up your own civic-json-worker API, hold it! Our goal is to make life easy for you: you shouldn't have to adapt, deploy, or maintain your own API, just read and write data from a single source. (This way, all the data is centralized, too!)*
 
 If you want to help out with development, or you don't want to play nice with the other kids in the schoolyard, read on...
 
