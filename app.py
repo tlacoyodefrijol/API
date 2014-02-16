@@ -89,5 +89,9 @@ def update_projects():
     resp = make_response('Executed update task')
     return resp
 
+@app.route("/")
+def index():
+    return "HELLO WORLD"
+
 if __name__ == "__main__":
     app.run(debug=True, port=6666)
