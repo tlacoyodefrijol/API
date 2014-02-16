@@ -27,7 +27,7 @@ The goal of this project is to make humans responsible for one thing: __deciding
 ]
 ```
 
-The rest is up to computers. When the ``/update-projects/`` endpoint is hit on API, it loops over the project urls in the list, and pings the Github API to gather the following fields for each project:
+The rest is up to computers. Every 10 minutes the run_update.py script runs over the project urls in the list, and pings the Github API to gather the following fields for each project:
 
 ``` json
 [
@@ -76,13 +76,12 @@ The rest is up to computers. When the ``/update-projects/`` endpoint is hit on A
 
 **NOTE**: these fields will eventually reflect the proposed [civic.json](https://github.com/BetaNYC/civic.json) standard (see below.)
 
-This data is hosted on a publicly available endpoint as JSON with a CORS configuration that allows it to be loaded via 
+This data is hosted on a [publicly on S3](https://s3-us-west-2.amazonaws.com/project-list/projects.json) as JSON with a CORS configuration that allows it to be loaded via 
 an Ajax call, for use on [any projects list site](http://opengovhacknight.org/projects.html).
 
 __bonus:__ anyone can use [this JSON
-file](http://worker.opengovhacknight.org/data/project_details.json) for their
-own purposes. Details on setting up a CORS configuration for nginx can be found
-[here](https://github.com/open-city/civic-json-worker/issues/16#issuecomment-28759993)
+file](https://s3-us-west-2.amazonaws.com/project-list/project_details.json) for their
+own purposes.
 
 ## Civic.json data standard
 [Civic.json](https://github.com/BetaNYC/civic.json) is proposed meta-data standard for describing civic tech projects. The goal is for this standard to be simple, and for the data fields that describe projects to be largely assembled programatically.
