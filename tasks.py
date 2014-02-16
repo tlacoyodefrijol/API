@@ -5,10 +5,15 @@ from urlparse import urlparse
 from operator import itemgetter
 from itertools import groupby
 from datetime import datetime
+from boto.s3.connection import S3Connection
+from boto.s3.key import Key
+
+BUCKET = os.environ['S3_BUCKET']
+AWS_KEY = os.environ['AWS_ACCESS_KEY']
+AWS_SECRET = os.environ['AWS_SECRET_KEY']
 
 GITHUB = 'https://api.github.com'
 GITHUB_TOKEN = os.environ['GITHUB_TOKEN']
-
 
 def build_user(user):
     user_info = {}
@@ -78,16 +83,19 @@ def update_project(project_url):
     url = '%s/repos/%s' % (GITHUB, full_name)
     headers = {'Authorization': 'token %s' % GITHUB_TOKEN}
     r = requests.get(url, headers=headers)
+    conn = S3Connection(AWS_KEY, AWS_SECRET)
+    bucket = conn.get_bucket(BUCKET)
     if r.status_code == 200:
-        f = open('data/projects.json', 'rb')
-        inp_list = list(set(json.loads(f.read())))
-        f.close()
+        pj_list = Key(bucket)
+        pj_list.key = 'projects.json'
+        inp_list = json.loads(pj_list.get_contents_as_string())
         inp = [l.rstrip('/') for l in inp_list]
         if not project_url in inp:
             inp.append(project_url)
-            f = open('data/projects.json', 'wb')
-            f.write(json.dumps(inp, indent=4))
-            f.close()
+            pj_list.set_contents_from_string(json.dumps(inp))
+            pj_list.set_metadata('Content-Type', 'application/json')
+            pj_list.set_acl('public-read')
+        pj_list.close()
         repo = r.json()
         owner = repo.get('owner')
         detail = {
@@ -135,13 +143,14 @@ def update_project(project_url):
         return detail
     elif r.status_code == 404:
         # Can't find the project on gitub so scrub it from the list
-        f = open('data/projects.json', 'rb')
-        projects = json.loads(f.read())
-        f.close()
-        projects.remove(project_url)
-        f = open('data/projects.json', 'wb')
-        f.write(json.dumps(projects, indent=4))
-        f.close()
+        pj_list = Key(bucket)
+        pj_list.key = 'projects.json'
+        project_list = json.loads(pj_list.get_contents_as_string())
+        project_list.remove(project_url)
+        pj_list.set_contents_from_string(json.dumps(project_list))
+        pj_list.set_metadata('Content-Type', 'application/json')
+        pj_list.set_acl('public-read')
+        pj_list.close()
         return None
     elif r.status_code == 403: 
         raise IOError('Over rate limit')
