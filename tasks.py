@@ -4,21 +4,11 @@ import requests
 from urlparse import urlparse
 from operator import itemgetter
 from itertools import groupby
-from git import Repo, GitCommandError
 from datetime import datetime
 
 GITHUB = 'https://api.github.com'
 GITHUB_TOKEN = os.environ['GITHUB_TOKEN']
 
-def backup_data():
-    os.setuid(1001)
-    repo_path = os.path.join(os.path.abspath(os.curdir), 'data')
-    repo = Repo(repo_path)
-    g = repo.git
-    g.add(repo_path)
-    g.commit(message="Backed up at %s" % datetime.now().isoformat(), author="eric.vanzanten@gmail.com")
-    g.push()
-    return None
 
 def build_user(user):
     user_info = {}
