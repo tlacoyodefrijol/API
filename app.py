@@ -4,7 +4,8 @@ from functools import update_wrapper
 import json
 import os
 import requests
-from tasks import update_project, update_projects as update_pjs_task
+from tasks import update_project
+from run_update import update_projects as update_pjs
 
 THE_KEY = os.environ['FLASK_KEY']
 
@@ -84,7 +85,7 @@ def delete_project():
 
 @app.route('/update-projects/', methods=['GET'])
 def update_projects():
-    update_pjs_task.delay()
+    update_pjs()
     resp = make_response('Executed update task')
     return resp
 
