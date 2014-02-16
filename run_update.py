@@ -37,7 +37,7 @@ def update_projects():
     people_list.close()
     org_list = Key(bucket)
     org_list.key = 'organizations.json'
-    org_list.set_contents_from_string(json.dumps(get_org_totals(orgs)))
+    org_list.set_contents_from_string(json.dumps(get_org_totals(details)))
     org_list.set_metadata('Content-Type', 'application/json')
     org_list.set_acl('public-read')
     org_list.close()
