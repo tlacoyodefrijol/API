@@ -124,6 +124,30 @@ $ export AWS_SECRET_KEY=[Amazon Web Services Secret] # This will need access to 
 Probably easiest placed in the .bashrc (or the like) of 
 the user that the app is running as rather than manually set but you get the idea...
 
+## Running the updater
+
+To get this going the first time, you’ll need to create a ``projects.json`` file
+in the root directory of the S3 Bucket where you will be storing your civic
+JSON files. The structure is pretty simple, just an array with a list of github
+URLs like so:
+
+``` javascript
+[
+    "https://github.com/open-city/dedupe",
+    "https://github.com/censusreporter/censusreporter"
+]
+```
+
+Once that is setup and you have your python virtualenv activated, you should be
+able to run the ``run_update.py`` script thusly:
+
+``` bash 
+$ python run_update.py
+```
+
+That should go through and create all the other files in your S3 Bucket as
+needed.
+
 ## Contribute
 
 Get in touch with Andrew Hyder ([andrewh@codeforamerica.org](andrewh@codeforamerica.org)) from Code for America or Eric Van Zanten ([eric.vanzanten@gmail.com](eric.vanzanten@gmail.com)) from Open City.
