@@ -1,6 +1,6 @@
 # civic-json-worker
 
-[Flask](http://flask.pocoo.org) API for tracking civic tech projects across the world. Project data is stored / output using the [civic.json](https://github.com/BetaNYC/civic.json) data standard. (Soon!)
+A [Flask](http://flask.pocoo.org) API generalizing [OpenCity Chicago's similar app](https://github.com/open-city/civic-json-worker) to track civic tech projects around the world. Project data is stored / output using the [civic.json](https://github.com/BetaNYC/civic.json) data standard. (Soon!)
 
 A project by:
 
