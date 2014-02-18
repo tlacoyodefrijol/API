@@ -59,7 +59,9 @@ def update_project_info(row):
             raise IOError('We done got throttled')
         
         repo = got.json()
-        sleep(1) # be nice to Github
+        
+        if github_auth is None:
+            sleep(1) # be nice to Github
         
         if 'name' not in row or not row['name']:
             row['name'] = repo['name']
