@@ -1,14 +1,21 @@
 import json
 import os
 from requests import get
+from urlparse import urlparse
 from csv import DictReader, Sniffer
 from StringIO import StringIO
 from tasks import update_project, get_people_totals, get_org_totals
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key
+from time import sleep
 
 BUCKET = os.environ['S3_BUCKET']
 gdocs_url = 'https://docs.google.com/a/codeforamerica.org/spreadsheet/ccc?key=0ArHmv-6U1drqdGNCLWV5Q0d5YmllUzE5WGlUY3hhT2c&output=csv'
+
+if 'GITHUB_TOKEN' in os.environ:
+    github_auth = (os.environ['GITHUB_TOKEN'], '')
+else:
+    github_auth = None
 
 def get_orgs():
     ''' Get a row for each organization from the Brigade Info spreadsheet.
@@ -33,7 +40,37 @@ def load_projects(projects_url):
         dialect = Sniffer().sniff(projects[0])
         data = list(DictReader(projects, dialect=dialect))
     
-    return data
+    return [update_project_info(row) for row in data]
+
+def update_project_info(row):
+    ''' Update info from Github, if it's missing.
+    '''
+    if 'code_url' not in row:
+        return row
+    
+    _, host, path, _, _, _ = urlparse(row['code_url'])
+    
+    if host == 'github.com':
+        repo_url = 'https://api.github.com/repos' + path
+        
+        got = get(repo_url, auth=github_auth)
+        
+        if got.status_code in range(400, 499):
+            raise IOError('We done got throttled')
+        
+        repo = got.json()
+        sleep(1) # be nice to Github
+        
+        if 'name' not in row or not row['name']:
+            row['name'] = repo['name']
+        
+        if 'description' not in row or not row['description']:
+            row['description'] = repo['description']
+        
+        if 'link_url' not in row or not row['link_url']:
+            row['link_url'] = repo['homepage']
+    
+    return row
 
 def update_projects():
     conn = S3Connection()
