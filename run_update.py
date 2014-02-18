@@ -44,6 +44,11 @@ def load_projects(projects_url):
 
 def update_project_info(row):
     ''' Update info from Github, if it's missing.
+    
+        Modify the row in-place with new info and return it.
+
+        Complete repository project details go into extras, for example
+        project details from Github can be found under "github_extras".
     '''
     if 'code_url' not in row:
         return row
@@ -71,8 +76,42 @@ def update_project_info(row):
         
         if 'link_url' not in row or not row['link_url']:
             row['link_url'] = repo['homepage']
+        
+        row['github_extras'] = repo
     
     return row
+
+def reformat_project_info(input):
+    ''' Return a clone of the project hash, formatted for use by opengovhacknight.org.
+    
+        The representation here is specifically expected to be used on this page:
+        http://opengovhacknight.org/projects.html
+    '''
+    output = dict()
+    
+    for field in ('name', 'description'):
+        output[field] = input[field]
+    
+    if 'github_extras' in input:
+        github = input['github_extras']
+    
+        fields = ('contributors_url', 'created_at', 'forks_count', 'homepage',
+                  'html_url', 'id', 'language', 'open_issues', 'pushed_at',
+                  'updated_at', 'watchers_count')
+    
+        for field in fields:
+            output[field] = github[field]
+    
+        # populate project_needs from github[issues_url] (without "{/number}")
+        # populate contributors from github[contributors_url] 
+        # populate participation from repo_url? + "/stats/participation"
+    
+        output['owner'] = dict()
+    
+        for field in ('avatar_url', 'html_url', 'login', 'type'):
+            output['owner'][field] = github['owner'][field]
+    
+    return output
 
 def update_projects():
     conn = S3Connection()
