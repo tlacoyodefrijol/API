@@ -140,8 +140,13 @@ def update_github_project_info(input):
         output['contributors'][-1]['owner'] \
             = bool(contributor['login'] == output['owner']['login'])
     
+    #
+    # Populate project participation from github[url] + "/stats/participation"
+    #
+    got = get(github['url'] + '/stats/participation', auth=github_auth)
+    output['participation'] = got.json()['all']
+    
     # populate project_needs from github[issues_url] (without "{/number}")
-    # populate participation from repo_url? + "/stats/participation"
 
     return output
 
