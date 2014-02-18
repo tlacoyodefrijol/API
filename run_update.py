@@ -1,7 +1,7 @@
 import json
 import os
 from requests import get
-from csv import DictReader
+from csv import DictReader, Sniffer
 from StringIO import StringIO
 from tasks import update_project, get_people_totals, get_org_totals
 from boto.s3.connection import S3Connection
@@ -17,6 +17,21 @@ def get_orgs():
     '''
     got = get(gdocs_url)
     data = list(DictReader(StringIO(got.text)))
+    
+    return data
+
+def load_projects(projects_url):
+    ''' Load a list of projects from a given URL.
+    '''
+    got = get(projects_url)
+
+    try:
+        data = [dict(code_url=item) for item in got.json()]
+
+    except ValueError:
+        projects = got.text.splitlines()
+        dialect = Sniffer().sniff(projects[0])
+        data = list(DictReader(projects, dialect=dialect))
     
     return data
 
