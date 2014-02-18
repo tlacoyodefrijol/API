@@ -92,25 +92,57 @@ def reformat_project_info(input):
     for field in ('name', 'description'):
         output[field] = input[field]
     
-    if 'github_extras' in input:
-        github = input['github_extras']
+    output.update(update_github_project_info(input))
     
-        fields = ('contributors_url', 'created_at', 'forks_count', 'homepage',
-                  'html_url', 'id', 'language', 'open_issues', 'pushed_at',
-                  'updated_at', 'watchers_count')
+    return output
+
+def update_github_project_info(input):
+    '''
+    '''
+    output = dict()
     
-        for field in fields:
-            output[field] = github[field]
+    if 'github_extras' not in input:
+        return output
     
-        # populate project_needs from github[issues_url] (without "{/number}")
-        # populate contributors from github[contributors_url] 
-        # populate participation from repo_url? + "/stats/participation"
+    github = input['github_extras']
+
+    #
+    # Populate core Github fields.
+    #
+    for field in (
+            'contributors_url', 'created_at', 'forks_count', 'homepage',
+            'html_url', 'id', 'language', 'open_issues', 'pushed_at',
+            'updated_at', 'watchers_count'
+            ):
+        output[field] = github[field]
+
+    output['owner'] = dict()
+
+    for field in ('avatar_url', 'html_url', 'login', 'type'):
+        output['owner'][field] = github['owner'][field]
     
-        output['owner'] = dict()
+    #
+    # Populate project contributors with a call to Github contributors_url.
+    #
+    output['contributors'] = []
+    got = get(github['contributors_url'], auth=github_auth)
     
-        for field in ('avatar_url', 'html_url', 'login', 'type'):
-            output['owner'][field] = github['owner'][field]
+    for contributor in got.json():
+        # we don't want people without email addresses?
+        if contributor['login'] == 'invalid-email-address':
+            break
     
+        output['contributors'].append(dict())
+        
+        for field in ('login', 'avatar_url', 'html_url', 'contributions'):
+            output['contributors'][-1][field] = contributor[field]
+        
+        output['contributors'][-1]['owner'] \
+            = bool(contributor['login'] == output['owner']['login'])
+    
+    # populate project_needs from github[issues_url] (without "{/number}")
+    # populate participation from repo_url? + "/stats/participation"
+
     return output
 
 def update_projects():
