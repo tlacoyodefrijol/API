@@ -8,6 +8,7 @@ from tasks import update_project, get_people_totals, get_org_totals
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key
 from time import sleep
+from json import dumps
 
 BUCKET = os.environ['S3_BUCKET']
 gdocs_url = 'https://docs.google.com/a/codeforamerica.org/spreadsheet/ccc?key=0ArHmv-6U1drqdGNCLWV5Q0d5YmllUzE5WGlUY3hhT2c&output=csv'
@@ -199,5 +200,33 @@ def update_projects():
     org_list.close()
     return 'Updated'
 
+def upload_project_details(project_details):
+    '''
+    '''
+    s3 = S3Connection()
+    bucket = s3.get_bucket(BUCKET)
+
+    object = Key(bucket)
+    object.key = 'project_details.json'
+    
+    data = dumps(project_details, indent=2)
+    args = dict(policy='public-read', headers={'Content-Type': 'application/json'})
+
+    object.set_contents_from_string(data, **args)
+
 if __name__ == "__main__":
+
+    project_details = []
+
+    for org in get_orgs():
+        if not org['projects_url']:
+            continue
+    
+        for project in load_projects(org['projects_url']):
+            project_details.append(reformat_project_info(project))
+            print dumps(project, indent=2)
+    
+    upload_project_details(project_details)
+    exit()
+
     update_projects()
