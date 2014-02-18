@@ -9,8 +9,6 @@ from boto.s3.connection import S3Connection
 from boto.s3.key import Key
 
 BUCKET = os.environ['S3_BUCKET']
-AWS_KEY = os.environ['AWS_ACCESS_KEY']
-AWS_SECRET = os.environ['AWS_SECRET_KEY']
 
 GITHUB = 'https://api.github.com'
 GITHUB_TOKEN = os.environ['GITHUB_TOKEN']
@@ -83,7 +81,7 @@ def update_project(project_url):
     url = '%s/repos/%s' % (GITHUB, full_name)
     headers = {'Authorization': 'token %s' % GITHUB_TOKEN}
     r = requests.get(url, headers=headers)
-    conn = S3Connection(AWS_KEY, AWS_SECRET)
+    conn = S3Connection()
     bucket = conn.get_bucket(BUCKET)
     if r.status_code == 200:
         pj_list = Key(bucket)

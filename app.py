@@ -10,9 +10,6 @@ from boto.s3.connection import S3Connection
 from boto.s3.key import Key
 
 BUCKET = os.environ['S3_BUCKET']
-AWS_KEY = os.environ['AWS_ACCESS_KEY']
-AWS_SECRET = os.environ['AWS_SECRET_KEY']
-
 THE_KEY = os.environ['FLASK_KEY']
 
 app = Flask(__name__)
@@ -74,7 +71,7 @@ def submit_project():
 def delete_project():
     if request.form.get('the_key') == THE_KEY:
         project_url = request.form.get('project_url')
-        conn = S3Connection(AWS_KEY, AWS_SECRET)
+        conn = S3Connection()
         bucket = conn.get_bucket(BUCKET)
         pj_list = Key(bucket)
         pj_list.key = 'projects.json'
