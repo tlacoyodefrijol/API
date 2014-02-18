@@ -113,13 +113,11 @@ $ pip install -r requirements.txt
 
 Besides that, there are a few environmental variables that you'll need to set:
 
-``` bash
-$ export FLASK_KEY=[whatever you want] # This is a string that you'll check to make sure that only trusted people are deleting things
-$ export GITHUB_TOKEN=[Github API token] # Read about setting that up here: http://developer.github.com/v3/oauth/
-$ export S3_BUCKET=[Name of the bucket] # This is the bucket where you'll store the JSON files 
-$ export AWS_ACCESS_KEY=[Amazon Web Services Key] # This will need access to the bucket above
-$ export AWS_SECRET_KEY=[Amazon Web Services Secret] # This will need access to the bucket above
-```
+* `FLASK_KEY=[whatever you want]` — This is a string that you'll check to make sure that only trusted people are deleting things
+* `GITHUB_TOKEN=[Github API token]` — Read about setting that up here: http://developer.github.com/v3/oauth/
+* `S3_BUCKET=[Name of the bucket]` — This is the bucket where you'll store the JSON files
+* `AWS_ACCESS_KEY_ID=[Amazon Web Services Key]` — Amazon access key for the bucket above, see also [boto config](https://code.google.com/p/boto/wiki/BotoConfig).
+* `AWS_SECRET_ACCESS_KEY=[Amazon Web Services Secret]` — Amazon secret key for the bucket above, see also [boto config](https://code.google.com/p/boto/wiki/BotoConfig).
 
 Probably easiest placed in the .bashrc (or the like) of 
 the user that the app is running as rather than manually set but you get the idea...
