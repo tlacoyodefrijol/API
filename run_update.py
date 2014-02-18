@@ -7,6 +7,8 @@ from StringIO import StringIO
 from tasks import update_project, get_people_totals, get_org_totals
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key
+from operator import itemgetter
+from itertools import groupby
 from time import sleep
 from json import dumps
 
@@ -140,7 +142,7 @@ def collect_github_project_info(input):
     
         output['contributors'].append(dict())
         
-        for field in ('login', 'avatar_url', 'html_url', 'contributions'):
+        for field in ('login', 'url', 'avatar_url', 'html_url', 'contributions'):
             output['contributors'][-1][field] = contributor[field]
         
         output['contributors'][-1]['owner'] \
@@ -200,19 +202,61 @@ def update_projects():
     org_list.close()
     return 'Updated'
 
-def upload_project_details(project_details):
+def upload_json_file(project_details, object_name):
     '''
     '''
     s3 = S3Connection()
     bucket = s3.get_bucket(BUCKET)
 
     object = Key(bucket)
-    object.key = 'project_details.json'
+    object.key = object_name
     
     data = dumps(project_details, indent=2)
     args = dict(policy='public-read', headers={'Content-Type': 'application/json'})
 
     object.set_contents_from_string(data, **args)
+
+def count_people_totals(project_details):
+    '''
+    '''
+    users, contributors = [], []
+
+    for project in project_details:
+        contributors.extend(project['contributors'])
+    
+    #
+    # Sort by login; there will be duplicates!
+    #
+    contributors.sort(key=itemgetter('login'))
+    
+    #
+    # Populate users array with groups of contributors.
+    #
+    for (_, _contributors) in groupby(contributors, key=itemgetter('login')):
+        user = dict(contributions=0, repositories=0)
+        
+        for contributor in _contributors:
+            user['contributions'] += contributor['contributions']
+            user['repositories'] += 1
+            
+            if 'login' in user:
+                continue
+
+            #
+            # Populate user hash with Github info, if it hasn't been already.
+            #
+            got = get(contributor['url'], auth=github_auth)
+            contributor = got.json()
+            
+            for field in (
+                    'login', 'avatar_url', 'html_url',
+                    'blog', 'company', 'location'
+                    ):
+                user[field] = contributor.get(field, None)
+        
+        users.append(user)
+    
+    return users
 
 if __name__ == "__main__":
 
@@ -226,7 +270,11 @@ if __name__ == "__main__":
             project_details.append(reformat_project_info(project))
             print dumps(project, indent=2)
     
-    upload_project_details(project_details)
-    exit()
+    upload_json_file(project_details, 'project_details.json')
+
+    people = count_people_totals(project_details)
+    upload_json_file(people, 'people.json')
+
+    exit(0)
 
     update_projects()
