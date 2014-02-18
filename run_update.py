@@ -1,10 +1,24 @@
 import json
 import os
+from requests import get
+from csv import DictReader
+from StringIO import StringIO
 from tasks import update_project, get_people_totals, get_org_totals
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key
 
 BUCKET = os.environ['S3_BUCKET']
+gdocs_url = 'https://docs.google.com/a/codeforamerica.org/spreadsheet/ccc?key=0ArHmv-6U1drqdGNCLWV5Q0d5YmllUzE5WGlUY3hhT2c&output=csv'
+
+def get_orgs():
+    ''' Get a row for each organization from the Brigade Info spreadsheet.
+
+        Return a list of dictionaries, one for each row past the header.
+    '''
+    got = get(gdocs_url)
+    data = list(DictReader(StringIO(got.text)))
+    
+    return data
 
 def update_projects():
     conn = S3Connection()
