@@ -20,6 +20,16 @@ if 'GITHUB_TOKEN' in os.environ:
 else:
     github_auth = None
 
+def get_github_api(url):
+    '''
+    '''
+    got = get(url, auth=github_auth)
+    
+    if github_auth is None:
+        sleep(1) # be nice to Github
+    
+    return got
+
 def get_orgs():
     ''' Get a row for each organization from the Brigade Info spreadsheet.
 
@@ -61,15 +71,12 @@ def update_project_info(row):
     if host == 'github.com':
         repo_url = 'https://api.github.com/repos' + path
         
-        got = get(repo_url, auth=github_auth)
+        got = get_github_api(repo_url)
         
         if got.status_code in range(400, 499):
             raise IOError('We done got throttled')
         
         repo = got.json()
-        
-        if github_auth is None:
-            sleep(1) # be nice to Github
         
         if 'name' not in row or not row['name']:
             row['name'] = repo['name']
@@ -133,7 +140,7 @@ def collect_github_project_info(input):
     # Populate project contributors from github[contributors_url]
     #
     output['contributors'] = []
-    got = get(github['contributors_url'], auth=github_auth)
+    got = get_github_api(github['contributors_url'])
     
     for contributor in got.json():
         # we don't want people without email addresses?
@@ -202,8 +209,8 @@ def update_projects():
     org_list.close()
     return 'Updated'
 
-def upload_json_file(project_details, object_name):
-    '''
+def upload_json_file(json_data, object_name):
+    ''' Upload a named file to S3 BUCKET, return nothing.
     '''
     s3 = S3Connection()
     bucket = s3.get_bucket(BUCKET)
@@ -211,13 +218,15 @@ def upload_json_file(project_details, object_name):
     object = Key(bucket)
     object.key = object_name
     
-    data = dumps(project_details, indent=2)
+    data = dumps(json_data, indent=2)
     args = dict(policy='public-read', headers={'Content-Type': 'application/json'})
 
     object.set_contents_from_string(data, **args)
 
 def count_people_totals(project_details):
-    '''
+    ''' Create a list of people details based on project details.
+    
+        Request additional data from Github API for each person.
     '''
     users, contributors = [], []
 
@@ -245,7 +254,7 @@ def count_people_totals(project_details):
             #
             # Populate user hash with Github info, if it hasn't been already.
             #
-            got = get(contributor['url'], auth=github_auth)
+            got = get_github_api(contributor['url'])
             contributor = got.json()
             
             for field in (
