@@ -92,18 +92,23 @@ def reformat_project_info(input):
     for field in ('name', 'description'):
         output[field] = input[field]
     
-    output.update(update_github_project_info(input))
+    if 'github_extras' in input:
+        try:
+            info = collect_github_project_info(input)
+        except:
+            pass
+        else:
+            output.update(info)
     
     return output
 
-def update_github_project_info(input):
-    '''
+def collect_github_project_info(input):
+    ''' Collect Github project info, formatted for use by opengovhacknight.org.
+    
+        The representation here is specifically expected to be used on this page:
+        http://opengovhacknight.org/projects.html
     '''
     output = dict()
-    
-    if 'github_extras' not in input:
-        return output
-    
     github = input['github_extras']
 
     #
@@ -122,7 +127,7 @@ def update_github_project_info(input):
         output['owner'][field] = github['owner'][field]
     
     #
-    # Populate project contributors with a call to Github contributors_url.
+    # Populate project contributors from github[contributors_url]
     #
     output['contributors'] = []
     got = get(github['contributors_url'], auth=github_auth)
@@ -146,8 +151,17 @@ def update_github_project_info(input):
     got = get(github['url'] + '/stats/participation', auth=github_auth)
     output['participation'] = got.json()['all']
     
-    # populate project_needs from github[issues_url] (without "{/number}")
-
+    #
+    # Populate project needs from github[issues_url] (remove "{/number}")
+    #
+    output['project_needs'] = []
+    url = github['issues_url'].replace('{/number}', '')
+    got = get(url, auth=github_auth, params=dict(labels='project-needs'))
+    
+    for issue in got.json():
+        project_need = dict(title=issue['title'], issue_url=issue['html_url'])
+        output['project_needs'].append(project_need)
+    
     return output
 
 def update_projects():
