@@ -12,6 +12,8 @@ from requests import get
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key
 
+from app import db, Project
+
 BUCKET = os.environ['S3_BUCKET']
 gdocs_url = 'https://docs.google.com/a/codeforamerica.org/spreadsheet/ccc?key=0ArHmv-6U1drqdGNCLWV5Q0d5YmllUzE5WGlUY3hhT2c&output=csv'
 
@@ -235,6 +237,9 @@ def count_people_totals(all_project_details):
     return users
 
 if __name__ == "__main__":
+
+    db.drop_all()
+    db.create_all()
 
     all_project_details = []
 

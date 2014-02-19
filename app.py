@@ -5,14 +5,41 @@ import json
 import os
 import requests
 from tasks import update_project
-from run_update import update_projects as update_pjs
+# from run_update import update_projects as update_pjs
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key
+from flask.ext.heroku import Heroku
+from flask.ext.sqlalchemy import SQLAlchemy
+import flask.ext.restless
 
 BUCKET = os.environ['S3_BUCKET']
 THE_KEY = os.environ['FLASK_KEY']
 
 app = Flask(__name__)
+heroku = Heroku(app)
+db = SQLAlchemy(app)
+
+class Project(db.Model):
+    name = db.Column(db.Unicode(), primary_key=True)
+    code_url = db.Column(db.Unicode())
+    link_url = db.Column(db.Unicode())
+    description = db.Column(db.Unicode())
+    type = db.Column(db.Unicode())
+    categories = db.Column(db.Unicode())
+    github_extras = db.Column(db.Unicode())
+    
+    def __init__(self, name, code_url=None, link_url=None,
+                 description=None, type=None, categories=None, github_extras=None):
+        self.name = name
+        self.code_url = code_url
+        self.link_url = link_url
+        self.description = description
+        self.type = type
+        self.categories = categories
+        self.github_extras = github_extras
+
+manager = flask.ext.restless.APIManager(app, flask_sqlalchemy_db=db)
+manager.create_api(Project, methods=['GET'], collection_name='projects', max_results_per_page=-1)
 
 def crossdomain(origin=None, methods=None, headers=None,
                 max_age=21600, attach_to_all=True,
