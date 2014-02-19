@@ -30,66 +30,68 @@ def get_github_api(url):
     
     return got
 
-def get_orgs():
+def get_organizations():
     ''' Get a row for each organization from the Brigade Info spreadsheet.
 
         Return a list of dictionaries, one for each row past the header.
     '''
     got = get(gdocs_url)
-    data = list(DictReader(StringIO(got.text)))
+    organizations = list(DictReader(StringIO(got.text)))
     
-    return data
+    return organizations
 
-def load_projects(projects_url):
+def load_projects(projects_list_url):
     ''' Load a list of projects from a given URL.
     '''
-    got = get(projects_url)
+    print projects_list_url
+    got = get(projects_list_url)
 
     try:
-        data = [dict(code_url=item) for item in got.json()]
+        projects_details = [dict(code_url=item) for item in got.json()]
 
     except ValueError:
-        projects = got.text.splitlines()
-        dialect = Sniffer().sniff(projects[0])
-        data = list(DictReader(projects, dialect=dialect))
-    
-    return [update_project_info(row) for row in data[:2]]
+        data = got.text.splitlines()
+        dialect = Sniffer().sniff(data[0])
+        projects_details = list(DictReader(data, dialect=dialect))
 
-def update_project_info(row):
+    return [update_project_info(project_detail) for project_detail in projects_details]
+
+def update_project_info(project_detail):
     ''' Update info from Github, if it's missing.
     
-        Modify the row in-place with new info and return it.
+        Modify the project_detail in-place with new info and return it.
 
         Complete repository project details go into extras, for example
         project details from Github can be found under "github_extras".
     '''
-    if 'code_url' not in row:
-        return row
+    if 'code_url' not in project_detail:
+        return project_detail
     
-    _, host, path, _, _, _ = urlparse(row['code_url'])
+    _, host, path, _, _, _ = urlparse(project_detail['code_url'])
     
     if host == 'github.com':
         repo_url = 'https://api.github.com/repos' + path
         
+        print repo_url
         got = get_github_api(repo_url)
         
         if got.status_code in range(400, 499):
             raise IOError('We done got throttled')
+
+        github_project_info = got.json()
         
-        repo = got.json()
+        if 'name' not in project_detail or not project_detail['name']:
+            project_detail['name'] = github_project_info['name']
         
-        if 'name' not in row or not row['name']:
-            row['name'] = repo['name']
+        if 'description' not in project_detail or not project_detail['description']:
+            project_detail['description'] = github_project_info['description']
         
-        if 'description' not in row or not row['description']:
-            row['description'] = repo['description']
+        if 'link_url' not in project_detail or not project_detail['link_url']:
+            project_detail['link_url'] = github_project_info['homepage']
         
-        if 'link_url' not in row or not row['link_url']:
-            row['link_url'] = repo['homepage']
-        
-        row['github_extras'] = repo
+        project_detail['github_extras'] = unicode(github_project_info)
     
-    return row
+    return project_detail
 
 def reformat_project_info(input):
     ''' Return a clone of the project hash, formatted for use by opengovhacknight.org.
@@ -188,15 +190,15 @@ def upload_json_file(json_data, object_name):
 
     object.set_contents_from_string(data, **args)
 
-def count_people_totals(project_details):
+def count_people_totals(all_project_details):
     ''' Create a list of people details based on project details.
     
         Request additional data from Github API for each person.
     '''
     users, contributors = [], []
 
-    for project in project_details:
-        contributors.extend(project['contributors'])
+    for project_details in all_project_details:
+        contributors.extend(project_details['contributors'])
     
     #
     # Sort by login; there will be duplicates!
@@ -234,17 +236,23 @@ def count_people_totals(project_details):
 
 if __name__ == "__main__":
 
-    project_details = []
+    all_project_details = []
 
-    for org in get_orgs():
-        if not org['projects_url']:
+    for organization in get_organizations():
+        print organization['name']
+        if not organization['projects_list_url']:
             continue
-    
-        for project in load_projects(org['projects_url']):
-            project_details.append(reformat_project_info(project))
-            print dumps(project, indent=2)
-    
-    upload_json_file(project_details, 'project_details.json')
+        
+        org_projects_details = load_projects(organization['projects_list_url'])
 
-    people = count_people_totals(project_details)
+        for project_details in org_projects_details:
+            project = Project(**project_details)
+            db.session.add(project)
+            db.session.commit()
+        #     all_project_details.append(reformat_project_info(project_details))
+        #     print dumps(project, indent=2)
+
+
+    upload_json_file(all_project_details, 'project_details.json')
+    people = count_people_totals(all_project_details)
     upload_json_file(people, 'people.json')
