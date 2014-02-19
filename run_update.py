@@ -25,7 +25,7 @@ else:
 def get_github_api(url):
     '''
     '''
-    print >> sys.stderr, 'Asking Github for', url
+    print 'Asking Github for', url
     
     got = get(url, auth=github_auth)
     
@@ -47,7 +47,7 @@ def get_organizations():
 def load_projects(projects_list_url):
     ''' Load a list of projects from a given URL.
     '''
-    print projects_list_url
+    print 'Asking for', projects_list_url
     got = get(projects_list_url)
 
     try:
@@ -65,7 +65,7 @@ def load_projects(projects_list_url):
 def update_project_info(project_detail):
     ''' Update info from Github, if it's missing.
     
-        Modify the row in-place and return nothing.
+        Modify the project_detail in-place and return nothing.
 
         Complete repository project details go into extras, for example
         project details from Github can be found under "github_extras".
@@ -78,7 +78,6 @@ def update_project_info(project_detail):
     if host == 'github.com':
         repo_url = 'https://api.github.com/repos' + path
         
-        print repo_url
         got = get_github_api(repo_url)
         
         if got.status_code in range(400, 499):
@@ -247,6 +246,7 @@ if __name__ == "__main__":
 
     for organization in get_organizations():
         print organization['name']
+
         if not organization['projects_list_url']:
             continue
         
