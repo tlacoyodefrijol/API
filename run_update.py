@@ -157,13 +157,14 @@ def collect_github_project_info(input):
         for field in ('login', 'url', 'avatar_url', 'html_url', 'contributions'):
             output['contributors'][-1][field] = contributor[field]
         
+        # flag the owner with a boolean value
         output['contributors'][-1]['owner'] \
             = bool(contributor['login'] == output['owner']['login'])
     
     #
     # Populate project participation from github[url] + "/stats/participation"
     #
-    got = get(github['url'] + '/stats/participation', auth=github_auth)
+    got = get_github_api(github['url'] + '/stats/participation')
     output['participation'] = got.json()['all']
     
     #
