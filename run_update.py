@@ -1,5 +1,5 @@
-import json
 import os
+import sys
 from urlparse import urlparse
 from csv import DictReader, Sniffer
 from StringIO import StringIO
@@ -23,6 +23,8 @@ else:
 def get_github_api(url):
     '''
     '''
+    print >> sys.stderr, 'Asking Github for', url
+    
     got = get(url, auth=github_auth)
     
     if github_auth is None:
@@ -53,12 +55,14 @@ def load_projects(projects_url):
         dialect = Sniffer().sniff(projects[0])
         data = list(DictReader(projects, dialect=dialect))
     
-    return [update_project_info(row) for row in data[:2]]
+    map(update_project_info, data)
+    
+    return data
 
 def update_project_info(row):
     ''' Update info from Github, if it's missing.
     
-        Modify the row in-place with new info and return it.
+        Modify the row in-place and return nothing.
 
         Complete repository project details go into extras, for example
         project details from Github can be found under "github_extras".
@@ -88,8 +92,6 @@ def update_project_info(row):
             row['link_url'] = repo['homepage']
         
         row['github_extras'] = repo
-    
-    return row
 
 def reformat_project_info(input):
     ''' Return a clone of the project hash, formatted for use by opengovhacknight.org.
