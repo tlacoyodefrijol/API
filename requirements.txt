@@ -1,4 +1,7 @@
 requests==1.2.3
 Flask==0.10.1
+Flask-Restless==0.12.1
+Flask-SQLAlchemy==1.0
+Flask-Heroku==0.1.8
 gunicorn<0.18.0
 boto==2.25.0
