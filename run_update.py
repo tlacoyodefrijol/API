@@ -254,8 +254,8 @@ if __name__ == "__main__":
             project = Project(**project_details)
             db.session.add(project)
             db.session.commit()
-        #     all_project_details.append(reformat_project_info(project_details))
-        #     print dumps(project, indent=2)
+            # all_project_details.append(reformat_project_info(project_details))
+            # print dumps(project, indent=2)
 
 
     upload_json_file(all_project_details, 'project_details.json')
