@@ -27,6 +27,7 @@ class Project(db.Model):
     type = db.Column(db.Unicode())
     categories = db.Column(db.Unicode())
     github_extras = db.Column(db.Unicode())
+    keep = db.Column(db.Boolean())
     
     def __init__(self, name, code_url=None, link_url=None,
                  description=None, type=None, categories=None, github_extras=None):
@@ -37,6 +38,7 @@ class Project(db.Model):
         self.type = type
         self.categories = categories
         self.github_extras = github_extras
+        self.keep = True
 
 manager = flask.ext.restless.APIManager(app, flask_sqlalchemy_db=db)
 manager.create_api(Project, methods=['GET'], collection_name='projects', max_results_per_page=-1)
