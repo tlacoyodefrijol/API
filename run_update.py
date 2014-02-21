@@ -240,9 +240,9 @@ def count_people_totals(all_project_details):
 
 if __name__ == "__main__":
 
-    db.drop_all()
-    db.create_all()
-
+    # Mark all projects for deletion at first.
+    db.session.execute(db.update(Project, values={Project.keep: False}))
+    
     all_project_details = []
 
     for organization in get_organizations():
@@ -254,12 +254,27 @@ if __name__ == "__main__":
         org_projects_details = load_projects(organization['projects_list_url'])
 
         for project_details in org_projects_details:
-            project = Project(**project_details)
-            db.session.add(project)
-            db.session.commit()
-            # all_project_details.append(reformat_project_info(project_details))
-            # print dumps(project, indent=2)
 
+            # Select the current project
+            filter = Project.name == project_details['name']
+            project = db.session.query(Project).filter(filter).first()
+            
+            if not project:
+                project = Project(**project_details)
+                db.session.add(project)
+                continue
+
+            # Update project details
+            for (field, value) in project_details.items():
+                setattr(project, field, value)
+
+            # Mark this project for safe-keeping
+            project.keep = True
+
+    # Remove everything marked for deletion.
+    db.session.flush()
+    db.session.execute(db.delete(Project).where(Project.keep == False))
+    db.session.commit()
 
     upload_json_file(all_project_details, 'project_details.json')
     people = count_people_totals(all_project_details)
