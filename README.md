@@ -113,6 +113,7 @@ $ pip install -r requirements.txt
 
 Besides that, there are a few environmental variables that you'll need to set:
 
+* `DATABASE_URL=[db connection string]` — On Heroku with Postgres, this will be set for you. When testing locally, “sqlite:///data.db” is a great way to skip Postgres installation.
 * `FLASK_KEY=[whatever you want]` — This is a string that you'll check to make sure that only trusted people are deleting things
 * `GITHUB_TOKEN=[Github API token]` — Read about setting that up here: http://developer.github.com/v3/oauth/
 * `S3_BUCKET=[Name of the bucket]` — This is the bucket where you'll store the JSON files
@@ -121,6 +122,12 @@ Besides that, there are a few environmental variables that you'll need to set:
 
 Probably easiest placed in the .bashrc (or the like) of 
 the user that the app is running as rather than manually set but you get the idea...
+
+### Preparing the database
+
+Run this Python command to create a fresh database schema:
+
+    python -c 'from app import db; db.create_all()'
 
 ## Running the updater
 
