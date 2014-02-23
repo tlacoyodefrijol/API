@@ -17,6 +17,12 @@ A project by:
 
 Looking at [other civic tech listing projects](http://commons.codeforamerica.org/) like this that have [gone stale](http://digital.cityofchicago.org/index.php/open-data-applications/), the real sticking point is keeping the list of projects - and their details - up to date. The less work people have to do, the more the archive will stay up to date and useful.
 
+### New User Workflow
+
+A revised user workflow [is being discussed here](https://github.com/codeforamerica/civic-json-worker/issues/14#issuecomment-35569288). Please add your thoughts to that thread.
+
+### Previous User Workflow
+
 The goal of this project is to make humans responsible for one thing: __deciding what gets tracked__. They submit github repo urls to this API, which curates a simple projects list:
 
 ```json
