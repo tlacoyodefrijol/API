@@ -15,102 +15,58 @@ A project by:
 
 ## How It Works
 
-Looking at [other civic tech listing projects](http://commons.codeforamerica.org/) like this that have [gone stale](http://digital.cityofchicago.org/index.php/open-data-applications/), the real sticking point is keeping the list of projects - and their details - up to date. The less work people have to do, the more the archive will stay up to date and useful.
+Looking at [other civic tech listings](http://commons.codeforamerica.org/), projects like this that have [gone stale](http://digital.cityofchicago.org/index.php/open-data-applications/), the real sticking point seems to be keeping the list of projects - and their details - up to date.
 
-### New User Workflow
+The goal of this project is to minimize the work needed from civic hacking organizations to track their projects, and share project information with the world in a structured way.
 
-A revised user workflow [is being discussed here](https://github.com/codeforamerica/civic-json-worker/issues/14#issuecomment-35569288). Please add your thoughts to that thread.
+Below is the current **draft** workflow: please [contribute your thoughts on this by adding an issue!](https://github.com/codeforamerica/civic-json-worker/issues)
 
-### Previous User Workflow
+### Organizations List
 
-The goal of this project is to make humans responsible for one thing: __deciding what gets tracked__. They submit github repo urls to this API, which curates a simple projects list:
+The current approach is for there to be "One True List" of participating civic hacking organizations (such as Code for America Brigades) stored in a Google Spreadsheet.
 
-```json
-[
-    "https://github.com/dssg/census-communities-usa",
-    "https://github.com/open-city/open-gov-hack-night",
-    ...
-]
-```
+An organization will contribute their information by adding a row to the GSpreadsheet.
 
-The rest is up to computers. Every 10 minutes the run_update.py script runs over the project urls in the list, and pings the Github API to gather the following fields for each project:
+Each organization will be defined here by:
 
-``` json
-[
-    {
-        "contributors": [
-            {
-                "avatar_url": "https://0.gravatar.com/avatar/5e5eb188a0e4d3a7c8f38ee0fc3a6cbd?d=https%3A%2F%2Fidenticons.github.com%2Fd8c3ef3ed05a213a7225bf5e6e46101a.png", 
-                "contributions": 51, 
-                "html_url": "https://github.com/derekeder", 
-                "login": "derekeder"
-            }, 
-            {
-                "avatar_url": "https://2.gravatar.com/avatar/813d23c289052af417387a9270d0da31?d=https%3A%2F%2Fidenticons.github.com%2Ffa9357bb22fd993fc9795619c7e1d4f7.png", 
-                "contributions": 46, 
-                "html_url": "https://github.com/fgregg", 
-                "login": "fgregg"
-            }, 
-            {
-                "avatar_url": "https://2.gravatar.com/avatar/1d0c5faee140af87d7d6967bc946ecc6?d=https%3A%2F%2Fidenticons.github.com%2F44e80db9ed8527f429c969e804432b0f.png", 
-                "contributions": 9, 
-                "html_url": "https://github.com/evz", 
-                "login": "evz"
-            }
-        ], 
-        "contributors_url": "https://api.github.com/repos/datamade/csvdedupe/contributors", 
-        "created_at": "2013-07-11T14:23:33Z", 
-        "description": "Command line tool for deduplicating CSV files", 
-        "forks_count": 2, 
-        "homepage": null, 
-        "html_url": "https://github.com/datamade/csvdedupe", 
-        "id": 11343900, 
-        "language": "Python", 
-        "name": "csvdedupe", 
-        "open_issues": 8, 
-        "owner": {
-            "avatar_url": "https://2.gravatar.com/avatar/0a89207d38feff1dcd938bdc1e4a9b5e?d=https%3A%2F%2Fidenticons.github.com%2F3424042f8cb2b04950903794ad9c8daf.png", 
-            "html_url": "https://github.com/datamade", 
-            "login": "datamade"
-        }, 
-        "updated_at": "2013-09-20T06:32:39Z", 
-        "watchers_count": 26
-    },
-    ...
-]
-```
+`name, url, events_url, rss, projects_list_url`
 
-**NOTE**: these fields will eventually reflect the proposed [civic.json](https://github.com/BetaNYC/civic.json) standard (see below.)
 
-This data is hosted on a [publicly on S3](https://s3-us-west-2.amazonaws.com/project-list/projects.json) as JSON with a CORS configuration that allows it to be loaded via 
-an Ajax call, for use on [any projects list site](http://opengovhacknight.org/projects.html).
+### Projects List
 
-__bonus:__ anyone can use [this JSON
-file](https://s3-us-west-2.amazonaws.com/project-list/project_details.json) for their
-own purposes.
+The `projects_list_url` provided by an organization in the above doc will point to a file with a list of projects the org is working on. A variety of common formats will be supported (Google Spreadsheet, JSON, CSV/TSV.)
+
+Each project in `projects_list` will be defined by:
+
+`name, description, live_url, code_url, type, categories`
+
+#### Auto-Populating Data from GitHub URLs
+
+If `code_url` points to a GitHub repository, and `name` and `description` are blank, these two fields will be auto-populated by hitting the GitHub API.
+
+
+### Output Data
+
+`civic-json-worker` will output data in the civic.json standard (see below) to a [public JSON File on S3](https://s3-us-west-2.amazonaws.com/project-list/projects.json) with CORS enabled, allowing it to be loaded with only 
+an Ajax call.
+
+This way, it can be used for any project listing site ([for a good example, see Chicago's](http://opengovhacknight.org/projects.html).)
+
 
 ## Civic.json data standard
 [Civic.json](https://github.com/BetaNYC/civic.json) is proposed meta-data standard for describing civic tech projects. The goal is for this standard to be simple, and for the data fields that describe projects to be largely assembled programatically.
 
-The standard is still very much in planning phases, and we [welcome discussion](https://github.com/BetaNYC/civic.json/issues). Once we settle on v1, civic-json-worker will outputs - and potentially store - project data in this format.
+The standard is still very much in planning phases, and we [welcome discussion](https://github.com/BetaNYC/civic.json/issues).
 
-
-## Benefits
-
-By pushing everything on to Github, we will have very little to maintain, content-wise, as administrators. Simultaneously, we will encourage people to:
-
-* sign up for Github if they aren't already
-* keep their projects open source (we can't crawl private repos)
-* make sure their description and website urls are up to date
-* use the issue tracker
+Once we settle on v1, `civic-json-worker` will output - and potentially store - project data in this format.
 
 ## Installation
 
-**NOTE**: *If you're a Code for America Brigade interested in setting up your own civic-json-worker API, hold it! Our goal is to make life easy for you: you shouldn't have to adapt, deploy, or maintain your own API, just read and write data from a single source. (This way, all the data is centralized, too!)*
+Development is in very early stages, and specs are likely to change, so please contact Andrew and Eric in the "Contribute" section below to get involved.
 
-If you want to help out with development, or you don't want to play nice with the other kids in the schoolyard, read on...
+Here's how to get set up for development:
 
-Propping this sucker up for oneself is pretty simple. However, there are some basic requirements which can be gotten 
+There are some basic requirements which can be gotten 
 in the standard Python fashion (assuming you are working in a [virtualenv](https://pypi.python.org/pypi/virtualenv)):
 
 ``` bash
