@@ -52,6 +52,30 @@ an Ajax call.
 
 This way, it can be used for any project listing site ([for a good example, see Chicago's](http://opengovhacknight.org/projects.html).)
 
+#### API
+
+Code for America will maintain a restful API of all of the Brigades' (CfA's volunteer civic hacking groups) activities. This API is under heavy development, with current focus on the /projects endpoint. Current output is formatted like:
+
+```Javascript
+{
+    num_results: 10,
+    objects: [
+        {
+            categories: "community engagement, housing",
+            code_url: "https://github.com/codeforamerica/cityvoice",
+            description: "A redeployment of CityVoice in South Bend, Indiana.",
+            github_extras: "{...}",
+            keep: true,
+            link_url: "http://www.southbendvoices.com/",
+            name: "South Bend Voices",
+            type: "service"
+        },
+        ...
+    ],
+    page: 1,
+    total_pages: 1
+}
+```
 
 ## Civic.json data standard
 [Civic.json](https://github.com/BetaNYC/civic.json) is proposed meta-data standard for describing civic tech projects. The goal is for this standard to be simple, and for the data fields that describe projects to be largely assembled programatically.
