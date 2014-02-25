@@ -47,11 +47,6 @@ If `code_url` points to a GitHub repository, and `name` and `description` are bl
 
 ### Output Data
 
-`civic-json-worker` will output data in the civic.json standard (see below) to a [public JSON File on S3](https://s3-us-west-2.amazonaws.com/project-list/projects.json) with CORS enabled, allowing it to be loaded with only 
-an Ajax call.
-
-This way, it can be used for any project listing site ([for a good example, see Chicago's](http://opengovhacknight.org/projects.html).)
-
 #### API
 
 Code for America will maintain a restful API of all of the Brigades' (CfA's volunteer civic hacking groups) activities. This API is under heavy development, with current focus on the /projects endpoint. Current output is formatted like:
@@ -64,7 +59,7 @@ Code for America will maintain a restful API of all of the Brigades' (CfA's volu
             categories: "community engagement, housing",
             code_url: "https://github.com/codeforamerica/cityvoice",
             description: "A redeployment of CityVoice in South Bend, Indiana.",
-            github_extras: "{...}",
+            github_details: "{...}",
             keep: true,
             link_url: "http://www.southbendvoices.com/",
             name: "South Bend Voices",
@@ -76,6 +71,14 @@ Code for America will maintain a restful API of all of the Brigades' (CfA's volu
     total_pages: 1
 }
 ```
+
+#### TODO: civic.json files
+
+`civic-json-worker` will output data in the civic.json standard (see below) to a [public JSON File on S3](https://s3-us-west-2.amazonaws.com/project-list/projects.json) with CORS enabled, allowing it to be loaded with only 
+an Ajax call.
+
+This way, it can be used for any project listing site ([for a good example, see Chicago's](http://opengovhacknight.org/projects.html).)
+
 
 ## Civic.json data standard
 [Civic.json](https://github.com/BetaNYC/civic.json) is proposed meta-data standard for describing civic tech projects. The goal is for this standard to be simple, and for the data fields that describe projects to be largely assembled programatically.
@@ -97,6 +100,15 @@ in the standard Python fashion (assuming you are working in a [virtualenv](https
 $ pip install -r requirements.txt
 ```
 
+### Create and prepare a database
+For a new postgres db, run:
+
+    createdb civicjsonworker
+
+Run this Python command to create a fresh database schema:
+
+    python -c 'from app import db; db.create_all()'
+
 Besides that, there are a few environmental variables that you'll need to set:
 
 * `DATABASE_URL=[db connection string]` — On Heroku with Postgres, this will be set for you. When testing locally, “sqlite:///data.db” is a great way to skip Postgres installation.
@@ -109,35 +121,15 @@ Besides that, there are a few environmental variables that you'll need to set:
 Probably easiest placed in the .bashrc (or the like) of 
 the user that the app is running as rather than manually set but you get the idea...
 
-### Preparing the database
-
-Run this Python command to create a fresh database schema:
-
-    python -c 'from app import db; db.create_all()'
 
 ## Running the updater
 
-To get this going the first time, you’ll need to create a ``projects.json`` file
-in the root directory of the S3 Bucket where you will be storing your civic
-JSON files. The structure is pretty simple, just an array with a list of github
-URLs like so:
-
-``` javascript
-[
-    "https://github.com/open-city/dedupe",
-    "https://github.com/censusreporter/censusreporter"
-]
-```
-
-Once that is setup and you have your python virtualenv activated, you should be
-able to run the ``run_update.py`` script thusly:
+The ``run_update.py`` script will be run on Heroku once an hour and populate the database. To run locally, try:
 
 ``` bash 
 $ python run_update.py
 ```
 
-That should go through and create all the other files in your S3 Bucket as
-needed.
 
 ## Contribute
 
