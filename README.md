@@ -53,14 +53,13 @@ Code for America will maintain a restful API of all of the Brigades' (CfA's volu
 
 ```Javascript
 {
-    num_results: 10,
+    num_results: 493,
     objects: [
         {
             categories: "community engagement, housing",
             code_url: "https://github.com/codeforamerica/cityvoice",
             description: "A redeployment of CityVoice in South Bend, Indiana.",
             github_details: "{...}",
-            keep: true,
             link_url: "http://www.southbendvoices.com/",
             name: "South Bend Voices",
             type: "service"
@@ -74,7 +73,7 @@ Code for America will maintain a restful API of all of the Brigades' (CfA's volu
 
 #### TODO: civic.json files
 
-`civic-json-worker` will output data in the civic.json standard (see below) to a [public JSON File on S3](https://s3-us-west-2.amazonaws.com/project-list/projects.json) with CORS enabled, allowing it to be loaded with only 
+`civic-json-worker` will also output data in the civic.json standard (see below) to a [public JSON File on S3](https://s3-us-west-2.amazonaws.com/project-list/projects.json) with CORS enabled, allowing it to be loaded with only 
 an Ajax call.
 
 This way, it can be used for any project listing site ([for a good example, see Chicago's](http://opengovhacknight.org/projects.html).)
@@ -111,7 +110,7 @@ Run this Python command to create a fresh database schema:
 
 Besides that, there are a few environmental variables that you'll need to set:
 
-* `DATABASE_URL=[db connection string]` — On Heroku with Postgres, this will be set for you. When testing locally, “sqlite:///data.db” is a great way to skip Postgres installation.
+* `DATABASE_URL=[db connection string]` — On Heroku with Postgres, this will be set for you. My local example is `postgres://hackyourcity@localhost/civicjsonworker` When testing locally, “sqlite:///data.db” is a great way to skip Postgres installation.
 * `FLASK_KEY=[whatever you want]` — This is a string that you'll check to make sure that only trusted people are deleting things
 * `GITHUB_TOKEN=[Github API token]` — Read about setting that up here: http://developer.github.com/v3/oauth/
 * `S3_BUCKET=[Name of the bucket]` — This is the bucket where you'll store the JSON files
