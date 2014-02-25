@@ -84,6 +84,19 @@ def update_project_info(project_detail):
             raise IOError('We done got throttled')
 
         github_project_info = got.json()
+        github_extras = {}
+        for field in ('contributors_url', 'created_at', 'forks_count', 'homepage',
+                      'html_url', 'id', 'language', 'open_issues', 'pushed_at',
+                      'updated_at', 'watchers_count','name', 'description'
+                     ):
+            github_extras[field] = github_project_info[field]
+
+        github_extras['owner'] = dict()
+
+        for field in ('avatar_url', 'html_url', 'login', 'type'):
+            github_extras['owner'][field] = github_project_info['owner'][field]
+
+        project_detail['github_extras'] = github_extras
         
         if 'name' not in project_detail or not project_detail['name']:
             project_detail['name'] = github_project_info['name']
@@ -93,92 +106,128 @@ def update_project_info(project_detail):
         
         if 'link_url' not in project_detail or not project_detail['link_url']:
             project_detail['link_url'] = github_project_info['homepage']
+
+        #
+        # Populate project contributors from github[contributors_url]
+        #
+        project_detail['github_extras']['contributors'] = []
+        got = get_github_api(github_project_info['contributors_url'])
         
-        project_detail['github_extras'] = unicode(github_project_info)
-
-def reformat_project_info(input):
-    ''' Return a clone of the project hash, formatted for use by opengovhacknight.org.
-    
-        The representation here is specifically expected to be used on this page:
-        http://opengovhacknight.org/projects.html
-    '''
-    output = dict()
-    
-    for field in ('name', 'description'):
-        output[field] = input[field]
-    
-    if 'github_extras' in input:
-        try:
-            info = collect_github_project_info(input)
-        except:
-            pass
-        else:
-            output.update(info)
-    
-    return output
-
-def collect_github_project_info(input):
-    ''' Collect Github project info, formatted for use by opengovhacknight.org.
-    
-        The representation here is specifically expected to be used on this page:
-        http://opengovhacknight.org/projects.html
-    '''
-    output = dict()
-    github = input['github_extras']
-
-    #
-    # Populate core Github fields.
-    #
-    for field in (
-            'contributors_url', 'created_at', 'forks_count', 'homepage',
-            'html_url', 'id', 'language', 'open_issues', 'pushed_at',
-            'updated_at', 'watchers_count'
-            ):
-        output[field] = github[field]
-
-    output['owner'] = dict()
-
-    for field in ('avatar_url', 'html_url', 'login', 'type'):
-        output['owner'][field] = github['owner'][field]
-    
-    #
-    # Populate project contributors from github[contributors_url]
-    #
-    output['contributors'] = []
-    got = get_github_api(github['contributors_url'])
-    
-    for contributor in got.json():
-        # we don't want people without email addresses?
-        if contributor['login'] == 'invalid-email-address':
-            break
-    
-        output['contributors'].append(dict())
+        for contributor in got.json():
+            # we don't want people without email addresses?
+            if contributor['login'] == 'invalid-email-address':
+                break
         
-        for field in ('login', 'url', 'avatar_url', 'html_url', 'contributions'):
-            output['contributors'][-1][field] = contributor[field]
+            project_detail['github_extras']['contributors'].append(dict())
+            
+            for field in ('login', 'url', 'avatar_url', 'html_url', 'contributions'):
+                project_detail['github_extras']['contributors'][-1][field] = contributor[field]
+            
+            # flag the owner with a boolean value
+            project_detail['github_extras']['contributors'][-1]['owner'] \
+                = bool(contributor['login'] == project_detail['github_extras']['owner']['login'])
         
-        # flag the owner with a boolean value
-        output['contributors'][-1]['owner'] \
-            = bool(contributor['login'] == output['owner']['login'])
+        #
+        # Populate project participation from github[url] + "/stats/participation"
+        #
+        got = get_github_api(github_project_info['url'] + '/stats/participation')
+        project_detail['github_extras']['participation'] = got.json()['all']
+        
+        #
+        # Populate project needs from github[issues_url] (remove "{/number}")
+        #
+        project_detail['github_extras']['project_needs'] = []
+        url = github_project_info['issues_url'].replace('{/number}', '')
+        got = get(url, auth=github_auth, params=dict(labels='project-needs'))
+        
+        for issue in got.json():
+            project_need = dict(title=issue['title'], issue_url=issue['html_url'])
+            project_detail['github_extras']['project_needs'].append(project_need)
+
+
+# def reformat_project_info(input):
+#     ''' Return a clone of the project hash, formatted for use by opengovhacknight.org.
     
-    #
-    # Populate project participation from github[url] + "/stats/participation"
-    #
-    got = get_github_api(github['url'] + '/stats/participation')
-    output['participation'] = got.json()['all']
+#         The representation here is specifically expected to be used on this page:
+#         http://opengovhacknight.org/projects.html
+#     '''
+#     output = dict()
     
-    #
-    # Populate project needs from github[issues_url] (remove "{/number}")
-    #
-    output['project_needs'] = []
-    url = github['issues_url'].replace('{/number}', '')
-    got = get(url, auth=github_auth, params=dict(labels='project-needs'))
+#     for field in ('name', 'description'):
+#         output[field] = input[field]
     
-    for issue in got.json():
-        project_need = dict(title=issue['title'], issue_url=issue['html_url'])
-        output['project_needs'].append(project_need)
+#     if 'github_extras' in input:
+#         try:
+#             info = collect_github_project_info(input)
+#         except:
+#             pass
+#         else:
+#             output.update(info)
     
-    return output
+#     return output
+
+# def collect_github_project_info(input):
+#     ''' Collect Github project info, formatted for use by opengovhacknight.org.
+    
+#         The representation here is specifically expected to be used on this page:
+#         http://opengovhacknight.org/projects.html
+#     '''
+#     output = dict()
+#     github = input['github_extras']
+
+#     #
+#     # Populate core Github fields.
+#     #
+#     for field in (
+#             'contributors_url', 'created_at', 'forks_count', 'homepage',
+#             'html_url', 'id', 'language', 'open_issues', 'pushed_at',
+#             'updated_at', 'watchers_count'
+#             ):
+#         output[field] = github[field]
+
+#     output['owner'] = dict()
+
+#     for field in ('avatar_url', 'html_url', 'login', 'type'):
+#         output['owner'][field] = github['owner'][field]
+    
+#     #
+#     # Populate project contributors from github[contributors_url]
+#     #
+#     output['contributors'] = []
+#     got = get_github_api(github['contributors_url'])
+    
+#     for contributor in got.json():
+#         # we don't want people without email addresses?
+#         if contributor['login'] == 'invalid-email-address':
+#             break
+    
+#         output['contributors'].append(dict())
+        
+#         for field in ('login', 'url', 'avatar_url', 'html_url', 'contributions'):
+#             output['contributors'][-1][field] = contributor[field]
+        
+#         # flag the owner with a boolean value
+#         output['contributors'][-1]['owner'] \
+#             = bool(contributor['login'] == output['owner']['login'])
+    
+#     #
+#     # Populate project participation from github[url] + "/stats/participation"
+#     #
+#     got = get_github_api(github['url'] + '/stats/participation')
+#     output['participation'] = got.json()['all']
+    
+#     #
+#     # Populate project needs from github[issues_url] (remove "{/number}")
+#     #
+#     output['project_needs'] = []
+#     url = github['issues_url'].replace('{/number}', '')
+#     got = get(url, auth=github_auth, params=dict(labels='project-needs'))
+    
+#     for issue in got.json():
+#         project_need = dict(title=issue['title'], issue_url=issue['html_url'])
+#         output['project_needs'].append(project_need)
+    
+#     return output
 
 def upload_json_file(json_data, object_name):
     ''' Upload a named file to S3 BUCKET, return nothing.
@@ -200,9 +249,8 @@ def count_people_totals(all_project_details):
         Request additional data from Github API for each person.
     '''
     users, contributors = [], []
-
     for project_details in all_project_details:
-        contributors.extend(project_details['contributors'])
+        contributors.extend(project_details['github_extras']['contributors'])
     
     #
     # Sort by login; there will be duplicates!
@@ -257,7 +305,7 @@ if __name__ == "__main__":
             project = Project(**project_details)
             db.session.add(project)
             db.session.commit()
-            # all_project_details.append(reformat_project_info(project_details))
+            all_project_details.append(project_details)
             # print dumps(project, indent=2)
 
 
