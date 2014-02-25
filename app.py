@@ -8,7 +8,8 @@ from functools import update_wrapper
 import json, os, requests
 from flask.ext.heroku import Heroku
 from flask.ext.sqlalchemy import SQLAlchemy
-from sqlalchemy.dialects.postgresql import JSON
+from sqlalchemy.ext.mutable import Mutable
+from sqlalchemy import types
 import flask.ext.restless
 
 
@@ -39,6 +40,25 @@ app.after_request(add_cors_header)
 # Models
 # -------------------
 
+class JsonType(Mutable, types.TypeDecorator):
+    ''' JSON wrapper type for TEXT database storage.
+    
+        References:
+        http://stackoverflow.com/questions/4038314/sqlalchemy-json-as-blob-text
+        http://docs.sqlalchemy.org/en/rel_0_9/orm/extensions/mutable.html
+    '''
+    impl = types.Unicode
+
+    def process_bind_param(self, value, engine):
+        return unicode(json.dumps(value))
+
+    def process_result_value(self, value, engine):
+        if value:
+            return json.loads(value)
+        else:
+            # default can also be a list
+            return {}
+
 class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Unicode())
@@ -47,7 +67,7 @@ class Project(db.Model):
     description = db.Column(db.Unicode())
     type = db.Column(db.Unicode())
     categories = db.Column(db.Unicode())
-    github_details = db.Column(JSON)
+    github_details = db.Column(JsonType())
     brigade = db.Column(db.Unicode)
     keep = db.Column(db.Boolean())
     
