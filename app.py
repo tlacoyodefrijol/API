@@ -47,19 +47,19 @@ class Project(db.Model):
     description = db.Column(db.Unicode())
     type = db.Column(db.Unicode())
     categories = db.Column(db.Unicode())
-    github = db.Column(JSON)
+    github_details = db.Column(JSON)
     brigade = db.Column(db.Unicode)
     keep = db.Column(db.Boolean())
     
     def __init__(self, name, code_url=None, link_url=None,
-                 description=None, type=None, categories=None, github=None, brigade=None, keep=None):
+                 description=None, type=None, categories=None, github_details=None, brigade=None, keep=None):
         self.name = name
         self.code_url = code_url
         self.link_url = link_url
         self.description = description
         self.type = type
         self.categories = categories
-        self.github = github
+        self.github_details = github_details
         self.brigade = brigade
         self.keep = True
 
