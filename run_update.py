@@ -2,9 +2,6 @@ import os, sys
 from urlparse import urlparse
 from csv import DictReader, Sniffer
 from StringIO import StringIO
-from operator import itemgetter
-from itertools import groupby
-from json import dumps
 from requests import get
 
 from app import db, Project
@@ -45,9 +42,11 @@ def get_projects(brigade, projects_list_url):
     print 'Asking for', projects_list_url
     got = get(projects_list_url)
 
+    # If projects_list_url is a json file
     try:
         projects = [dict(brigade=brigade, code_url=item) for item in got.json()]
 
+    # If projects_list_url is a type of csv
     except ValueError:
         data = got.text.splitlines()
         dialect = Sniffer().sniff(data[0])
@@ -72,6 +71,7 @@ def update_project_info(project):
     
     _, host, path, _, _, _ = urlparse(project['code_url'])
     
+    # Get the Github attributes
     if host == 'github.com':
         repo_url = 'https://api.github.com/repos' + path
         
@@ -133,13 +133,15 @@ def update_project_info(project):
         #
         # Populate project needs from github[issues_url] (remove "{/number}")
         #
-        # project['github']['project_needs'] = []
-        # url = all_github_attributes['issues_url'].replace('{/number}', '')
-        # got = get(url, auth=github_auth, params=dict(labels='project-needs'))
+        project['github']['project_needs'] = []
+        url = all_github_attributes['issues_url'].replace('{/number}', '')
+        got = get(url, auth=github_auth, params=dict(labels='project-needs'))
         
-        # for issue in got.json():
-        #     project_need = dict(title=issue['title'], issue_url=issue['html_url'])
-        #     project['github']['project_needs'].append(project_need)
+        # Check if GitHub Issues are disabled
+        if all_github_attributes['has_issues']:
+            for issue in got.json():
+                project_need = dict(title=issue['title'], issue_url=issue['html_url'])
+                project['github']['project_needs'].append(project_need)
 
 
 if __name__ == "__main__":
@@ -147,36 +149,38 @@ if __name__ == "__main__":
     # Mark all projects for deletion at first.
     db.session.execute(db.update(Project, values={Project.keep: False}))
 
-    all_projects = []
+    # all_projects = []
     for organization in get_organizations():
-        print 'Gathering all of ' + organization['name']+ "'s projects."
 
         if not organization['projects_list_url']:
             continue
-        
+
+        print 'Gathering all of ' + organization['name']+ "'s projects."
+
         projects = get_projects(organization['name'], organization['projects_list_url'])
 
         for project in projects:
-            # Select the current project
-            filter = Project.name == project['name']
-            project_obj = db.session.query(Project).filter(filter).first()
-            
-            if not project_obj:
-                project_obj = Project(**project)
-                db.session.add(project_obj)
-                continue
-
-            # Update project details
-            for (field, value) in project.items():
-                setattr(project, field, value)
 
             # Mark this project for safe-keeping
-            project.keep = True
-            project_obj = Project(**project)
-            db.session.add(project_obj)
-    
+            project['keep'] = True
+
+            # Select the current project, filtering on name AND brigade
+            # filter = Project.name == project['name'], Project.brigade == project['brigade']
+            existing_project = db.session.query(Project).filter(Project.name == project['name'], Project.brigade == project['brigade']).first()
+
+            # If this is a new project
+            if not existing_project:
+                project = Project(**project)
+                db.session.add(project)
+                continue
+
+            # Update exisiting project details
+            for (field, value) in project.items():
+                setattr(existing_project, field, value)
+
+            # Save each project to db
+            db.session.commit()
+
     # Remove everything marked for deletion.
-    db.session.flush()
     db.session.execute(db.delete(Project).where(Project.keep == False))
     db.session.commit()
-    db.session.close()
