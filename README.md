@@ -139,6 +139,6 @@ $ python run_update.py
 
 ## Contribute
 
-Get in touch with Andrew Hyder ([ondrae])(http://github.com/ondrae) ([andrewh@codeforamerica.org](andrewh@codeforamerica.org)) from Code for America or Eric Van Zanten ([eric.vanzanten@gmail.com](eric.vanzanten@gmail.com)) from Open City.
+Get in touch with Andrew Hyder ([ondrae](http://github.com/ondrae)) ([andrewh@codeforamerica.org](andrewh@codeforamerica.org)) from Code for America or Eric Van Zanten ([eric.vanzanten@gmail.com](eric.vanzanten@gmail.com)) from Open City.
 
 The issue tracker is actively watched and pull requests are welcome!
