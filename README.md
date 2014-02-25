@@ -31,6 +31,11 @@ Each organization will be defined here by:
 
 `name, url, events_url, rss, projects_list_url`
 
+### Events List
+Coming Soon!
+
+### RSS
+Coming Soon!
 
 ### Projects List
 
@@ -70,6 +75,8 @@ Code for America will maintain a restful API of all of the Brigades' (CfA's volu
     total_pages: 1
 }
 ```
+
+This API is built with the [Flask-Restless](http://flask-restless.readthedocs.org/en/latest/) plugin. Refer to its documentation for specifics.
 
 #### TODO: civic.json files
 
@@ -132,6 +139,6 @@ $ python run_update.py
 
 ## Contribute
 
-Get in touch with Andrew Hyder ([andrewh@codeforamerica.org](andrewh@codeforamerica.org)) from Code for America or Eric Van Zanten ([eric.vanzanten@gmail.com](eric.vanzanten@gmail.com)) from Open City.
+Get in touch with Andrew Hyder ([ondrae])(http://github.com/ondrae) ([andrewh@codeforamerica.org](andrewh@codeforamerica.org)) from Code for America or Eric Van Zanten ([eric.vanzanten@gmail.com](eric.vanzanten@gmail.com)) from Open City.
 
 The issue tracker is actively watched and pull requests are welcome!
