@@ -136,8 +136,7 @@ def update_project_info(project):
         try:
             project['github_details']['participation'] = got.json()['all']
         except:
-            blank_participation = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-            project['github_details']['participation'] = blank
+            project['github_details']['participation'] = [0] * 50
         
         #
         # Populate project needs from github_details[issues_url] (remove "{/number}")
