@@ -40,7 +40,8 @@ app.after_request(add_cors_header)
 # -------------------
 
 class Project(db.Model):
-    name = db.Column(db.Unicode(), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Unicode())
     code_url = db.Column(db.Unicode())
     link_url = db.Column(db.Unicode())
     description = db.Column(db.Unicode())
@@ -68,7 +69,7 @@ class Project(db.Model):
 # -------------------
 
 manager = flask.ext.restless.APIManager(app, flask_sqlalchemy_db=db)
-exclude_columns = ['keep']
+exclude_columns = ['id','keep']
 manager.create_api(Project, methods=['GET'], exclude_columns=exclude_columns, collection_name='projects', max_results_per_page=-1)
 
 
