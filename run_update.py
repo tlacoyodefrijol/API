@@ -1,5 +1,4 @@
-import os
-import sys
+import os, sys
 from urlparse import urlparse
 from csv import DictReader, Sniffer
 from StringIO import StringIO
@@ -145,11 +144,10 @@ def update_project_info(project):
 
 if __name__ == "__main__":
 
-    db.drop_all()
-    db.create_all()
+    # Mark all projects for deletion at first.
+    db.session.execute(db.update(Project, values={Project.keep: False}))
 
     all_projects = []
-
     for organization in get_organizations():
         print 'Gathering all of ' + organization['name']+ "'s projects."
 
@@ -159,8 +157,26 @@ if __name__ == "__main__":
         projects = get_projects(organization['name'], organization['projects_list_url'])
 
         for project in projects:
+            # Select the current project
+            filter = Project.name == project['name']
+            project_obj = db.session.query(Project).filter(filter).first()
+            
+            if not project_obj:
+                project_obj = Project(**project)
+                db.session.add(project_obj)
+                continue
+
+            # Update project details
+            for (field, value) in project.items():
+                setattr(project, field, value)
+
+            # Mark this project for safe-keeping
+            project.keep = True
             project_obj = Project(**project)
             db.session.add(project_obj)
-            db.session.commit()
-
+    
+    # Remove everything marked for deletion.
+    db.session.flush()
+    db.session.execute(db.delete(Project).where(Project.keep == False))
+    db.session.commit()
     db.session.close()

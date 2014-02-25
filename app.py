@@ -5,13 +5,7 @@
 from flask import Flask, make_response, request, current_app
 from datetime import timedelta
 from functools import update_wrapper
-import json
-import os
-import requests
-from tasks import update_project
-# from run_update import update_projects as update_pjs
-from boto.s3.connection import S3Connection
-from boto.s3.key import Key
+import json, os, requests
 from flask.ext.heroku import Heroku
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.postgresql import JSON
@@ -31,8 +25,7 @@ db = SQLAlchemy(app)
 # Settings
 # -------------------
 
-BUCKET = os.environ['S3_BUCKET']
-THE_KEY = os.environ['FLASK_KEY']
+# THE_KEY = os.environ['FLASK_KEY']
 
 def add_cors_header(response):
     response.headers['Access-Control-Allow-Origin'] = '*'
@@ -55,9 +48,10 @@ class Project(db.Model):
     categories = db.Column(db.Unicode())
     github = db.Column(JSON)
     brigade = db.Column(db.Unicode)
+    keep = db.Column(db.Boolean())
     
     def __init__(self, name, code_url=None, link_url=None,
-                 description=None, type=None, categories=None, github=None, brigade=None):
+                 description=None, type=None, categories=None, github=None, brigade=None, keep=None):
         self.name = name
         self.code_url = code_url
         self.link_url = link_url
@@ -66,6 +60,7 @@ class Project(db.Model):
         self.categories = categories
         self.github = github
         self.brigade = brigade
+        self.keep = True
 
 
 # -------------------
@@ -73,7 +68,8 @@ class Project(db.Model):
 # -------------------
 
 manager = flask.ext.restless.APIManager(app, flask_sqlalchemy_db=db)
-manager.create_api(Project, methods=['GET'], collection_name='projects', max_results_per_page=-1)
+exclude_columns = ['keep']
+manager.create_api(Project, methods=['GET'], exclude_columns=exclude_columns, collection_name='projects', max_results_per_page=-1)
 
 
 # -------------------
