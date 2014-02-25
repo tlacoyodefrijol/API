@@ -110,25 +110,34 @@ def update_project_info(project):
         project['github_details']['contributors'] = []
         got = get_github_api(all_github_attributes['contributors_url'])
         
-        for contributor in got.json():
-            # we don't want people without email addresses?
-            if contributor['login'] == 'invalid-email-address':
-                break
-        
-            project['github_details']['contributors'].append(dict())
+        # Check if there are contributors
+        try:
+            for contributor in got.json():
+                # we don't want people without email addresses?
+                if contributor['login'] == 'invalid-email-address':
+                    break
             
-            for field in ('login', 'url', 'avatar_url', 'html_url', 'contributions'):
-                project['github_details']['contributors'][-1][field] = contributor[field]
-            
-            # flag the owner with a boolean value
-            project['github_details']['contributors'][-1]['owner'] \
-                = bool(contributor['login'] == project['github_details']['owner']['login'])
-        
+                project['github_details']['contributors'].append(dict())
+                
+                for field in ('login', 'url', 'avatar_url', 'html_url', 'contributions'):
+                    project['github_details']['contributors'][-1][field] = contributor[field]
+                
+                # flag the owner with a boolean value
+                project['github_details']['contributors'][-1]['owner'] \
+                    = bool(contributor['login'] == project['github_details']['owner']['login'])
+        except:
+            pass
+
         #
         # Populate project participation from github_details[url] + "/stats/participation"
+        # Sometimes GitHub returns a blank dict instead of no participation.
         #
         got = get_github_api(all_github_attributes['url'] + '/stats/participation')
-        project['github_details']['participation'] = got.json()['all']
+        try:
+            project['github_details']['participation'] = got.json()['all']
+        except:
+            blank_participation = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+            project['github_details']['participation'] = blank
         
         #
         # Populate project needs from github_details[issues_url] (remove "{/number}")
