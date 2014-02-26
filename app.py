@@ -89,7 +89,7 @@ class Project(db.Model):
 # -------------------
 
 manager = flask.ext.restless.APIManager(app, flask_sqlalchemy_db=db)
-exclude_columns = ['id','keep']
+exclude_columns = ['keep']
 manager.create_api(Project, methods=['GET'], exclude_columns=exclude_columns, collection_name='projects', max_results_per_page=-1)
 
 
