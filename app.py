@@ -73,6 +73,7 @@ class Organization(db.Model):
     rss = db.Column(db.Unicode())
     projects_list_url = db.Column(db.Unicode())
     keep = db.Column(db.Boolean())
+    projects = db.relationship('Project', backref='organization', lazy='dynamic')
     
     def __init__(self, name=None, website=None, events_url=None,
                  rss=None, projects_list_url=None):
@@ -94,12 +95,12 @@ class Project(db.Model):
     type = db.Column(db.Unicode())
     categories = db.Column(db.Unicode())
     github_details = db.Column(JsonType())
-    organization = db.Column(db.Unicode)
+    organization_name = db.Column(db.Unicode(), db.ForeignKey('organization.name'))
     keep = db.Column(db.Boolean())
     
     def __init__(self, name, code_url=None, link_url=None,
                  description=None, type=None, categories=None,
-                 github_details=None, organization=None, keep=None):
+                 github_details=None, organization_name=None, keep=None):
         self.name = name
         self.code_url = code_url
         self.link_url = link_url
@@ -107,7 +108,7 @@ class Project(db.Model):
         self.type = type
         self.categories = categories
         self.github_details = github_details
-        self.organization = organization
+        self.organization_name = organization_name
         self.keep = True
 
 

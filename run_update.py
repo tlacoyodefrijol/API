@@ -33,18 +33,19 @@ def get_organizations():
     
     return organizations
 
-def get_projects(organization, projects_list_url):
+def get_projects(organization):
     ''' 
         Get a list of projects from CSV, TSV, or JSON.
         Convert to a dict.
         TODO: Have this work for GDocs.
     '''
-    print 'Asking for', projects_list_url
-    got = get(projects_list_url)
+    print 'Asking for', organization.projects_list_url
+    got = get(organization.projects_list_url)
 
     # If projects_list_url is a json file
     try:
-        projects = [dict(organization=organization, code_url=item) for item in got.json()]
+        projects = [dict(organization_name=organization.name, code_url=item)
+                    for item in got.json()]
 
     # If projects_list_url is a type of csv
     except ValueError:
@@ -52,7 +53,7 @@ def get_projects(organization, projects_list_url):
         dialect = Sniffer().sniff(data[0])
         projects = list(DictReader(data, dialect=dialect))
         for project in projects:
-            project['organization'] = organization
+            project['organization_name'] = organization.name
     
     map(update_project_info, projects)
     
@@ -184,7 +185,7 @@ def save_project_info(session, proj_dict):
         Return an app.Project instance.
     '''
     # Select the current project, filtering on name AND organization.
-    filter = Project.name == proj_dict['name'], Project.organization == proj_dict['organization']
+    filter = Project.name == proj_dict['name'], Project.organization_name == proj_dict['organization_name']
     existing_project = session.query(Project).filter(*filter).first()
 
     # If this is a new project, save and return it.
@@ -220,7 +221,7 @@ if __name__ == "__main__":
 
         print "Gathering all of %s's projects." % organization.name
 
-        projects = get_projects(organization.name, organization.projects_list_url)
+        projects = get_projects(organization)
 
         for proj_info in projects:
             save_project_info(db.session, proj_info)
