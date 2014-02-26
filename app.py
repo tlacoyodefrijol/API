@@ -67,8 +67,6 @@ class JsonType(Mutable, types.TypeDecorator):
 class Organization(db.Model):
     '''
     '''
-    # Table Info
-    __tablename__ = 'Organization'
     #Columns
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Unicode(), unique=True)
@@ -93,7 +91,6 @@ class Project(db.Model):
     '''
     '''
     # Table Info
-    __tablename__ = 'Project'
     __table_args__ = ( db.UniqueConstraint('name', 'organization_name'), { } )
     # Columns
     id = db.Column(db.Integer, primary_key=True)
