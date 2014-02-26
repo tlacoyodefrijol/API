@@ -33,19 +33,6 @@ def build_user(user):
         user_info['location'] = user_details.json().get('location')
     return user_info
 
-def get_people_totals(details):
-    all_users = []
-    for project in details:
-        all_users.extend(project['contributors'])
-    sorted_users = sorted(all_users, key=itemgetter('login'))
-    grouped_users = []
-    for k, g in groupby(sorted_users, key=itemgetter('login')):
-        grouped_users.append({k:list(g)})
-    user_totals = []
-    for user in grouped_users:
-        user_totals.append(build_user(user))
-    return user_totals
-
 def update_issues(project_url):
     full_name = '/'.join(urlparse(project_url).path.split('/')[1:3])
     url = '%s/repos/%s/issues' % (GITHUB, full_name)
