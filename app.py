@@ -77,46 +77,6 @@ manager.create_api(Project, methods=['GET'], exclude_columns=exclude_columns, co
 # Routes
 # -------------------
 
-# @app.route('/add-project/', methods=['POST'])
-# @crossdomain(origin="*")
-# def submit_project():
-#     project_url = request.form.get('project_url')
-#     project_details = update_project(project_url)
-#     if project_details:
-#         resp = make_response(json.dumps(project_details))
-#         resp.headers['Content-Type'] = 'application/json'
-#         return resp
-#     else:
-#         return make_response('The URL you submitted, %s, does not appear to be a valid Github repo' % project_url, 400)
-
-# @app.route('/delete-project/', methods=['POST'])
-# def delete_project():
-#     if request.form.get('the_key') == THE_KEY:
-#         project_url = request.form.get('project_url')
-#         conn = S3Connection()
-#         bucket = conn.get_bucket(BUCKET)
-#         pj_list = Key(bucket)
-#         pj_list.key = 'projects.json'
-#         project_list = json.loads(pj_list.get_contents_as_string())
-#         try:
-#             project_list.remove(project_url)
-#             pj_list.set_contents_from_string(json.dumps(project_list))
-#             pj_list.set_metadata('Content-Type', 'application/json')
-#             pj_list.set_acl('public-read')
-#             resp = make_response('Deleted %s' % project_url)
-#         except ValueError:
-#             resp = make_response('%s is not in the registry', 400)
-#         pj_list.close()
-#     else:
-#         resp = make_response("I can't do that Dave", 400)
-#     return resp
-
-# @app.route('/update-projects/', methods=['GET'])
-# def update_projects():
-#     update_pjs()
-#     resp = make_response('Executed update task')
-#     return resp
-
 @app.route("/")
 def index():
     return "HELLO WORLD"
