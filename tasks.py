@@ -33,19 +33,6 @@ def build_user(user):
         user_info['location'] = user_details.json().get('location')
     return user_info
 
-def get_org_totals(details):
-    all_orgs = []
-    for project in details:
-      all_orgs.append({'login': project['owner']['login'], 'repo': project})
-    sorted_orgs = sorted(all_orgs, key=itemgetter('login'))
-    grouped_orgs = []
-    for k,g in groupby(sorted_orgs, key=itemgetter('login')):
-        grouped_orgs.append({k:[r['repo']['owner'] for r in g]})
-    org_totals = []
-    for org in grouped_orgs:
-        org_totals.append(build_user(org))
-    return org_totals
-
 def get_people_totals(details):
     all_users = []
     for project in details:
