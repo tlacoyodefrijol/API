@@ -39,7 +39,27 @@ app.after_request(add_cors_header)
 # Models
 # -------------------
 
+class Brigade(db.Model):
+    '''
+    '''
+    name = db.Column(db.Unicode(), primary_key=True)
+    url = db.Column(db.Unicode())
+    events_url = db.Column(db.Unicode())
+    rss = db.Column(db.Unicode())
+    projects_list_url = db.Column(db.Unicode())
+    keep = db.Column(db.Boolean())
+    
+    def __init__(self, name, url, events_url, rss, projects_list_url):
+        self.name = name
+        self.url = url
+        self.events_url = events_url
+        self.rss = rss
+        self.projects_list_url = projects_list_url
+        self.keep = True
+
 class Project(db.Model):
+    '''
+    '''
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Unicode())
     code_url = db.Column(db.Unicode())
