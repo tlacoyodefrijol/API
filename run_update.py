@@ -156,11 +156,11 @@ def save_organization_info(session, org_dict):
     
         Return an app.Organization instance.
     '''
-    # Select an existing organization by name
+    # Select an existing organization by name.
     filter = Organization.name == org_dict['name']
     existing_org = session.query(Organization).filter(filter).first()
     
-    # If this is a new organization
+    # If this is a new organization, save and return it.
     if not existing_org:
         new_organization = Organization(**org_dict)
         session.add(new_organization)
@@ -169,11 +169,11 @@ def save_organization_info(session, org_dict):
     # Mark the existing organization for safekeeping
     existing_org.keep = True
 
-    # Update existing organization details
+    # Update existing organization details.
     for (field, value) in org_dict.items():
         setattr(existing_org, field, value)
     
-    # Flush existing object, to prevent a sqlalchemy.orm.exc.StaleDataError
+    # Flush existing object, to prevent a sqlalchemy.orm.exc.StaleDataError.
     session.flush()
     
     return existing_org
@@ -183,24 +183,24 @@ def save_project_info(session, proj_dict):
     
         Return an app.Project instance.
     '''
-    # Select the current project, filtering on name AND brigade
+    # Select the current project, filtering on name AND brigade.
     filter = Project.name == proj_dict['name'], Project.brigade == proj_dict['brigade']
     existing_project = session.query(Project).filter(*filter).first()
 
-    # If this is a new project
+    # If this is a new project, save and return it.
     if not existing_project:
         new_project = Project(**proj_dict)
         session.add(new_project)
         return new_project
 
-    # Mark the existing project for safekeeping
+    # Mark the existing project for safekeeping.
     existing_project.keep = True
 
     # Update existing project details
     for (field, value) in proj_dict.items():
         setattr(existing_project, field, value)
     
-    # Flush existing object, to prevent a sqlalchemy.orm.exc.StaleDataError
+    # Flush existing object, to prevent a sqlalchemy.orm.exc.StaleDataError.
     session.flush()
 
     return existing_project
@@ -213,14 +213,14 @@ if __name__ == "__main__":
 
     # Iterate over organizations and projects, saving them to db.session.
     for org_info in get_organizations():
-        save_organization_info(db.session, org_info)
+        organization = save_organization_info(db.session, org_info)
 
-        if not org_info['projects_list_url']:
+        if not organization.projects_list_url:
             continue
 
-        print "Gathering all of %(name)s's projects." % org_info
+        print "Gathering all of %s's projects." % organization.name
 
-        projects = get_projects(org_info['name'], org_info['projects_list_url'])
+        projects = get_projects(organization.name, organization.projects_list_url)
 
         for proj_info in projects:
             save_project_info(db.session, proj_info)
