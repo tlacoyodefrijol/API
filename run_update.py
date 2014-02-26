@@ -33,7 +33,7 @@ def get_organizations():
     
     return organizations
 
-def get_projects(brigade, projects_list_url):
+def get_projects(organization, projects_list_url):
     ''' 
         Get a list of projects from CSV, TSV, or JSON.
         Convert to a dict.
@@ -44,7 +44,7 @@ def get_projects(brigade, projects_list_url):
 
     # If projects_list_url is a json file
     try:
-        projects = [dict(brigade=brigade, code_url=item) for item in got.json()]
+        projects = [dict(organization=organization, code_url=item) for item in got.json()]
 
     # If projects_list_url is a type of csv
     except ValueError:
@@ -52,7 +52,7 @@ def get_projects(brigade, projects_list_url):
         dialect = Sniffer().sniff(data[0])
         projects = list(DictReader(data, dialect=dialect))
         for project in projects:
-            project['brigade'] = brigade
+            project['organization'] = organization
     
     map(update_project_info, projects)
     
@@ -183,8 +183,8 @@ def save_project_info(session, proj_dict):
     
         Return an app.Project instance.
     '''
-    # Select the current project, filtering on name AND brigade.
-    filter = Project.name == proj_dict['name'], Project.brigade == proj_dict['brigade']
+    # Select the current project, filtering on name AND organization.
+    filter = Project.name == proj_dict['name'], Project.organization == proj_dict['organization']
     existing_project = session.query(Project).filter(*filter).first()
 
     # If this is a new project, save and return it.
