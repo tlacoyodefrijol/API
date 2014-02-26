@@ -161,9 +161,11 @@ if __name__ == "__main__":
     # all_projects = []
     for org_info in get_organizations():
     
+        # Select an existing organization by name
         filter = Organization.name == org_info['name']
         existing_org = db.session.query(Organization).filter(filter).first()
         
+        # If this is a new organization
         if not existing_org:
             organization = Organization(**org_info)
             db.session.add(organization)
@@ -173,39 +175,35 @@ if __name__ == "__main__":
         
             for (field, value) in org_info.items():
                 setattr(existing_org, field, value)
-        
-        db.session.commit()
-        
-        continue
 
         if not org_info['projects_list_url']:
             continue
 
-        print 'Gathering all of ' + org_info['name']+ "'s projects."
+        print "Gathering all of %(name)s's projects." % org_info
 
         projects = get_projects(org_info['name'], org_info['projects_list_url'])
 
-        for project in projects:
+        for proj_info in projects:
 
             # Mark this project for safe-keeping
-            project['keep'] = True
+            proj_info['keep'] = True
 
             # Select the current project, filtering on name AND brigade
-            # filter = Project.name == project['name'], Project.brigade == project['brigade']
-            existing_project = db.session.query(Project).filter(Project.name == project['name'], Project.brigade == project['brigade']).first()
+            # filter = Project.name == proj_info['name'], Project.brigade == proj_info['brigade']
+            existing_project = db.session.query(Project).filter(Project.name == proj_info['name'], Project.brigade == proj_info['brigade']).first()
 
             # If this is a new project
             if not existing_project:
-                project = Project(**project)
+                project = Project(**proj_info)
                 db.session.add(project)
                 continue
 
             # Update exisiting project details
-            for (field, value) in project.items():
+            for (field, value) in proj_info.items():
                 setattr(existing_project, field, value)
 
-            # Save each project to db
-            db.session.commit()
+    # Flush objects above, to prevent a sqlalchemy.orm.exc.StaleDataError
+    db.session.flush()
 
     # Remove everything marked for deletion.
     db.session.execute(db.delete(Project).where(Project.keep == False))
