@@ -37,7 +37,7 @@ app.after_request(add_cors_header)
 
 
 # -------------------
-# Models
+# Types
 # -------------------
 
 class JsonType(Mutable, types.TypeDecorator):
@@ -58,6 +58,11 @@ class JsonType(Mutable, types.TypeDecorator):
         else:
             # default can also be a list
             return {}
+
+
+# -------------------
+# Models
+# -------------------
 
 class Organization(db.Model):
     '''
