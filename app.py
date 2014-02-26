@@ -111,8 +111,10 @@ class Project(db.Model):
 # -------------------
 
 manager = flask.ext.restless.APIManager(app, flask_sqlalchemy_db=db)
-exclude_columns = ['id','keep']
-manager.create_api(Project, methods=['GET'], exclude_columns=exclude_columns, collection_name='projects', max_results_per_page=-1)
+
+kwargs = dict(methods=['GET'], exclude_columns=['id','keep'], max_results_per_page=-1)
+manager.create_api(Organization, collection_name='organizations', **kwargs)
+manager.create_api(Project, collection_name='projects', **kwargs)
 
 
 # -------------------
