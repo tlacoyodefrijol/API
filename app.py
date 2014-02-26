@@ -99,7 +99,18 @@ manager.create_api(Project, methods=['GET'], exclude_columns=exclude_columns, co
 
 @app.route("/")
 def index():
-    return "HELLO WORLD"
+    return '''<html>
+<head>
+    <title>Civic Tech Movement API</title>
+</head>
+<body>
+    <p>Read more about me at <a href="https://github.com/codeforamerica/civic-json-worker#readme">codeforamerica/civic-json-worker</a>.</p>
+    <p>Some data:</p>
+    <ul>
+    <li><a href="api/projects">Projects</a></li>
+    </ul>
+</body>
+</html>'''
 
 if __name__ == "__main__":
     app.run(debug=True)
