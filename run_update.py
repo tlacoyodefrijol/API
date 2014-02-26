@@ -3,6 +3,7 @@ from urlparse import urlparse
 from csv import DictReader, Sniffer
 from StringIO import StringIO
 from requests import get
+import requests
 
 from app import db, Project, Organization
 
@@ -209,8 +210,7 @@ def save_project_info(session, proj_dict):
 
     return existing_project
 
-if __name__ == "__main__":
-
+def main():
     # Mark all projects for deletion at first.
     db.session.execute(db.update(Project, values={Project.keep: False}))
     db.session.execute(db.update(Organization, values={Organization.keep: False}))
@@ -233,3 +233,6 @@ if __name__ == "__main__":
     db.session.execute(db.delete(Project).where(Project.keep == False))
     db.session.execute(db.delete(Organization).where(Organization.keep == False))
     db.session.commit()
+
+if __name__ == "__main__":
+    main()
