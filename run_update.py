@@ -151,6 +151,25 @@ def update_project_info(project):
                 project_need = dict(title=issue['title'], issue_url=issue['html_url'])
                 project['github_details']['project_needs'].append(project_need)
 
+def save_organization_info(session, org_dict):
+    ''' Save a dictionary of organization info to the datastore session.
+    
+        Return nothing, but be sure to call session.flush() later.
+    '''
+    # Select an existing organization by name
+    filter = Organization.name == org_dict['name']
+    existing_org = session.query(Organization).filter(filter).first()
+    
+    # If this is a new organization
+    if not existing_org:
+        organization = Organization(**org_dict)
+        session.add(organization)
+    
+    else:
+        existing_org.keep = True
+    
+        for (field, value) in org_dict.items():
+            setattr(existing_org, field, value)
 
 if __name__ == "__main__":
 
@@ -160,21 +179,7 @@ if __name__ == "__main__":
 
     # all_projects = []
     for org_info in get_organizations():
-    
-        # Select an existing organization by name
-        filter = Organization.name == org_info['name']
-        existing_org = db.session.query(Organization).filter(filter).first()
-        
-        # If this is a new organization
-        if not existing_org:
-            organization = Organization(**org_info)
-            db.session.add(organization)
-        
-        else:
-            existing_org.keep = True
-        
-            for (field, value) in org_info.items():
-                setattr(existing_org, field, value)
+        save_organization_info(db.session, org_info)
 
         if not org_info['projects_list_url']:
             continue
