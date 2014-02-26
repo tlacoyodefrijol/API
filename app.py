@@ -37,7 +37,7 @@ app.after_request(add_cors_header)
 
 
 # -------------------
-# Models
+# Types
 # -------------------
 
 class JsonType(Mutable, types.TypeDecorator):
@@ -59,7 +59,43 @@ class JsonType(Mutable, types.TypeDecorator):
             # default can also be a list
             return {}
 
+
+# -------------------
+# Models
+# -------------------
+
+class Organization(db.Model):
+    '''
+    '''
+    # Table Info
+    __tablename__ = 'Organization'
+    #Columns
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Unicode(), unique=True)
+    website = db.Column(db.Unicode())
+    events_url = db.Column(db.Unicode())
+    rss = db.Column(db.Unicode())
+    projects_list_url = db.Column(db.Unicode())
+    keep = db.Column(db.Boolean())
+    # Relationships
+    projects = db.relationship('Project', backref='organization', lazy='dynamic')
+    
+    def __init__(self, name=None, website=None, events_url=None,
+                 rss=None, projects_list_url=None):
+        self.name = name
+        self.website = website
+        self.events_url = events_url
+        self.rss = rss
+        self.projects_list_url = projects_list_url
+        self.keep = True
+
 class Project(db.Model):
+    '''
+    '''
+    # Table Info
+    __tablename__ = 'Project'
+    __table_args__ = ( db.UniqueConstraint('name', 'organization_name'), { } )
+    # Columns
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Unicode())
     code_url = db.Column(db.Unicode())
@@ -68,11 +104,12 @@ class Project(db.Model):
     type = db.Column(db.Unicode())
     categories = db.Column(db.Unicode())
     github_details = db.Column(JsonType())
-    brigade = db.Column(db.Unicode)
+    organization_name = db.Column(db.Unicode(), db.ForeignKey('organization.name'))
     keep = db.Column(db.Boolean())
     
     def __init__(self, name, code_url=None, link_url=None,
-                 description=None, type=None, categories=None, github_details=None, brigade=None, keep=None):
+                 description=None, type=None, categories=None,
+                 github_details=None, organization_name=None, keep=None):
         self.name = name
         self.code_url = code_url
         self.link_url = link_url
@@ -80,7 +117,7 @@ class Project(db.Model):
         self.type = type
         self.categories = categories
         self.github_details = github_details
-        self.brigade = brigade
+        self.organization_name = organization_name
         self.keep = True
 
 
@@ -89,9 +126,9 @@ class Project(db.Model):
 # -------------------
 
 manager = flask.ext.restless.APIManager(app, flask_sqlalchemy_db=db)
-exclude_columns = ['keep']
-manager.create_api(Project, methods=['GET'], exclude_columns=exclude_columns, collection_name='projects', max_results_per_page=-1)
-
+kwargs = dict(methods=['GET'], exclude_columns=['keep'], max_results_per_page=-1)
+manager.create_api(Organization, collection_name='organizations', **kwargs)
+manager.create_api(Project, collection_name='projects', **kwargs)
 
 # -------------------
 # Routes
