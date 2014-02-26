@@ -4,7 +4,7 @@ from csv import DictReader, Sniffer
 from StringIO import StringIO
 from requests import get
 
-from app import db, Project
+from app import db, Project, Organization
 
 gdocs_url = 'https://docs.google.com/a/codeforamerica.org/spreadsheet/ccc?key=0ArHmv-6U1drqdGNCLWV5Q0d5YmllUzE5WGlUY3hhT2c&output=csv'
 
@@ -157,16 +157,34 @@ if __name__ == "__main__":
 
     # Mark all projects for deletion at first.
     db.session.execute(db.update(Project, values={Project.keep: False}))
+    db.session.execute(db.update(Organization, values={Organization.keep: False}))
 
     # all_projects = []
-    for organization in get_organizations():
+    for org_info in get_organizations():
+    
+        filter = Organization.name == org_info['name']
+        existing_org = db.session.query(Organization).filter(filter).first()
+        
+        if not existing_org:
+            organization = Organization(**org_info)
+            db.session.add(organization)
+        
+        else:
+            existing_org.keep = True
+        
+            for (field, value) in org_info.items():
+                setattr(existing_org, field, value)
+        
+        db.session.commit()
+        
+        continue
 
-        if not organization['projects_list_url']:
+        if not org_info['projects_list_url']:
             continue
 
-        print 'Gathering all of ' + organization['name']+ "'s projects."
+        print 'Gathering all of ' + org_info['name']+ "'s projects."
 
-        projects = get_projects(organization['name'], organization['projects_list_url'])
+        projects = get_projects(org_info['name'], org_info['projects_list_url'])
 
         for project in projects:
 
@@ -192,4 +210,5 @@ if __name__ == "__main__":
 
     # Remove everything marked for deletion.
     db.session.execute(db.delete(Project).where(Project.keep == False))
+    db.session.execute(db.delete(Organization).where(Organization.keep == False))
     db.session.commit()
