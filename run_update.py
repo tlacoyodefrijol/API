@@ -171,6 +171,27 @@ def save_organization_info(session, org_dict):
         for (field, value) in org_dict.items():
             setattr(existing_org, field, value)
 
+def save_project_info(session, proj_dict):
+    ''' Save a dictionary of project info to the datastore session.
+    
+        Return nothing, but be sure to call session.flush() later.
+    '''
+    # Select the current project, filtering on name AND brigade
+    # filter = Project.name == proj_dict['name'], Project.brigade == proj_dict['brigade']
+    existing_project = db.session.query(Project).filter(Project.name == proj_dict['name'], Project.brigade == proj_dict['brigade']).first()
+
+    # If this is a new project
+    if not existing_project:
+        project = Project(**proj_dict)
+        db.session.add(project)
+
+    else:
+        existing_project.keep = True
+    
+        # Update exisiting project details
+        for (field, value) in proj_dict.items():
+            setattr(existing_project, field, value)
+
 if __name__ == "__main__":
 
     # Mark all projects for deletion at first.
@@ -189,23 +210,7 @@ if __name__ == "__main__":
         projects = get_projects(org_info['name'], org_info['projects_list_url'])
 
         for proj_info in projects:
-
-            # Mark this project for safe-keeping
-            proj_info['keep'] = True
-
-            # Select the current project, filtering on name AND brigade
-            # filter = Project.name == proj_info['name'], Project.brigade == proj_info['brigade']
-            existing_project = db.session.query(Project).filter(Project.name == proj_info['name'], Project.brigade == proj_info['brigade']).first()
-
-            # If this is a new project
-            if not existing_project:
-                project = Project(**proj_info)
-                db.session.add(project)
-                continue
-
-            # Update exisiting project details
-            for (field, value) in proj_info.items():
-                setattr(existing_project, field, value)
+            save_project_info(db.session, proj_info)
 
     # Flush objects above, to prevent a sqlalchemy.orm.exc.StaleDataError
     db.session.flush()
