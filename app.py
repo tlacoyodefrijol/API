@@ -90,8 +90,6 @@ class Organization(db.Model):
 class Project(db.Model):
     '''
     '''
-    # Table Info
-    __table_args__ = ( db.UniqueConstraint('name', 'organization_name'), { } )
     # Columns
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Unicode())
