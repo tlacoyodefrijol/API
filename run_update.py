@@ -75,10 +75,13 @@ def update_project_info(project):
     # Get the Github attributes
     if host == 'github.com':
         repo_url = 'https://api.github.com/repos' + path
-        
+
         got = get_github_api(repo_url)
         
         if got.status_code in range(400, 499):
+            if got.status_code == 404:
+                print repo_url + ' doesn\'t exist.'
+                return project
             raise IOError('We done got throttled')
 
         all_github_attributes = got.json()
