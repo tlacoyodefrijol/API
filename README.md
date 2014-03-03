@@ -21,33 +21,27 @@ The goal of this project is to minimize the work needed from civic hacking organ
 
 Below is the current **draft** workflow: please [contribute your thoughts on this by adding an issue!](https://github.com/codeforamerica/civic-json-worker/issues)
 
-### Organizations List
+### How to add your Brigade to the API
 
-The current approach is for there to be "One True List" of participating civic hacking organizations (such as Code for America Brigades) stored in a Google Spreadsheet.
+##### Brigade Information
+The new site will be powered by this [Brigade Information](https://docs.google.com/spreadsheet/ccc?key=0ArHmv-6U1drqdGNCLWV5Q0d5YmllUzE5WGlUY3hhT2c&usp=sharing) Google Spreadsheet. This way you don't need yet another account for our Brigade site. Just keep your Brigade's info up to date and you're good. The columns are:
+* Name
+* Website
+* Events Url - Point us to where ever you schedule your events. Meetup, Google Calendar, whatever. The /events endpoint is still under construction.
+* RSS - If you have a blog, point us to it. The /stories endpoint is still under construction.
+* Projects List Url - Keep a list of projects urls somewhere online we can read it.
 
-An organization will contribute their information by adding a row to the GSpreadsheet.
 
-Each organization will be defined here by:
+##### Projects List
+This projects list you point us to will need the following columns:
+* name - filled in by GitHub if left blank
+* description - filled in by GitHub if left blank
+* link_url - filled in by GitHub if left blank
+* code_url - Only GitHub links work for now. Others will be added as needed later.
+* type - Is this project an app, an open data policy, a webservice?
+* categories - Write your own separated by commas. "Education, digital literacy"
 
-`name, url, events_url, rss, projects_list_url`
-
-### Events List
-Coming Soon!
-
-### RSS
-Coming Soon!
-
-### Projects List
-
-The `projects_list_url` provided by an organization in the above doc will point to a file with a list of projects the org is working on. A variety of common formats will be supported (Google Spreadsheet, JSON, CSV/TSV.)
-
-Each project in `projects_list` will be defined by:
-
-`name, description, live_url, code_url, type, categories`
-
-#### Auto-Populating Data from GitHub URLs
-
-If `code_url` points to a GitHub repository, and `name` and `description` are blank, these two fields will be auto-populated by hitting the GitHub API.
+That projects list url can be any flavor of csv or a json file. The easiest way is to make a Google Spreadsheet like [my example](https://docs.google.com/spreadsheet/ccc?key=0ArHmv-6U1drqdDBzNXpSZkVzRDJUQnpOS0RJM0FDWGc&usp=sharing) and then ```File > Publish it to the web```. Grab the published link and change ```?output=html to ?output=csv```. Put that in the Brigade Information sheet and you're done.
 
 
 ### Output Data
