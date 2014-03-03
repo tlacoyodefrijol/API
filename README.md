@@ -48,7 +48,9 @@ That projects list url can be any flavor of csv or a json file. The easiest way 
 
 #### API
 
-Code for America will maintain a restful API of all of the Brigades' (CfA's volunteer civic hacking groups) activities. This API is under heavy development, with current focus on the /projects endpoint. Current output is formatted like:
+Code for America will maintain a restful API of all of the Brigades' (CfA's volunteer civic hacking groups) activities. This API is under heavy development, with current focus on the /projects endpoint. There is a great discussion of what attributes should be included here on the BetaNYC [civic.json thread](https://github.com/BetaNYC/civic.json/issues/6). 
+
+Current output is formatted like:
 
 ```Javascript
 {
