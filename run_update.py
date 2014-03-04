@@ -5,7 +5,7 @@ from StringIO import StringIO
 from requests import get
 import requests
 
-from app import db, Project, Organization
+from app import db, app, Project, Organization
 
 gdocs_url = 'https://docs.google.com/a/codeforamerica.org/spreadsheet/ccc?key=0ArHmv-6U1drqdGNCLWV5Q0d5YmllUzE5WGlUY3hhT2c&output=csv'
 
@@ -18,7 +18,7 @@ def get_github_api(url):
     '''
         Make authenticated GitHub requests.
     '''
-    print 'Asking Github for', url
+    app.logger.info('Asking Github for', url)
     
     got = get(url, auth=github_auth)
     
@@ -40,7 +40,7 @@ def get_projects(organization):
         Convert to a dict.
         TODO: Have this work for GDocs.
     '''
-    print 'Asking for', organization.projects_list_url
+    app.logger.info('Asking for', organization.projects_list_url)
     got = get(organization.projects_list_url)
 
     # If projects_list_url is a json file
@@ -81,7 +81,7 @@ def update_project_info(project):
         
         if got.status_code in range(400, 499):
             if got.status_code == 404:
-                print repo_url + ' doesn\'t exist.'
+                app.logger.error(repo_url + ' doesn\'t exist.')
                 return project
             raise IOError('We done got throttled')
 
@@ -222,7 +222,7 @@ def main():
         if not organization.projects_list_url:
             continue
 
-        print "Gathering all of %s's projects." % organization.name
+        app.logger.info("Gathering all of %s's projects." % organization.name)
 
         projects = get_projects(organization)
 
