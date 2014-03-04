@@ -8,3 +8,4 @@ boto==2.25.0
 psycopg2==2.5.2
 httmock==1.2
 factory_boy==2.4.0
+mock==1.0.1

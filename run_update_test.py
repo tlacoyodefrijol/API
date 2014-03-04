@@ -2,6 +2,7 @@ import os
 import unittest
 import tempfile
 from httmock import all_requests, response, HTTMock
+from mock import MagicMock
 import requests
 
 class FakeResponse:
@@ -47,7 +48,7 @@ class RunUpdateTestCase(unittest.TestCase):
         else:
             raise Exception('Asked for unknown URL ' + url.geturl())
 
-    def testImport(self):
+    def test_import(self):
         ''' Add one sample organization with two projects, verify that it comes back.
         '''
         with HTTMock(self.response_content):
@@ -69,25 +70,25 @@ class RunUpdateTestCase(unittest.TestCase):
         # check for the one organization
         filter = Organization.name == 'Code for America'
         organization = self.db.session.query(Organization).filter(filter).first()
-        assert organization is not None
-        assert organization.name == 'Code for America'
+        self.assertIsNotNone(organization)
+        self.assertEqual(organization.name,'Code for America')
 
         # check for the one project
         filter = Project.name == 'SouthBendVoices'
         project = self.db.session.query(Project).filter(filter).first()
-        assert project is not None
-        assert project.name == 'SouthBendVoices'
+        self.assertIsNotNone(project)
+        self.assertEqual(project.name,'SouthBendVoices')
 
         # check for the other project
         filter = Project.name == 'cityvoice'
         project = self.db.session.query(Project).filter(filter).first()
-        assert project is not None
-        assert project.name == 'cityvoice'
+        self.assertIsNotNone(project)
+        self.assertEqual(project.name,'cityvoice')
 
-    def testMainWithGoodNewData(self):
-        ''' Get organization data that is not the same set as existing, saved organization data.
-            Ensure the new organization and its project data is saved and the out of data organization
-            and its project data is deleted.
+    def test_main_with_good_new_data(self):
+        ''' When current organization data is not the same set as existing, saved organization data,
+            the new organization and its project data should be saved and the out of data organization
+            and its project data should be deleted.
         '''
         from factories import OrganizationFactory, ProjectFactory
 
@@ -96,9 +97,7 @@ class RunUpdateTestCase(unittest.TestCase):
         self.db.session.flush()
 
         with HTTMock(self.response_content):
-
             import run_update
-
             run_update.main()
 
         self.db.session.flush()
@@ -108,24 +107,68 @@ class RunUpdateTestCase(unittest.TestCase):
         # make sure old org is no longer there
         filter = Organization.name == 'Old Organization'
         organization = self.db.session.query(Organization).filter(filter).first()
-        assert organization is None
+        self.assertIsNone(organization)
 
         # make sure old project is no longer there
         filter = Project.name == 'Old Project'
         project = self.db.session.query(Project).filter(filter).first()
-        assert project is None
+        self.assertIsNone(project)
 
         # check for the one organization
         filter = Organization.name == 'Code for America'
         organization = self.db.session.query(Organization).filter(filter).first()
-        assert organization is not None
-        assert organization.name == 'Code for America'
+        self.assertIsNotNone(organization)
+        self.assertEqual(organization.name,'Code for America')
 
         # check for the one project
         filter = Project.name == 'SouthBendVoices'
         project = self.db.session.query(Project).filter(filter).first()
-        assert project is not None
-        assert project.name == 'SouthBendVoices'
+        self.assertIsNotNone(project)
+        self.assertEqual(project.name,'SouthBendVoices')
+
+    def test_main_with_missing_projects(self):
+        ''' When github returns a 404 when trying to retrieve project data,
+            an error message should be logged.
+        '''
+        def response_content(url, request):
+            import run_update
+
+            if url.geturl() == 'http://example.com/cfa-projects.csv':
+                return response(200, '''name,description,link_url,code_url,type,categories\n,,,https://github.com/codeforamerica/cityvoice,web service,"community engagement, housing"\nSouthBendVoices,,,https://github.com/codeforamerica/cityvoice,,''')
+
+            elif url.geturl() == run_update.gdocs_url:
+                return response(200, '''name,website,events_url,rss,projects_list_url\nCode for America,http://codeforamerica.org,http://codeforamerica.org/events,http://www.codeforamerica.org/blog/,http://example.com/cfa-projects.csv''')
+
+            elif url.geturl() == 'https://api.github.com/repos/codeforamerica/cityvoice':
+                return response(404, '''Not Found!''')
+
+        from app import app
+        app.logger.error = MagicMock()
+
+        with HTTMock(response_content):
+            import run_update
+            run_update.main()
+
+        app.logger.error.assert_called_with('https://api.github.com/repos/codeforamerica/cityvoice doesn\'t exist.')
+
+    def test_main_with_github_errors(self):
+        ''' When github returns a non-404 error code, an IOError should be raised.
+        '''
+        def response_content(url, request):
+            import run_update
+
+            if url.geturl() == 'http://example.com/cfa-projects.csv':
+                return response(200, '''name,description,link_url,code_url,type,categories\n,,,https://github.com/codeforamerica/cityvoice,web service,"community engagement, housing"\nSouthBendVoices,,,https://github.com/codeforamerica/cityvoice,,''')
+
+            elif url.geturl() == run_update.gdocs_url:
+                return response(200, '''name,website,events_url,rss,projects_list_url\nCode for America,http://codeforamerica.org,http://codeforamerica.org/events,http://www.codeforamerica.org/blog/,http://example.com/cfa-projects.csv''')
+
+            elif url.geturl() == 'https://api.github.com/repos/codeforamerica/cityvoice':
+                return response(422, '''Unprocessable Entity''')
+
+        with HTTMock(response_content):
+            import run_update
+            self.assertRaises(IOError, run_update.main)
 
 if __name__ == '__main__':
     unittest.main()
