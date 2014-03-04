@@ -4,8 +4,11 @@ from csv import DictReader, Sniffer
 from StringIO import StringIO
 from requests import get
 import requests
+from feeds import extract_feed_links, get_first_working_feed_link
+import feedparser
+from urllib2 import HTTPError
 
-from app import db, app, Project, Organization
+from app import db, app, Project, Organization, Story, Event
 
 gdocs_url = 'https://docs.google.com/a/codeforamerica.org/spreadsheet/ccc?key=0ArHmv-6U1drqdGNCLWV5Q0d5YmllUzE5WGlUY3hhT2c&output=csv'
 
@@ -33,6 +36,40 @@ def get_organizations():
     organizations = list(DictReader(StringIO(got.text)))
     
     return organizations
+
+def get_stories(organization):
+    '''
+    '''
+    # If there is no given rss link, try the website url.
+    if organization.rss:
+        rss = organization.rss
+    else:
+        rss = organization.website
+    try:
+        url = get_first_working_feed_link(rss)
+    except (HTTPError, ValueError):
+        url = None
+
+    # If no blog found then give up
+    if not url:
+        return None
+
+    d = feedparser.parse(url)
+    if d.entries:
+        # Grab the two most recent stories.
+        for i in range(0,2):
+            print d.entries[i].title
+            print d.entries[i].link
+            # Search for the same story
+            filter = Story.title == d.entries[i].title
+            existing_story = db.session.query(Story).filter(filter).first()
+            if existing_story:
+                continue
+            else:
+                story_dict = dict(title=d.entries[i].title, link=d.entries[i].link, type="blog", organization_name=organization.name)
+                new_story = Story(**story_dict)
+                db.session.add(new_story)
+
 
 def get_projects(organization):
     ''' 
@@ -218,6 +255,8 @@ def main():
     # Iterate over organizations and projects, saving them to db.session.
     for org_info in get_organizations():
         organization = save_organization_info(db.session, org_info)
+
+        get_stories(organization)
 
         if not organization.projects_list_url:
             continue

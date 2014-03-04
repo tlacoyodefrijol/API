@@ -76,7 +76,9 @@ class Organization(db.Model):
     projects_list_url = db.Column(db.Unicode())
     keep = db.Column(db.Boolean())
     # Relationships
-    projects = db.relationship('Project', backref='organization', lazy='dynamic')
+    stories = db.relationship('Story', backref='organization', lazy='dynamic')
+    events = db.relationship('Event', backref='organization', lazy='dynamic')
+    projects = db.relationship('Project', backref='organization', lazy='dynamic') 
     
     def __init__(self, name=None, website=None, events_url=None,
                  rss=None, projects_list_url=None):
@@ -86,6 +88,44 @@ class Organization(db.Model):
         self.rss = rss
         self.projects_list_url = projects_list_url
         self.keep = True
+
+class Event(db.Model):
+    '''
+        Upcoming and past events from a Brigade.
+    '''
+    # Columns
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Unicode())
+    url = db.Column(db.Unicode())
+    date = db.Column(db.Unicode())
+    start = db.Column(db.Unicode())
+    end = db.Column(db.Unicode())
+    organization_name = db.Column(db.Unicode(), db.ForeignKey('organization.name'))
+
+    def __init__(self, name=None, url=None, date=None, start=None, end=None, organization_name=None):
+        self.name = name
+        self.url = url
+        self.date = date
+        self.start = start
+        self.end = end
+        self.organization_name = organization_name
+
+class Story(db.Model):
+    '''
+        Blog posts and tweets from a Brigade.
+    '''
+    # Columns
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.Unicode())
+    link = db.Column(db.Unicode())
+    type = db.Column(db.Unicode())
+    organization_name = db.Column(db.Unicode(), db.ForeignKey('organization.name'))
+
+    def __init__(self, title=None, link=None, type=None, organization_name=None):
+        self.title = title
+        self.link = link
+        self.type = type
+        self.organization_name = organization_name
 
 class Project(db.Model):
     '''
@@ -123,6 +163,8 @@ class Project(db.Model):
 manager = flask.ext.restless.APIManager(app, flask_sqlalchemy_db=db)
 kwargs = dict(methods=['GET'], exclude_columns=['keep'], max_results_per_page=-1)
 manager.create_api(Organization, collection_name='organizations', **kwargs)
+manager.create_api(Story, collection_name='stories', **kwargs)
+manager.create_api(Story, collection_name='events', **kwargs)
 manager.create_api(Project, collection_name='projects', **kwargs)
 
 # -------------------
