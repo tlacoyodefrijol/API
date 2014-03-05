@@ -1,4 +1,4 @@
-# civic json worker
+# civic-json-worker
 
 A [Flask](http://flask.pocoo.org) API generalizing [OpenCity Chicago's similar app](https://github.com/open-city/civic-json-worker) to track civic tech projects around the world. Project data is stored / output using the [civic.json](https://github.com/BetaNYC/civic.json) data standard. (Soon!)
 
@@ -19,7 +19,7 @@ Looking at [other civic tech listings](http://commons.codeforamerica.org/), proj
 
 The goal of this project is to minimize the work needed from civic hacking organizations to track their projects, and share project information with the world in a structured way.
 
-Below is the current **draft** workflow: please [contribute your thoughts on this by adding an issue!](https://github.com/codeforamerica/civicjsonworker/issues)
+Below is the current **draft** workflow: please [contribute your thoughts on this by adding an issue!](https://github.com/codeforamerica/civic-json-worker/issues)
 
 ### How to add your Brigade to the API
 
@@ -76,7 +76,7 @@ This API is built with the [Flask-Restless](http://flask-restless.readthedocs.or
 
 #### TODO: civic.json files
 
-`civicjsonworker` will also output data in the civic.json standard (see below) to a [public JSON File on S3](https://s3-us-west-2.amazonaws.com/project-list/projects.json) with CORS enabled, allowing it to be loaded with only
+`civic-json-worker` will also output data in the civic.json standard (see below) to a [public JSON File on S3](https://s3-us-west-2.amazonaws.com/project-list/projects.json) with CORS enabled, allowing it to be loaded with only 
 an Ajax call.
 
 This way, it can be used for any project listing site ([for a good example, see Chicago's](http://opengovhacknight.org/projects.html).)
@@ -87,7 +87,7 @@ This way, it can be used for any project listing site ([for a good example, see 
 
 The standard is still very much in planning phases, and we [welcome discussion](https://github.com/BetaNYC/civic.json/issues).
 
-Once we settle on v1, `civicjsonworker` will output - and potentially store - project data in this format.
+Once we settle on v1, `civic-json-worker` will output - and potentially store - project data in this format.
 
 ## Installation
 

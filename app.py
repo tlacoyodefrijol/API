@@ -136,7 +136,7 @@ def index():
     <title>Civic Tech Movement API</title>
 </head>
 <body>
-    <p>Read more about me at <a href="https://github.com/codeforamerica/civicjsonworker#readme">codeforamerica/civicjsonworker</a>.</p>
+    <p>Read more about me at <a href="https://github.com/codeforamerica/civic-json-worker#readme">codeforamerica/civic-json-worker</a>.</p>
     <p>Some data:</p>
     <ul>
     <li><a href="api/projects">Projects</a></li>
