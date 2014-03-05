@@ -7,7 +7,7 @@ NUM_WORKERS=3
 # user/group to run as
 USER=crimeweather
 GROUP=crimeweather
-cd $VENV/checkouts/civic-json-worker
+cd $VENV/checkouts/civicjsonworker
 source $VENV/bin/activate
 source /home/crimeweather/.zshenv
 test -d $LOGDIR || mkdir -p $LOGDIR
