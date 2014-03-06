@@ -3,7 +3,7 @@
 # -------------------
 
 from flask import Flask, make_response, request, current_app
-from datetime import timedelta
+from datetime import datetime, timedelta
 from functools import update_wrapper
 import json, os, requests
 from flask.ext.heroku import Heroku
@@ -42,7 +42,7 @@ app.after_request(add_cors_header)
 
 class JsonType(Mutable, types.TypeDecorator):
     ''' JSON wrapper type for TEXT database storage.
-    
+
         References:
         http://stackoverflow.com/questions/4038314/sqlalchemy-json-as-blob-text
         http://docs.sqlalchemy.org/en/rel_0_9/orm/extensions/mutable.html
@@ -79,10 +79,12 @@ class Organization(db.Model):
     latitude = db.Column(db.Float())
     longitude = db.Column(db.Float())
     keep = db.Column(db.Boolean())
+
     # Relationships
+    events = db.relationship('Event', backref='organization', lazy='dynamic')
     stories = db.relationship('Story', backref='organization', lazy='dynamic')
-    projects = db.relationship('Project', backref='organization', lazy='dynamic') 
-    
+    projects = db.relationship('Project', backref='organization', lazy='dynamic')
+
     def __init__(self, name=None, website=None, events_url=None,
                  rss=None, projects_list_url=None, type=None, city=None, latitude=None, longitude=None):
         self.name = name
@@ -127,7 +129,7 @@ class Project(db.Model):
     github_details = db.Column(JsonType())
     organization_name = db.Column(db.Unicode(), db.ForeignKey('organization.name'))
     keep = db.Column(db.Boolean())
-    
+
     def __init__(self, name, code_url=None, link_url=None,
                  description=None, type=None, categories=None,
                  github_details=None, organization_name=None, keep=None):
@@ -141,6 +143,31 @@ class Project(db.Model):
         self.organization_name = organization_name
         self.keep = True
 
+class Event(db.Model):
+    '''
+    '''
+    # Columns
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Unicode())
+    description = db.Column(db.Unicode())
+    event_url = db.Column(db.Unicode())
+    location = db.Column(db.Unicode())
+    start_time = db.Column(db.DateTime())
+    end_time = db.Column(db.DateTime())
+    organization_name = db.Column(db.Unicode(),db.ForeignKey('organization.name'))
+    keep = db.Column(db.Boolean())
+
+    def __init__(self, name, location, event_url, start_time, created_at,
+                 organization_name, end_time=None, description=None):
+        self.name = name
+        self.description = description
+        self.location = location
+        self.event_url = event_url
+        self.start_time = start_time
+        self.end_time = end_time
+        self.organization_name = organization_name
+        self.created_at = created_at
+        self.keep = True
 
 # -------------------
 # API
