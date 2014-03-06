@@ -34,7 +34,7 @@ def get_organizations():
     '''
     got = get(gdocs_url)
     organizations = list(DictReader(StringIO(got.text)))
-    
+
     return organizations
 
 def get_stories(organization):

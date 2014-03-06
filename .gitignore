@@ -1,2 +1,3 @@
 *.pyc
 .env
+venv-civic-json-worker
