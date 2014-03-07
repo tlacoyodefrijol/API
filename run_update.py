@@ -1,6 +1,8 @@
 import os, sys
 from urlparse import urlparse
 from csv import DictReader, Sniffer
+from itertools import groupby
+from operator import itemgetter
 from StringIO import StringIO
 from requests import get
 import requests
@@ -166,6 +168,49 @@ def reformat_project_info_for_chicago(all_projects):
         http://opengovhacknight.org/projects.html
     '''
     return [project['github_details'] for project in all_projects]
+
+def count_people_totals(all_projects):
+    ''' Create a list of people details based on project details.
+    
+        Request additional data from Github API for each person.
+    '''
+    users, contributors = [], []
+    for project in all_projects:
+        contributors.extend(project['contributors'])
+    
+    #
+    # Sort by login; there will be duplicates!
+    #
+    contributors.sort(key=itemgetter('login'))
+    
+    #
+    # Populate users array with groups of contributors.
+    #
+    for (_, _contributors) in groupby(contributors, key=itemgetter('login')):
+        user = dict(contributions=0, repositories=0)
+        
+        for contributor in _contributors:
+            user['contributions'] += contributor['contributions']
+            user['repositories'] += 1
+            
+            if 'login' in user:
+                continue
+
+            #
+            # Populate user hash with Github info, if it hasn't been already.
+            #
+            got = get_github_api(contributor['url'])
+            contributor = got.json()
+            
+            for field in (
+                    'login', 'avatar_url', 'html_url',
+                    'blog', 'company', 'location'
+                    ):
+                user[field] = contributor.get(field, None)
+        
+        users.append(user)
+    
+    return users
 
 def save_organization_info(session, org_dict):
     ''' Save a dictionary of organization info to the datastore session.
