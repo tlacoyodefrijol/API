@@ -166,6 +166,9 @@ def reformat_project_info_for_chicago(all_projects):
 
         The representation here is specifically expected to be used on this page:
         http://opengovhacknight.org/projects.html
+    
+        See discussion at
+        https://github.com/codeforamerica/civic-json-worker/issues/18
     '''
     return [project['github_details'] for project in all_projects]
 
@@ -173,6 +176,9 @@ def count_people_totals(all_projects):
     ''' Create a list of people details based on project details.
     
         Request additional data from Github API for each person.
+    
+        See discussion at
+        https://github.com/codeforamerica/civic-json-worker/issues/18
     '''
     users, contributors = [], []
     for project in all_projects:

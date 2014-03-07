@@ -186,7 +186,10 @@ class RunUpdateTestCase(unittest.TestCase):
             self.assertRaises(IOError, run_update.main)
 
     def test_json_files(self):
-        ''' 
+        ''' Check the structure of proposed Civic JSON data structures.
+        
+            See discussion at
+            https://github.com/codeforamerica/civic-json-worker/issues/18
         '''
         projects_detail = []
         
