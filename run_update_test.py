@@ -170,5 +170,42 @@ class RunUpdateTestCase(unittest.TestCase):
             import run_update
             self.assertRaises(IOError, run_update.main)
 
+    def test_json_files(self):
+        ''' 
+        '''
+        with HTTMock(self.response_content):
+            import run_update
+
+            # Iterate over organizations and projects, saving them to db.session.
+            for org_info in run_update.get_organizations():
+                organization = run_update.save_organization_info(self.db.session, org_info)
+
+                projects = run_update.get_projects(organization)
+                project_details = run_update.reformat_project_info_for_chicago(projects)
+        
+                #
+                # Verify correct output format for project_details.json.
+                #
+                for project in project_details:
+                    for key in ('contributors', 'contributors_url', 'created_at',
+                                'description', 'forks_count', 'homepage', 'html_url',
+                                'id', 'language', 'name', 'open_issues', 'owner',
+                                'participation', 'project_needs', 'pushed_at',
+                                'updated_at', 'watchers_count'):
+                        assert key in project
+            
+                    # project owner dict
+                    for key in ('avatar_url', 'html_url', 'login', 'type'):
+                        assert key in project['owner']
+            
+                    # project contributor list
+                    for contributor in project['contributors']:
+                        for key in ('avatar_url', 'contributions', 'html_url',
+                                    'login', 'owner', 'url'):
+                            assert key in contributor
+            
+                    # project participation history
+                    assert type(project['participation']) is list
+
 if __name__ == '__main__':
     unittest.main()

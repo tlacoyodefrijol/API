@@ -66,7 +66,10 @@ def update_project_info(project):
         Modify the project in-place and return nothing.
 
         Complete repository project details go into extras, for example
-        project details from Github can be found under "github".
+        project details from Github can be found under "github_details".
+
+        Github_details is specifically expected to be used on this page:
+        http://opengovhacknight.org/projects.html
     '''
     if 'code_url' not in project:
         return project
@@ -155,6 +158,14 @@ def update_project_info(project):
             for issue in got.json():
                 project_need = dict(title=issue['title'], issue_url=issue['html_url'])
                 project['github_details']['project_needs'].append(project_need)
+
+def reformat_project_info_for_chicago(all_projects):
+    ''' Return a clone of the project list, formatted for use by opengovhacknight.org.
+
+        The representation here is specifically expected to be used on this page:
+        http://opengovhacknight.org/projects.html
+    '''
+    return [project['github_details'] for project in all_projects]
 
 def save_organization_info(session, org_dict):
     ''' Save a dictionary of organization info to the datastore session.
