@@ -231,6 +231,7 @@ def save_organization_info(session, org_dict):
     if not existing_org:
         new_organization = Organization(**org_dict)
         session.add(new_organization)
+        # session.commit()
         return new_organization
     
     # Mark the existing organization for safekeeping
