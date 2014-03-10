@@ -10,9 +10,14 @@ from feeds import extract_feed_links, get_first_working_feed_link
 import feedparser
 from urllib2 import HTTPError
 
-from app import db, app, Project, Organization, Story, Event
+from app import db, app, Project, Organization, Story
 
+# Production
 gdocs_url = 'https://docs.google.com/a/codeforamerica.org/spreadsheet/ccc?key=0ArHmv-6U1drqdGNCLWV5Q0d5YmllUzE5WGlUY3hhT2c&output=csv'
+
+# Testing
+# gdocs_url = "https://docs.google.com/spreadsheet/pub?key=0ArHmv-6U1drqdEVkTUtZNVlYRE5ndERLLTFDb2RqQlE&output=csv"
+
 
 if 'GITHUB_TOKEN' in os.environ:
     github_auth = (os.environ['GITHUB_TOKEN'], '')
