@@ -74,6 +74,10 @@ class Organization(db.Model):
     events_url = db.Column(db.Unicode())
     rss = db.Column(db.Unicode())
     projects_list_url = db.Column(db.Unicode())
+    type = db.Column(db.Unicode())
+    city = db.Column(db.Unicode())
+    latitude = db.Column(db.Float())
+    longitude = db.Column(db.Float())
     keep = db.Column(db.Boolean())
     # Relationships
     stories = db.relationship('Story', backref='organization', lazy='dynamic')
@@ -81,12 +85,16 @@ class Organization(db.Model):
     projects = db.relationship('Project', backref='organization', lazy='dynamic') 
     
     def __init__(self, name=None, website=None, events_url=None,
-                 rss=None, projects_list_url=None):
+                 rss=None, projects_list_url=None, type=None, city=None, latitude=None, longitude=None):
         self.name = name
         self.website = website
         self.events_url = events_url
         self.rss = rss
         self.projects_list_url = projects_list_url
+        self.type = type
+        self.city = city
+        self.latitude = latitude
+        self.longitude = longitude
         self.keep = True
 
 class Event(db.Model):

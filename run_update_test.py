@@ -45,6 +45,21 @@ class RunUpdateTestCase(unittest.TestCase):
         elif url.geturl() == 'https://api.github.com/repos/codeforamerica/cityvoice/issues?labels=project-needs':
             return response(200, '''[ ]''')
 
+        elif url.geturl() == 'https://api.github.com/users/daguar':
+            return response(200, '''{ "login": "daguar", "id": 994938, "avatar_url": "https://gravatar.com/avatar/bdd8cc46ae86e389388ae78dfc45effe?d=https%3A%2F%2Fidenticons.github.com%2F4b102bf6681e25c44a3c980791826c1f.png&r=x", "gravatar_id": "bdd8cc46ae86e389388ae78dfc45effe", "url": "https://api.github.com/users/daguar", "html_url": "https://github.com/daguar", "followers_url": "https://api.github.com/users/daguar/followers", "following_url": "https://api.github.com/users/daguar/following{/other_user}", "gists_url": "https://api.github.com/users/daguar/gists{/gist_id}", "starred_url": "https://api.github.com/users/daguar/starred{/owner}{/repo}", "subscriptions_url": "https://api.github.com/users/daguar/subscriptions", "organizations_url": "https://api.github.com/users/daguar/orgs", "repos_url": "https://api.github.com/users/daguar/repos", "events_url": "https://api.github.com/users/daguar/events{/privacy}", "received_events_url": "https://api.github.com/users/daguar/received_events", "type": "User", "site_admin": false, "name": "Dave Guarino", "company": "", "blog": null, "location": "Oakland, CA", "email": "dave@codeforamerica.org", "hireable": true, "bio": null, "public_repos": 66, "public_gists": 10, "followers": 30, "following": 14, "created_at": "2011-08-21T21:12:10Z", "updated_at": "2014-03-07T18:17:21Z" }''')
+
+        elif url.geturl() == 'https://api.github.com/users/mholubowski':
+            return response(200, '''{ "login": "mholubowski", "id": 2035619, "avatar_url": "https://gravatar.com/avatar/76743e4c14368f817ea4fff3c7e72b34?d=https%3A%2F%2Fidenticons.github.com%2Fbcc9be8dba131f187a3750a001e9d330.png&r=x", "gravatar_id": "76743e4c14368f817ea4fff3c7e72b34", "url": "https://api.github.com/users/mholubowski", "html_url": "https://github.com/mholubowski", "followers_url": "https://api.github.com/users/mholubowski/followers", "following_url": "https://api.github.com/users/mholubowski/following{/other_user}", "gists_url": "https://api.github.com/users/mholubowski/gists{/gist_id}", "starred_url": "https://api.github.com/users/mholubowski/starred{/owner}{/repo}", "subscriptions_url": "https://api.github.com/users/mholubowski/subscriptions", "organizations_url": "https://api.github.com/users/mholubowski/orgs", "repos_url": "https://api.github.com/users/mholubowski/repos", "events_url": "https://api.github.com/users/mholubowski/events{/privacy}", "received_events_url": "https://api.github.com/users/mholubowski/received_events", "type": "User", "site_admin": false, "public_repos": 16, "public_gists": 6, "followers": 8, "following": 0, "created_at": "2012-07-24T17:46:53Z", "updated_at": "2014-03-07T07:23:50Z" }''')
+
+        elif url.geturl() == 'https://api.github.com/users/mick':
+            return response(200, '''{ "login": "mick", "id": 26278, "avatar_url": "https://gravatar.com/avatar/0a57f29a6d300554ed45c80b4e37ab49?d=https%3A%2F%2Fidenticons.github.com%2F523d0b250cf3fc7a5a04aec43fd55e43.png&r=x", "gravatar_id": "0a57f29a6d300554ed45c80b4e37ab49", "url": "https://api.github.com/users/mick", "html_url": "https://github.com/mick", "followers_url": "https://api.github.com/users/mick/followers", "following_url": "https://api.github.com/users/mick/following{/other_user}", "gists_url": "https://api.github.com/users/mick/gists{/gist_id}", "starred_url": "https://api.github.com/users/mick/starred{/owner}{/repo}", "subscriptions_url": "https://api.github.com/users/mick/subscriptions", "organizations_url": "https://api.github.com/users/mick/orgs", "repos_url": "https://api.github.com/users/mick/repos", "events_url": "https://api.github.com/users/mick/events{/privacy}", "received_events_url": "https://api.github.com/users/mick/received_events", "type": "User", "site_admin": false, "name": "Mick Thompson", "company": "Mapbox", "blog": "http://mick.im", "location": "San Francisco, CA", "email": "dthompson@gmail.com", "hireable": false, "bio": null, "public_repos": 86, "public_gists": 22, "followers": 103, "following": 32, "created_at": "2008-09-25T18:17:08Z", "updated_at": "2014-03-07T20:59:59Z" }''')
+
+        elif url.geturl() == 'https://api.github.com/users/migurski':
+            return response(200, '''{ "login": "migurski", "id": 58730, "avatar_url": "https://gravatar.com/avatar/039667155d1baa533e461671e97891a1?d=https%3A%2F%2Fidenticons.github.com%2F5ad9088b8b4fba5e76050c6c12f31a00.png&r=x", "gravatar_id": "039667155d1baa533e461671e97891a1", "url": "https://api.github.com/users/migurski", "html_url": "https://github.com/migurski", "followers_url": "https://api.github.com/users/migurski/followers", "following_url": "https://api.github.com/users/migurski/following{/other_user}", "gists_url": "https://api.github.com/users/migurski/gists{/gist_id}", "starred_url": "https://api.github.com/users/migurski/starred{/owner}{/repo}", "subscriptions_url": "https://api.github.com/users/migurski/subscriptions", "organizations_url": "https://api.github.com/users/migurski/orgs", "repos_url": "https://api.github.com/users/migurski/repos", "events_url": "https://api.github.com/users/migurski/events{/privacy}", "received_events_url": "https://api.github.com/users/migurski/received_events", "type": "User", "site_admin": false, "name": null, "company": null, "blog": "", "location": "", "email": "mike-github@teczno.com", "hireable": false, "bio": null, "public_repos": 67, "public_gists": 37, "followers": 305, "following": 78, "created_at": "2009-02-27T23:44:32Z", "updated_at": "2014-03-07T06:11:45Z" }''')
+
+        elif url.geturl() == 'https://api.github.com/users/rduecyg':
+            return response(200, '''{ "login": "rduecyg", "id": 1710759, "avatar_url": "https://gravatar.com/avatar/ca617a981a0ba8423eb849843b21693c?d=https%3A%2F%2Fidenticons.github.com%2F839df3551000263ba8c19e291482a371.png&r=x", "gravatar_id": "ca617a981a0ba8423eb849843b21693c", "url": "https://api.github.com/users/rduecyg", "html_url": "https://github.com/rduecyg", "followers_url": "https://api.github.com/users/rduecyg/followers", "following_url": "https://api.github.com/users/rduecyg/following{/other_user}", "gists_url": "https://api.github.com/users/rduecyg/gists{/gist_id}", "starred_url": "https://api.github.com/users/rduecyg/starred{/owner}{/repo}", "subscriptions_url": "https://api.github.com/users/rduecyg/subscriptions", "organizations_url": "https://api.github.com/users/rduecyg/orgs", "repos_url": "https://api.github.com/users/rduecyg/repos", "events_url": "https://api.github.com/users/rduecyg/events{/privacy}", "received_events_url": "https://api.github.com/users/rduecyg/received_events", "type": "User", "site_admin": false, "name": "Reed", "company": null, "blog": null, "location": null, "email": null, "hireable": false, "bio": null, "public_repos": 8, "public_gists": 0, "followers": 1, "following": 0, "created_at": "2012-05-06T14:39:37Z", "updated_at": "2014-03-04T20:33:45Z" }''')
+
         else:
             raise Exception('Asked for unknown URL ' + url.geturl())
 
@@ -169,6 +184,60 @@ class RunUpdateTestCase(unittest.TestCase):
         with HTTMock(response_content):
             import run_update
             self.assertRaises(IOError, run_update.main)
+
+    def test_json_files(self):
+        ''' Check the structure of proposed Civic JSON data structures.
+        
+            See discussion at
+            https://github.com/codeforamerica/civic-json-worker/issues/18
+        '''
+        projects_detail = []
+        
+        with HTTMock(self.response_content):
+            import run_update as ru
+
+            # Iterate over organizations and projects, saving them to db.session.
+            for org_info in ru.get_organizations():
+                organization = ru.save_organization_info(self.db.session, org_info)
+
+                projects = ru.get_projects(organization)
+                project_details = ru.reformat_project_info_for_chicago(projects)
+                projects_detail.append(project_details)
+        
+        for project_details in projects_detail:
+            #
+            # Verify correct output format for project_details.json.
+            #
+            for project in project_details:
+                for key in ('contributors', 'contributors_url', 'created_at',
+                            'description', 'forks_count', 'homepage', 'html_url',
+                            'id', 'language', 'name', 'open_issues', 'owner',
+                            'participation', 'project_needs', 'pushed_at',
+                            'updated_at', 'watchers_count'):
+                    assert key in project
+        
+                # project owner dict
+                for key in ('avatar_url', 'html_url', 'login', 'type'):
+                    assert key in project['owner']
+        
+                # project contributor list
+                for contributor in project['contributors']:
+                    for key in ('avatar_url', 'contributions', 'html_url',
+                                'login', 'owner', 'url'):
+                        assert key in contributor
+        
+                # project participation history
+                assert type(project['participation']) is list
+            
+            #
+            # Verify correct output format for people.json.
+            #
+            people = ru.count_people_totals(project_details)
+
+            for person in people:
+                for key in ('company', 'repositories', 'html_url', 'blog',
+                            'avatar_url', 'location', 'login', 'contributions'):
+                    assert key in person
 
 if __name__ == '__main__':
     unittest.main()
