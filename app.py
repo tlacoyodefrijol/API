@@ -150,7 +150,6 @@ manager = flask.ext.restless.APIManager(app, flask_sqlalchemy_db=db)
 kwargs = dict(methods=['GET'], exclude_columns=['keep'], max_results_per_page=-1)
 manager.create_api(Organization, collection_name='organizations', **kwargs)
 manager.create_api(Story, collection_name='stories', **kwargs)
-manager.create_api(Story, collection_name='events', **kwargs)
 manager.create_api(Project, collection_name='projects', **kwargs)
 
 # -------------------
