@@ -81,7 +81,6 @@ class Organization(db.Model):
     keep = db.Column(db.Boolean())
     # Relationships
     stories = db.relationship('Story', backref='organization', lazy='dynamic')
-    events = db.relationship('Event', backref='organization', lazy='dynamic')
     projects = db.relationship('Project', backref='organization', lazy='dynamic') 
     
     def __init__(self, name=None, website=None, events_url=None,
@@ -96,27 +95,6 @@ class Organization(db.Model):
         self.latitude = latitude
         self.longitude = longitude
         self.keep = True
-
-class Event(db.Model):
-    '''
-        Upcoming and past events from a Brigade.
-    '''
-    # Columns
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.Unicode())
-    url = db.Column(db.Unicode())
-    date = db.Column(db.Unicode())
-    start = db.Column(db.Unicode())
-    end = db.Column(db.Unicode())
-    organization_name = db.Column(db.Unicode(), db.ForeignKey('organization.name'))
-
-    def __init__(self, name=None, url=None, date=None, start=None, end=None, organization_name=None):
-        self.name = name
-        self.url = url
-        self.date = date
-        self.start = start
-        self.end = end
-        self.organization_name = organization_name
 
 class Story(db.Model):
     '''
