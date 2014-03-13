@@ -191,14 +191,14 @@ class RunUpdateTestCase(unittest.TestCase):
             else:
                 raise Exception('Asked for unknown URL ' + url.geturl())
 
-        from app import app
-        app.logger.error = MagicMock()
+        import logging
+        logging.error = MagicMock()
 
         with HTTMock(response_content):
             import run_update
             run_update.main()
 
-        app.logger.error.assert_called_with('https://api.github.com/repos/codeforamerica/cityvoice doesn\'t exist.')
+        logging.error.assert_called_with('https://api.github.com/repos/codeforamerica/cityvoice doesn\'t exist.')
 
     def test_main_with_github_errors(self):
         ''' When github returns a non-404 error code, an IOError should be raised.
@@ -300,14 +300,14 @@ class RunUpdateTestCase(unittest.TestCase):
             else:
                 raise Exception('Asked for unknown URL ' + url.geturl())
 
-        from app import app
-        app.logger.error = MagicMock()
+        import logging
+        logging.error = MagicMock()
 
         with HTTMock(response_content):
             import run_update
             run_update.main()
 
-        app.logger.error.assert_called_with('Code for America does not have a valid events url')
+        logging.error.assert_called_with('Code for America does not have a valid events url')
 
         from app import Event
 
@@ -346,14 +346,14 @@ class RunUpdateTestCase(unittest.TestCase):
             else:
                 raise Exception('Asked for unknown URL ' + url.geturl())
 
-        from app import app
-        app.logger.error = MagicMock()
+        import logging
+        logging.error = MagicMock()
 
         with HTTMock(response_content):
             import run_update
             run_update.main()
 
-        app.logger.error.assert_called_with('Code for America\'s meetup page cannot be found')
+        logging.error.assert_called_with('Code for America\'s meetup page cannot be found')
 
 if __name__ == '__main__':
     unittest.main()
