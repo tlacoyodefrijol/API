@@ -1,4 +1,5 @@
 import os, sys
+import logging
 from urlparse import urlparse
 from csv import DictReader, Sniffer
 from itertools import groupby
@@ -35,7 +36,7 @@ def get_github_api(url):
     '''
         Make authenticated GitHub requests.
     '''
-    app.logger.info('Asking Github for', url)
+    logging.info('Asking Github for ' + url)
 
     got = get(url, auth=github_auth)
 
@@ -62,7 +63,7 @@ def get_meetup_events(organization, group_urlname):
     meetup_url = "https://api.meetup.com/2/events?status=past,upcoming&format=json&group_urlname={0}&sig_id={1}".format(group_urlname, meetup_key)
     got = get(meetup_url)
     if got.status_code == 404:
-        app.logger.error("%s's meetup page cannot be found" % organization.name)
+        logging.error("%s's meetup page cannot be found" % organization.name)
         return None
     else:
         results = got.json()['results']
@@ -122,7 +123,7 @@ def get_projects(organization):
         Convert to a dict.
         TODO: Have this work for GDocs.
     '''
-    app.logger.info('Asking for', organization.projects_list_url)
+    logging.info('Asking for ' + organization.projects_list_url)
     got = get(organization.projects_list_url)
 
     # If projects_list_url is a json file
@@ -166,7 +167,7 @@ def update_project_info(project):
 
         if got.status_code in range(400, 499):
             if got.status_code == 404:
-                app.logger.error(repo_url + ' doesn\'t exist.')
+                logging.error(repo_url + ' doesn\'t exist.')
                 return project
             raise IOError('We done got throttled')
 
@@ -404,18 +405,18 @@ def main():
         if not organization.projects_list_url:
             continue
 
-        app.logger.info("Gathering all of %s's projects." % organization.name)
+        logging.info("Gathering all of %s's projects." % organization.name)
 
         projects = get_projects(organization)
 
         for proj_info in projects:
             save_project_info(db.session, proj_info)
 
-        app.logger.info("Gathering all of %s's events." % organization.name)
+        logging.info("Gathering all of %s's events." % organization.name)
 
         identifier = get_event_group_identifier(organization.events_url)
         if identifier is None:
-            app.logger.error("%s does not have a valid events url" % organization.name)
+            logging.error("%s does not have a valid events url" % organization.name)
         else:
             events = get_meetup_events(organization, identifier)
             if events is not None:
