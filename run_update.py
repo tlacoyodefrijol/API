@@ -147,6 +147,8 @@ def get_projects(organization):
             project['organization_name'] = organization.name
     
     else:
+        print repr((got.url, got.links))
+    
         if len(data) and type(data[0]) in (str, unicode):
             # Likely that the JSON data is a simple list of strings
             projects = [dict(organization_name=organization.name, code_url=item)
