@@ -119,18 +119,25 @@ def get_stories(organization):
 
 def get_projects(organization):
     '''
-        Get a list of projects from CSV, TSV, or JSON.
+        Get a list of projects from CSV, TSV, JSON, or Github URL.
         Convert to a dict.
         TODO: Have this work for GDocs.
     '''
-    logging.info('Asking for ' + organization.projects_list_url)
-    got = get(organization.projects_list_url)
+    _, host, path, _, _, _ = urlparse(organization.projects_list_url)
+    matched = match(r'(/orgs)?/(?P<name>[^/]+)/?$', path)
+    
+    if host in ('www.github.com', 'github.com') and matched:
+        projects_url = 'https://api.github.com/users/%s/repos' % matched.group('name')
+    else:
+        projects_url = organization.projects_list_url
+    
+    logging.info('Asking for ' + projects_url)
+    got = get(projects_url)
 
     # If projects_list_url is a json file
     try:
-        projects = [dict(organization_name=organization.name, code_url=item)
-                    for item in got.json()]
-
+        data = got.json()
+    
     # If projects_list_url is a type of csv
     except ValueError:
         data = got.text.splitlines()
@@ -138,6 +145,25 @@ def get_projects(organization):
         projects = list(DictReader(data, dialect=dialect))
         for project in projects:
             project['organization_name'] = organization.name
+    
+    else:
+        if len(data) and type(data[0]) in (str, unicode):
+            # Likely that the JSON data is a simple list of strings
+            projects = [dict(organization_name=organization.name, code_url=item)
+                        for item in data]
+        
+        elif len(data) and type(data[0]) is dict:
+            # Map data to name, description, link_url, code_url (skip type, categories)
+            projects = [dict(name=p['name'], description=p['description'],
+                             link_url=p['homepage'], code_url=p['html_url'],
+                             organization_name=organization.name)
+                        for p in data]
+        
+        elif len(data):
+            raise Exception('Unknown type for first project: "%s"' % repr(type(data[0])))
+        
+        else:
+            projects = []
 
     map(update_project_info, projects)
 
