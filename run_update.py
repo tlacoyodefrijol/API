@@ -116,6 +116,20 @@ def get_stories(organization):
                 new_story = Story(**story_dict)
                 db.session.add(new_story)
 
+def get_adjoined_json_lists(response):
+    ''' Github uses the Link header (RFC 5988) to do pagination.
+    
+        If we see a Link header, assume we're dealing with lists
+        and concat them all together.
+    '''
+    result = response.json()
+    
+    if type(result) is list:
+        while 'next' in response.links:
+            response = get(response.links['next']['url'])
+            result += response.json()
+    
+    return result
 
 def get_projects(organization):
     '''
@@ -132,23 +146,21 @@ def get_projects(organization):
         projects_url = organization.projects_list_url
     
     logging.info('Asking for ' + projects_url)
-    got = get(projects_url)
+    response = get(projects_url)
 
-    # If projects_list_url is a json file
     try:
-        data = got.json()
+        data = get_adjoined_json_lists(response)
     
-    # If projects_list_url is a type of csv
     except ValueError:
-        data = got.text.splitlines()
+        # If projects_list_url is a type of csv
+        data = response.text.splitlines()
         dialect = Sniffer().sniff(data[0])
         projects = list(DictReader(data, dialect=dialect))
         for project in projects:
             project['organization_name'] = organization.name
     
     else:
-        print repr((got.url, got.links))
-    
+        # If projects_list_url is a json file
         if len(data) and type(data[0]) in (str, unicode):
             # Likely that the JSON data is a simple list of strings
             projects = [dict(organization_name=organization.name, code_url=item)
