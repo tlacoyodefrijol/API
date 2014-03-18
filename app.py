@@ -68,8 +68,7 @@ class Organization(db.Model):
     '''
     '''
     #Columns
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.Unicode(), unique=True)
+    name = db.Column(db.Unicode(), primary_key=True)
     website = db.Column(db.Unicode())
     events_url = db.Column(db.Unicode())
     rss = db.Column(db.Unicode())
@@ -85,7 +84,7 @@ class Organization(db.Model):
     stories = db.relationship('Story', backref='organization', lazy='dynamic')
     projects = db.relationship('Project', backref='organization', lazy='dynamic')
 
-    def __init__(self, name=None, website=None, events_url=None,
+    def __init__(self, name, website=None, events_url=None,
                  rss=None, projects_list_url=None, type=None, city=None, latitude=None, longitude=None):
         self.name = name
         self.website = website
@@ -103,11 +102,10 @@ class Story(db.Model):
         Blog posts and tweets from a Brigade.
     '''
     # Columns
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.Unicode())
+    title = db.Column(db.Unicode(), primary_key=True)
     link = db.Column(db.Unicode())
     type = db.Column(db.Unicode())
-    organization_name = db.Column(db.Unicode(), db.ForeignKey('organization.name'))
+    organization_name = db.Column(db.Unicode(), db.ForeignKey('organization.name'), primary_key=True)
 
     def __init__(self, title=None, link=None, type=None, organization_name=None):
         self.title = title
@@ -119,15 +117,14 @@ class Project(db.Model):
     '''
     '''
     # Columns
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.Unicode())
+    name = db.Column(db.Unicode(), primary_key=True)
     code_url = db.Column(db.Unicode())
     link_url = db.Column(db.Unicode())
     description = db.Column(db.Unicode())
     type = db.Column(db.Unicode())
     categories = db.Column(db.Unicode())
     github_details = db.Column(JsonType())
-    organization_name = db.Column(db.Unicode(), db.ForeignKey('organization.name'))
+    organization_name = db.Column(db.Unicode(), db.ForeignKey('organization.name'), primary_key=True)
     keep = db.Column(db.Boolean())
 
     def __init__(self, name, code_url=None, link_url=None,
@@ -147,14 +144,13 @@ class Event(db.Model):
     '''
     '''
     # Columns
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.Unicode())
+    name = db.Column(db.Unicode(), primary_key=True)
     description = db.Column(db.Unicode())
     event_url = db.Column(db.Unicode())
     location = db.Column(db.Unicode())
     start_time = db.Column(db.DateTime())
     end_time = db.Column(db.DateTime())
-    organization_name = db.Column(db.Unicode(),db.ForeignKey('organization.name'))
+    organization_name = db.Column(db.Unicode(),db.ForeignKey('organization.name'), primary_key=True)
     keep = db.Column(db.Boolean())
 
     def __init__(self, name, location, event_url, start_time, created_at,
