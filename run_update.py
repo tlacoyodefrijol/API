@@ -471,21 +471,17 @@ def main():
     for org_info in get_organizations():
         organization = save_organization_info(db.session, org_info)
 
+        logging.info("Gathering all of %s's stories." % organization.name)
         get_stories(organization)
 
-        if not organization.projects_list_url:
-            continue
-
-        logging.info("Gathering all of %s's projects." % organization.name)
-
-        projects = get_projects(organization)
-
-        for proj_info in projects:
-            save_project_info(db.session, proj_info)
-
-        logging.info("Gathering all of %s's events." % organization.name)
+        if organization.projects_list_url:
+            logging.info("Gathering all of %s's projects." % organization.name)
+            projects = get_projects(organization)
+            for proj_info in projects:
+                save_project_info(db.session, proj_info)
         
         if organization.events_url:
+            logging.info("Gathering all of %s's events." % organization.name)
             identifier = get_event_group_identifier(organization.events_url)
             if identifier:
                 for event in get_meetup_events(organization, identifier):
