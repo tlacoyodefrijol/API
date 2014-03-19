@@ -41,7 +41,11 @@ This projects list you point us to will need the following columns:
 * type - Is this project an app, an open data policy, a webservice?
 * categories - Write your own separated by commas. "Education, digital literacy"
 
-That projects list url can be any flavor of csv or a json file. The easiest way is to make a Google Spreadsheet like [my example](https://docs.google.com/spreadsheet/ccc?key=0ArHmv-6U1drqdDBzNXpSZkVzRDJUQnpOS0RJM0FDWGc&usp=sharing) and then ```File > Publish it to the web```. Grab the published link and change ```?output=html to ?output=csv```. Put that in the Brigade Information sheet and you're done.
+That projects list URL can be any flavor of csv. The easiest way is to make a Google Spreadsheet like [my example](https://docs.google.com/spreadsheet/ccc?key=0ArHmv-6U1drqdDBzNXpSZkVzRDJUQnpOS0RJM0FDWGc&usp=sharing) and then ```File > Publish it to the web```. Grab the published link and change ```?output=html to ?output=csv```. Put that in the Brigade Information sheet and you're done.
+
+The projects list URL can also be a JSON file, with a list of strings containing Github project URLs.
+
+Lastly, the projects list URL can be a Github organization URL, like http://github.com/codeforamerica.
 
 
 ### Output Data
