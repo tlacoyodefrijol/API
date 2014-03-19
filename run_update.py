@@ -412,16 +412,17 @@ def main():
         for proj_info in projects:
             save_project_info(db.session, proj_info)
 
-        logging.info("Gathering all of %s's events." % organization.name)
+        if organization.events_url:
+            logging.info("Gathering all of %s's events." % organization.name)
 
-        identifier = get_event_group_identifier(organization.events_url)
-        if identifier is None:
-            logging.error("%s does not have a valid events url" % organization.name)
-        else:
-            events = get_meetup_events(organization, identifier)
-            if events is not None:
-                for event in events:
-                    save_event_info(db.session, event)
+            identifier = get_event_group_identifier(organization.events_url)
+            if identifier is None:
+                logging.error("%s does not have a valid events url" % organization.name)
+            else:
+                events = get_meetup_events(organization, identifier)
+                if events is not None:
+                    for event in events:
+                        save_event_info(db.session, event)
 
     # Remove everything marked for deletion.
     db.session.execute(db.delete(Event).where(Event.keep == False))
