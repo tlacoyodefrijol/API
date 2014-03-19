@@ -15,6 +15,12 @@ from app import db, app, Project, Organization, Story, Event
 from urlparse import urlparse
 from re import match
 
+# Logging Setup
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+requests_log = logging.getLogger("requests")
+requests_log.setLevel(logging.WARNING)
+
 # Production
 gdocs_url = 'https://docs.google.com/a/codeforamerica.org/spreadsheet/ccc?key=0ArHmv-6U1drqdGNCLWV5Q0d5YmllUzE5WGlUY3hhT2c&output=csv'
 
