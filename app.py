@@ -153,8 +153,8 @@ class Event(db.Model):
     organization_name = db.Column(db.Unicode(),db.ForeignKey('organization.name'), primary_key=True)
     keep = db.Column(db.Boolean())
 
-    def __init__(self, name, location, event_url, start_time, created_at,
-                 organization_name, end_time=None, description=None):
+    def __init__(self, name, event_url, start_time, created_at,
+                 organization_name, location=None, end_time=None, description=None):
         self.name = name
         self.description = description
         self.location = location
@@ -174,6 +174,7 @@ kwargs = dict(methods=['GET'], exclude_columns=['keep'], max_results_per_page=-1
 manager.create_api(Organization, collection_name='organizations', **kwargs)
 manager.create_api(Story, collection_name='stories', **kwargs)
 manager.create_api(Project, collection_name='projects', **kwargs)
+manager.create_api(Event, collection_name='events', **kwargs)
 
 # -------------------
 # Routes

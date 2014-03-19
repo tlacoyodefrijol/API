@@ -1,4 +1,5 @@
 import os, sys
+import logging
 from urlparse import urlparse
 from csv import DictReader, Sniffer
 from itertools import groupby
@@ -14,6 +15,12 @@ from app import db, app, Project, Organization, Story, Event
 from urlparse import urlparse
 from re import match
 
+# Logging Setup
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+requests_log = logging.getLogger("requests")
+requests_log.setLevel(logging.WARNING)
+
 # Production
 gdocs_url = 'https://docs.google.com/a/codeforamerica.org/spreadsheet/ccc?key=0ArHmv-6U1drqdGNCLWV5Q0d5YmllUzE5WGlUY3hhT2c&output=csv'
 
@@ -27,7 +34,7 @@ else:
     github_auth = None
 
 if 'MEETUP_KEY' in os.environ:
-    meetup_key = (os.environ['MEETUP_KEY'], '')
+    meetup_key = os.environ['MEETUP_KEY']
 else:
     meetup_key = None
 
@@ -35,7 +42,7 @@ def get_github_api(url):
     '''
         Make authenticated GitHub requests.
     '''
-    app.logger.info('Asking Github for', url)
+    logging.info('Asking Github for ' + url)
 
     got = get(url, auth=github_auth)
 
@@ -52,24 +59,36 @@ def format_location(venue):
     if('address_2' in venue.keys() and venue['address_2'] != ''):
         address = address + ', ' + venue['address_2']
 
-    return "{address}, {city}, {state}, {country}".format(address=address,
+    if 'state' in venue:
+        return "{address}, {city}, {state}, {country}".format(address=address,
                 city=venue['city'], state=venue['state'], country=venue['country'])
+    else:
+        return "{address}, {city}, {country}".format(address=address,
+                city=venue['city'], country=venue['country'])
 
 def get_meetup_events(organization, group_urlname):
     '''
         Get events associated with a group
     '''
-    meetup_url = "https://api.meetup.com/2/events?status=past,upcoming&format=json&group_urlname={0}&sig_id={1}".format(group_urlname, meetup_key)
+    meetup_url = "https://api.meetup.com/2/events?status=past,upcoming&format=json&group_urlname={0}&key={1}".format(group_urlname, meetup_key)
     got = get(meetup_url)
     if got.status_code == 404:
-        app.logger.error("%s's meetup page cannot be found" % organization.name)
-        return None
+        logging.error("%s's meetup page cannot be found" % organization.name)
+        return []
     else:
         results = got.json()['results']
-        events = [dict(organization_name=organization.name, name=event['name'], description=event['description'],
+        events = []
+        for event in results:
+            # Some events don't have locations.
+            if 'venue' in event:
+                event = dict(organization_name=organization.name, name=event['name'], description=event['description'],
                        event_url=event['event_url'], start_time=format_date(event['time']),
                        location=format_location(event['venue']), created_at=format_date(event['created']))
-                    for event in results]
+            else:
+                event = dict(organization_name=organization.name, name=event['name'], description=event['description'],
+                       event_url=event['event_url'], start_time=format_date(event['time']),
+                       created_at=format_date(event['created']))
+            events.append(event)
         return events
 
 def get_organizations():
@@ -100,43 +119,96 @@ def get_stories(organization):
         return None
 
     d = feedparser.parse(url)
+    
+    #
+    # Repeated code here, need to refactor
+    # 
     if d.entries:
-        # Grab the two most recent stories.
-        for i in range(0,2):
-            print d.entries[i].title
-            print d.entries[i].link
+        if len(d.entries) > 1:
+            # Grab the two most recent stories.
+            for i in range(0,2):
+                # Search for the same story
+                filter = Story.title == d.entries[i].title
+                existing_story = db.session.query(Story).filter(filter).first()
+                if existing_story:
+                    continue
+                else:
+                    story_dict = dict(title=d.entries[i].title, link=d.entries[i].link, type="blog", organization_name=organization.name)
+                    new_story = Story(**story_dict)
+                    db.session.add(new_story)
+        else:
             # Search for the same story
-            filter = Story.title == d.entries[i].title
+            filter = Story.title == d.entries[0].title
             existing_story = db.session.query(Story).filter(filter).first()
             if existing_story:
-                continue
+                pass
             else:
-                story_dict = dict(title=d.entries[i].title, link=d.entries[i].link, type="blog", organization_name=organization.name)
+                story_dict = dict(title=d.entries[0].title, link=d.entries[0].link, type="blog", organization_name=organization.name)
                 new_story = Story(**story_dict)
                 db.session.add(new_story)
 
+def get_adjoined_json_lists(response):
+    ''' Github uses the Link header (RFC 5988) to do pagination.
+    
+        If we see a Link header, assume we're dealing with lists
+        and concat them all together.
+    '''
+    result = response.json()
+    
+    if type(result) is list:
+        while 'next' in response.links:
+            response = get(response.links['next']['url'])
+            result += response.json()
+    
+    return result
 
 def get_projects(organization):
     '''
-        Get a list of projects from CSV, TSV, or JSON.
+        Get a list of projects from CSV, TSV, JSON, or Github URL.
         Convert to a dict.
         TODO: Have this work for GDocs.
     '''
-    app.logger.info('Asking for', organization.projects_list_url)
-    got = get(organization.projects_list_url)
+    _, host, path, _, _, _ = urlparse(organization.projects_list_url)
+    matched = match(r'(/orgs)?/(?P<name>[^/]+)/?$', path)
+    
+    if host in ('www.github.com', 'github.com') and matched:
+        projects_url = 'https://api.github.com/users/%s/repos' % matched.group('name')
+    else:
+        projects_url = organization.projects_list_url
+    
+    logging.info('Asking for ' + projects_url)
+    response = get(projects_url)
 
-    # If projects_list_url is a json file
     try:
-        projects = [dict(organization_name=organization.name, code_url=item)
-                    for item in got.json()]
-
-    # If projects_list_url is a type of csv
+        data = get_adjoined_json_lists(response)
+    
     except ValueError:
-        data = got.text.splitlines()
+        # If projects_list_url is a type of csv
+        data = response.text.splitlines()
         dialect = Sniffer().sniff(data[0])
         projects = list(DictReader(data, dialect=dialect))
         for project in projects:
             project['organization_name'] = organization.name
+    
+    else:
+        # If projects_list_url is a json file
+        if len(data) and type(data[0]) in (str, unicode):
+            # Likely that the JSON data is a simple list of strings
+            projects = [dict(organization_name=organization.name, code_url=item)
+                        for item in data]
+        
+        elif len(data) and type(data[0]) is dict:
+            # Map data to name, description, link_url, code_url (skip type, categories)
+            projects = [dict(name=p['name'], description=p['description'],
+                             link_url=p['homepage'], code_url=p['html_url'],
+                             organization_name=organization.name)
+                        for p in data]
+        
+        elif len(data):
+            raise Exception('Unknown type for first project: "%s"' % repr(type(data[0])))
+        
+        else:
+            projects = []
 
     map(update_project_info, projects)
 
@@ -166,7 +238,7 @@ def update_project_info(project):
 
         if got.status_code in range(400, 499):
             if got.status_code == 404:
-                app.logger.error(repo_url + ' doesn\'t exist.')
+                logging.error(repo_url + ' doesn\'t exist.')
                 return project
             raise IOError('We done got throttled')
 
@@ -399,28 +471,23 @@ def main():
     for org_info in get_organizations():
         organization = save_organization_info(db.session, org_info)
 
+        logging.info("Gathering all of %s's stories." % organization.name)
         get_stories(organization)
 
-        if not organization.projects_list_url:
-            continue
-
-        app.logger.info("Gathering all of %s's projects." % organization.name)
-
-        projects = get_projects(organization)
-
-        for proj_info in projects:
-            save_project_info(db.session, proj_info)
-
-        app.logger.info("Gathering all of %s's events." % organization.name)
-
-        identifier = get_event_group_identifier(organization.events_url)
-        if identifier is None:
-            app.logger.error("%s does not have a valid events url" % organization.name)
-        else:
-            events = get_meetup_events(organization, identifier)
-            if events is not None:
-                for event in events:
+        if organization.projects_list_url:
+            logging.info("Gathering all of %s's projects." % organization.name)
+            projects = get_projects(organization)
+            for proj_info in projects:
+                save_project_info(db.session, proj_info)
+        
+        if organization.events_url:
+            logging.info("Gathering all of %s's events." % organization.name)
+            identifier = get_event_group_identifier(organization.events_url)
+            if identifier:
+                for event in get_meetup_events(organization, identifier):
                     save_event_info(db.session, event)
+            else:
+                logging.error("%s does not have a valid events url" % organization.name)
 
     # Remove everything marked for deletion.
     db.session.execute(db.delete(Event).where(Event.keep == False))
