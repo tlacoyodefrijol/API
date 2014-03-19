@@ -157,8 +157,8 @@ class Event(db.Model):
     organization_name = db.Column(db.Unicode(),db.ForeignKey('organization.name'))
     keep = db.Column(db.Boolean())
 
-    def __init__(self, name, location, event_url, start_time, created_at,
-                 organization_name, end_time=None, description=None):
+    def __init__(self, name, event_url, start_time, created_at,
+                 organization_name, location=None, end_time=None, description=None):
         self.name = name
         self.description = description
         self.location = location

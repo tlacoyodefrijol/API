@@ -64,13 +64,21 @@ def get_meetup_events(organization, group_urlname):
     got = get(meetup_url)
     if got.status_code == 404:
         logging.error("%s's meetup page cannot be found" % organization.name)
-        return None
+        return []
     else:
         results = got.json()['results']
-        events = [dict(organization_name=organization.name, name=event['name'], description=event['description'],
+        events = []
+        for event in results:
+            # Some events don't have locations.
+            if 'venue' in event:
+                event = dict(organization_name=organization.name, name=event['name'], description=event['description'],
                        event_url=event['event_url'], start_time=format_date(event['time']),
                        location=format_location(event['venue']), created_at=format_date(event['created']))
-                    for event in results]
+            else:
+                event = dict(organization_name=organization.name, name=event['name'], description=event['description'],
+                       event_url=event['event_url'], start_time=format_date(event['time']),
+                       created_at=format_date(event['created']))
+            events.append(event)
         return events
 
 def get_organizations():
@@ -465,17 +473,15 @@ def main():
         for proj_info in projects:
             save_project_info(db.session, proj_info)
 
+        logging.info("Gathering all of %s's events." % organization.name)
+        
         if organization.events_url:
-            logging.info("Gathering all of %s's events." % organization.name)
-
             identifier = get_event_group_identifier(organization.events_url)
-            if identifier is None:
-                logging.error("%s does not have a valid events url" % organization.name)
+            if identifier:
+                for event in get_meetup_events(organization, identifier):
+                    save_event_info(db.session, event)
             else:
-                events = get_meetup_events(organization, identifier)
-                if events is not None:
-                    for event in events:
-                        save_event_info(db.session, event)
+                logging.error("%s does not have a valid events url" % organization.name)
 
     # Remove everything marked for deletion.
     db.session.execute(db.delete(Event).where(Event.keep == False))
