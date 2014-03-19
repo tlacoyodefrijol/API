@@ -80,9 +80,9 @@ class Organization(db.Model):
     keep = db.Column(db.Boolean())
 
     # Relationships
-    events = db.relationship('Event', backref='organization', lazy='dynamic')
-    stories = db.relationship('Story', backref='organization', lazy='dynamic')
-    projects = db.relationship('Project', backref='organization', lazy='dynamic')
+    events = db.relationship('Event')
+    stories = db.relationship('Story')
+    projects = db.relationship('Project')
 
     def __init__(self, name, website=None, events_url=None,
                  rss=None, projects_list_url=None, type=None, city=None, latitude=None, longitude=None):
@@ -170,7 +170,7 @@ class Event(db.Model):
 # -------------------
 
 manager = flask.ext.restless.APIManager(app, flask_sqlalchemy_db=db)
-kwargs = dict(methods=['GET'], exclude_columns=['keep'], max_results_per_page=-1)
+kwargs = dict(methods=['GET'], exclude_columns=['keep'], max_results_per_page=None)
 manager.create_api(Organization, collection_name='organizations', **kwargs)
 manager.create_api(Story, collection_name='stories', **kwargs)
 manager.create_api(Project, collection_name='projects', **kwargs)
