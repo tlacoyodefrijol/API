@@ -59,8 +59,12 @@ def format_location(venue):
     if('address_2' in venue.keys() and venue['address_2'] != ''):
         address = address + ', ' + venue['address_2']
 
-    return "{address}, {city}, {state}, {country}".format(address=address,
+    if 'state' in venue:
+        return "{address}, {city}, {state}, {country}".format(address=address,
                 city=venue['city'], state=venue['state'], country=venue['country'])
+    else:
+        return "{address}, {city}, {country}".format(address=address,
+                city=venue['city'], country=venue['country'])
 
 def get_meetup_events(organization, group_urlname):
     '''
