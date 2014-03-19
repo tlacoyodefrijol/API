@@ -4,6 +4,7 @@ import tempfile
 from httmock import response, HTTMock
 from mock import Mock
 import requests
+from re import match
 
 class FakeResponse:
     def __init__(self, text):
@@ -76,7 +77,7 @@ class RunUpdateTestCase(unittest.TestCase):
         elif url.geturl() == 'https://api.github.com/user/337792/repos?page=2':
             return response(200, '''[ ]''', headers=dict(Link='<https://api.github.com/user/337792/repos?page=1>; rel="prev", <https://api.github.com/user/337792/repos?page=1>; rel="first"'))
 
-        elif url.geturl() == 'https://api.meetup.com/2/events?status=past,upcoming&format=json&group_urlname=Code-For-Charlotte&key=' + os.environ['MEETUP_KEY']:
+        elif match(r'https:\/\/api\.meetup\.com\/2\/events\?status=past,upcoming&format=json&group_urlname=Code-For-Charlotte&key=', url.geturl()):
             events_file=open('meetup_events.json')
             events_content = events_file.read()
             events_file.close()
@@ -200,7 +201,7 @@ class RunUpdateTestCase(unittest.TestCase):
             elif url.geturl() == 'https://api.github.com/repos/codeforamerica/cityvoice':
                 return response(404, '''Not Found!''')
 
-            elif url.geturl() == 'https://api.meetup.com/2/events?status=past,upcoming&format=json&group_urlname=Code-For-Charlotte&key=' + os.environ['MEETUP_KEY']:
+            elif match(r'https:\/\/api\.meetup\.com\/2\/events\?status=past,upcoming&format=json&group_urlname=Code-For-Charlotte&key=', url.geturl()):
                 events_file=open('meetup_events.json')
                 events_content = events_file.read()
                 events_file.close()
@@ -362,7 +363,7 @@ class RunUpdateTestCase(unittest.TestCase):
             elif url.geturl() == 'https://api.github.com/repos/codeforamerica/cityvoice/issues?labels=project-needs':
                 return response(200, '''[ ]''')
 
-            elif url.geturl() == 'https://api.meetup.com/2/events?status=past,upcoming&format=json&group_urlname=Code-For-Charlotte&key=' + os.environ['MEETUP_KEY']:
+            elif match(r'https:\/\/api\.meetup\.com\/2\/events\?status=past,upcoming&format=json&group_urlname=Code-For-Charlotte&key=', url.geturl()):
                 return response(404, '''Not Found!''')
 
             else:
