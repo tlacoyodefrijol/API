@@ -60,7 +60,7 @@ class RunUpdateTestCase(unittest.TestCase):
         elif url.geturl() == 'https://api.github.com/users/rduecyg':
             return response(200, '''{ "login": "rduecyg", "id": 1710759, "avatar_url": "https://gravatar.com/avatar/ca617a981a0ba8423eb849843b21693c?d=https%3A%2F%2Fidenticons.github.com%2F839df3551000263ba8c19e291482a371.png&r=x", "gravatar_id": "ca617a981a0ba8423eb849843b21693c", "url": "https://api.github.com/users/rduecyg", "html_url": "https://github.com/rduecyg", "followers_url": "https://api.github.com/users/rduecyg/followers", "following_url": "https://api.github.com/users/rduecyg/following{/other_user}", "gists_url": "https://api.github.com/users/rduecyg/gists{/gist_id}", "starred_url": "https://api.github.com/users/rduecyg/starred{/owner}{/repo}", "subscriptions_url": "https://api.github.com/users/rduecyg/subscriptions", "organizations_url": "https://api.github.com/users/rduecyg/orgs", "repos_url": "https://api.github.com/users/rduecyg/repos", "events_url": "https://api.github.com/users/rduecyg/events{/privacy}", "received_events_url": "https://api.github.com/users/rduecyg/received_events", "type": "User", "site_admin": false, "name": "Reed", "company": null, "blog": null, "location": null, "email": null, "hireable": false, "bio": null, "public_repos": 8, "public_gists": 0, "followers": 1, "following": 0, "created_at": "2012-05-06T14:39:37Z", "updated_at": "2014-03-04T20:33:45Z" }''')
 
-        elif url.geturl() == 'https://api.meetup.com/2/events?status=past,upcoming&format=json&group_urlname=Code-For-Charlotte&sig_id=None':
+        elif url.geturl() == 'https://api.meetup.com/2/events?status=past,upcoming&format=json&group_urlname=Code-For-Charlotte&key=' + os.environ['MEETUP_KEY']:
             events_file=open('meetup_events.json')
             events_content = events_file.read()
             events_file.close()
@@ -182,7 +182,7 @@ class RunUpdateTestCase(unittest.TestCase):
             elif url.geturl() == 'https://api.github.com/repos/codeforamerica/cityvoice':
                 return response(404, '''Not Found!''')
 
-            elif url.geturl() == 'https://api.meetup.com/2/events?status=past,upcoming&format=json&group_urlname=Code-For-Charlotte&sig_id=None':
+            elif url.geturl() == 'https://api.meetup.com/2/events?status=past,upcoming&format=json&group_urlname=Code-For-Charlotte&key=' + os.environ['MEETUP_KEY']:
                 events_file=open('meetup_events.json')
                 events_content = events_file.read()
                 events_file.close()
@@ -340,7 +340,7 @@ class RunUpdateTestCase(unittest.TestCase):
             elif url.geturl() == 'https://api.github.com/repos/codeforamerica/cityvoice/issues?labels=project-needs':
                 return response(200, '''[ ]''')
 
-            elif url.geturl() == 'https://api.meetup.com/2/events?status=past,upcoming&format=json&group_urlname=Code-For-Charlotte&sig_id=None':
+            elif url.geturl() == 'https://api.meetup.com/2/events?status=past,upcoming&format=json&group_urlname=Code-For-Charlotte&key=' + os.environ['MEETUP_KEY']:
                 return response(404, '''Not Found!''')
 
             else:
