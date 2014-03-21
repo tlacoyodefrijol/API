@@ -6,7 +6,7 @@ class cfapi_tests(unittest.TestCase):
     
     def setUp(self):
         # Set up the database settings
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://hackyourcity@localhost/civic_json_worker_test'
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://postgres@localhost/civic_json_worker_test'
         db.create_all()
         self.app = app.test_client()
         
