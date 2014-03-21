@@ -3,7 +3,7 @@ import unittest, requests, json, os
 from app import *
 from factories import OrganizationFactory, ProjectFactory, EventFactory, StoryFactory
 
-class cfapi_tests(unittest.TestCase):
+class ApiTest(unittest.TestCase):
 
     def setUp(self):
         # Set up the database settings
