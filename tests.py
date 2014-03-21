@@ -1,67 +1,15 @@
 import unittest, requests, json, os
 
 from app import *
+from factories import OrganizationFactory, ProjectFactory, EventFactory, StoryFactory
 
 class cfapi_tests(unittest.TestCase):
-    
+
     def setUp(self):
         # Set up the database settings
         app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://postgres@localhost/civic_json_worker_test'
         db.create_all()
         self.app = app.test_client()
-        
-        # Fill up the DB
-        self.test_organization = {
-            "city": "San Francisco, CA",
-            "latitude": 37.7749,
-            "longitude": -122.4194,
-            "name": "Code for San Francisco",
-            "projects_list_url": "https://github.com/sfbrigade",
-            "rss": "https://groups.google.com/forum/feed/code-for-san-francisco/msgs/rss.xml?num=15",
-            "type": "Brigade",
-            "website": "http://codeforsanfrancisco.org/"
-        }
-        test_organization_obj = Organization(**self.test_organization)
-        db.session.add(test_organization_obj)
-
-        self.test_story = {
-            "link": "http://www.codeforamerica.org/blog/2014/03/14/four-great-years/",
-            "title": "Four Great Years",
-            "type": "blog",
-            "organization_name": "Code for San Francisco",
-        }
-        test_story_obj = Story(**self.test_story)
-        db.session.add(test_story_obj)
-
-        self.test_event = {
-            "description": '<p>To contribute code, see our "repo": <a href="https://github.com/sfbrigade" class="linkified">"https"://github.com/sfbrigade</a></p> <p>We are on irc.freenode.net #sfbrigade</p>',
-            "created_at": "2013-01-01T01:00:00",
-            "end_time": "2013-04-04T01:00:00",
-            "event_url": "http://www.meetup.com/Code-for-San-Francisco-Civic-Hack-Night/events/110712692/",
-            "location": "155 9th St., San Francisco, CA, us",
-            "name": "Weekly Civic Hack Night - Planning Meeting!",
-            "start_time": "2013-04-04T01:00:00",
-            "organization_name": "Code for San Francisco"
-        }
-        test_event_obj = Event(**self.test_event)
-        db.session.add(test_event_obj)
-
-        self.test_project = {
-            "categories": "",
-            "code_url": "https://github.com/BetaNYC/ReinventNYC.gov",
-            "description": "Before BetaNYC was an organization, we were an award winning hackathon project. This is our submission to the Reinvent NYC.gov hackathon.",
-            "github_details": {},
-            "link_url": "http://google.com",
-            "name": "ReinventNYC.gov",
-            "type": "",
-            "organization_name": "Code for San Francisco"
-        }
-        test_project_obj = Project(**self.test_project)
-        db.session.add(test_project_obj)
-
-        db.session.commit()
-
-        self.headers = [('Content-Type', 'application/json')]
 
     def tearDown(self):
         db.drop_all()
@@ -70,11 +18,17 @@ class cfapi_tests(unittest.TestCase):
     # Test API -----------------------
 
     def test_headers(self):
+        OrganizationFactory()
+        db.session.flush()
+
         response = self.app.get('/api/organizations')
         assert response.headers['Access-Control-Allow-Origin']  == '*'
         assert response.headers['Content-Type']  == 'application/json'
 
     def test_brigade_name_request(self):
+        OrganizationFactory(name='Code for San Francisco')
+        db.session.flush()
+
         response = self.app.get('/api/organizations/Code for San Francisco')
         response = json.loads(response.data)
         assert isinstance(response, dict)
@@ -91,6 +45,9 @@ class cfapi_tests(unittest.TestCase):
         assert isinstance(response['website'], unicode)
 
     def test_organizations(self):
+        OrganizationFactory()
+        db.session.flush()
+
         response = self.app.get('/api/organizations')
         response = json.loads(response.data)
         assert isinstance(response, dict)
@@ -108,6 +65,9 @@ class cfapi_tests(unittest.TestCase):
         assert isinstance(response['objects'][0]['website'], unicode)
 
     def test_projects(self):
+        ProjectFactory()
+        db.session.flush()
+
         response = self.app.get('/api/projects')
         response = json.loads(response.data)
         assert isinstance(response, dict)
@@ -124,6 +84,9 @@ class cfapi_tests(unittest.TestCase):
         assert isinstance(response['objects'][0]['type'], unicode)
 
     def test_stories(self):
+        StoryFactory()
+        db.session.flush()
+
         response = self.app.get('/api/stories')
         response = json.loads(response.data)
         assert isinstance(response, dict)
@@ -136,6 +99,9 @@ class cfapi_tests(unittest.TestCase):
         assert isinstance(response['objects'][0]['type'], unicode)
 
     def test_events(self):
+        EventFactory()
+        db.session.flush()
+
         response = self.app.get('/api/events')
         response = json.loads(response.data)
         assert isinstance(response, dict)
