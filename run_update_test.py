@@ -15,6 +15,7 @@ class RunUpdateTestCase(unittest.TestCase):
     def setUp(self):
         os.environ['DATABASE_URL'] = 'postgres://postgres@localhost/civic_json_worker_test'
         os.environ['SECRET_KEY'] = '123456'
+        os.environ['MEETUP_KEY'] = 'abcdef'
 
         from app import db
 
