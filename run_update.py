@@ -121,31 +121,18 @@ def get_stories(organization):
     d = feedparser.parse(url)
     
     #
-    # Repeated code here, need to refactor
+    # Search for the two most recent entries.
     # 
-    if d.entries:
-        if len(d.entries) > 1:
-            # Grab the two most recent stories.
-            for i in range(0,2):
-                # Search for the same story
-                filter = Story.title == d.entries[i].title
-                existing_story = db.session.query(Story).filter(filter).first()
-                if existing_story:
-                    continue
-                else:
-                    story_dict = dict(title=d.entries[i].title, link=d.entries[i].link, type="blog", organization_name=organization.name)
-                    new_story = Story(**story_dict)
-                    db.session.add(new_story)
+    for entry in d.entries[:2]:
+        # Search for the same story
+        filter = Story.title == entry.title
+        existing_story = db.session.query(Story).filter(filter).first()
+        if existing_story:
+            continue
         else:
-            # Search for the same story
-            filter = Story.title == d.entries[0].title
-            existing_story = db.session.query(Story).filter(filter).first()
-            if existing_story:
-                pass
-            else:
-                story_dict = dict(title=d.entries[0].title, link=d.entries[0].link, type="blog", organization_name=organization.name)
-                new_story = Story(**story_dict)
-                db.session.add(new_story)
+            story_dict = dict(title=entry.title, link=entry.link, type="blog", organization_name=organization.name)
+            new_story = Story(**story_dict)
+            db.session.add(new_story)
 
 def get_adjoined_json_lists(response):
     ''' Github uses the Link header (RFC 5988) to do pagination.
