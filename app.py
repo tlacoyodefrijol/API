@@ -189,6 +189,34 @@ manager.create_api(Story, collection_name='stories', **kwargs)
 manager.create_api(Project, collection_name='projects', **kwargs)
 manager.create_api(Event, collection_name='events', **kwargs)
 
+@app.route('/api/organizations.geojson')
+def get_organizations_geojson():
+    ''' GeoJSON response option for organizations.
+    '''
+    geojson = dict(type='GeometryCollection', features=[])
+    
+    for org in db.session.query(Organization):
+        # The unique identifier of an organization is its name.
+        id = org.name
+    
+        # Pick out all the field names without an underscore as the first char.
+        keys = [k for k in org.__dict__.keys() if not k.startswith('_')]
+        
+        # Pick out all the properties that aren't part of the location.
+        names = [k for k in keys if k not in ('latitude', 'longitude', 'keep')]
+        props = dict([(k, getattr(org, k)) for k in names])
+        
+        # GeoJSON Point geometry, http://geojson.org/geojson-spec.html#point
+        geom = dict(type='Point', coordinates=[org.longitude, org.latitude])
+        
+        feature = dict(type='Feature', id=id, properties=props, geometry=geom)
+        geojson['features'].append(feature)
+    
+    response = make_response(json.dumps(geojson, indent=2))
+    response.headers['Content-Type'] = 'application/json'
+    
+    return response
+
 # -------------------
 # Routes
 # -------------------
