@@ -33,10 +33,7 @@ if 'GITHUB_TOKEN' in os.environ:
 else:
     github_auth = None
 
-if 'MEETUP_KEY' in os.environ:
-    meetup_key = os.environ['MEETUP_KEY']
-else:
-    meetup_key = None
+meetup_key = os.environ['MEETUP_KEY']
 
 def get_github_api(url):
     '''

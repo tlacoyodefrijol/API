@@ -120,6 +120,7 @@ Besides that, there are a few environmental variables that you'll need to set:
 * `DATABASE_URL=[db connection string]` — On Heroku with Postgres, this will be set for you. My local example is `postgres://hackyourcity@localhost/civicjsonworker` When testing locally, “sqlite:///data.db” is a great way to skip Postgres installation.
 * `FLASK_KEY=[whatever you want]` — This is a string that you'll check to make sure that only trusted people are deleting things
 * `GITHUB_TOKEN=[Github API token]` — Read about setting that up here: http://developer.github.com/v3/oauth/
+* `MEETUP_KEY=[Meetup API Key]` — Read about setting that up here: https://secure.meetup.com/meetup_api/key/
 * `S3_BUCKET=[Name of the bucket]` — This is the bucket where you'll store the JSON files
 * `AWS_ACCESS_KEY_ID=[Amazon Web Services Key]` — Amazon access key for the bucket above, see also [boto config](https://code.google.com/p/boto/wiki/BotoConfig).
 * `AWS_SECRET_ACCESS_KEY=[Amazon Web Services Secret]` — Amazon secret key for the bucket above, see also [boto config](https://code.google.com/p/boto/wiki/BotoConfig).
