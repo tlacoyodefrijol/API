@@ -34,6 +34,7 @@ class ApiTest(unittest.TestCase):
         self.assertEqual(len(response_json['recent_events']), 2)
         self.assertEqual(response_json['recent_events'][0]['name'], "Most recent event")
         self.assertEqual(response_json['recent_events'][1]['name'], "Second most recent event")
+        self.assertEqual(response_json['recent_events'][0]['organization_name'], "Collective of Ericas")
 
     def test_recent_stories(self):
         '''
