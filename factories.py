@@ -38,9 +38,9 @@ class EventFactory(SQLAlchemyModelFactory):
     FACTORY_SESSION = db.session
     FACTORY_HIDDEN_ARGS = ('now',)
 
-    name = 'Civic Event'
+    name = factory.Sequence(lambda n: 'Civic Event {0}'.format(n))
     description = 'A civic event'
-    event_url = 'http://www.meetup.com/civic-project-hack-night'
+    event_url = factory.Sequence(lambda n: 'http://www.meetup.com/civic-project-hack-night{0}'.format(n))
     location = '155 9th St., San Francisco, CA'
 
     now = factory.LazyAttribute(lambda o: datetime.utcnow())
@@ -53,7 +53,7 @@ class StoryFactory(SQLAlchemyModelFactory):
     FACTORY_FOR = Story
     FACTORY_SESSION = db.session
 
-    title = 'Civic Story'
+    title = factory.Sequence(lambda n: 'Civic Story {0}'.format(n))
     link = 'http://www.codeforamerica.org/blog/2014/03/19/thanks-again-for-your-support-esri/'
     type = "blog"
     organization_name = factory.LazyAttribute(lambda e: OrganizationFactory().name)
