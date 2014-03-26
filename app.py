@@ -5,7 +5,7 @@
 from flask import Flask, make_response, request, current_app
 from datetime import datetime, timedelta
 from functools import update_wrapper
-import json, os, requests
+import json, os, requests, time
 from flask.ext.heroku import Heroku
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy.ext.mutable import Mutable
@@ -220,6 +220,36 @@ def get_organizations_geojson():
 # -------------------
 # Routes
 # -------------------
+
+@app.route('/.well-known/status')
+def well_known_status():
+    ''' Return status information for Engine Light.
+    
+        http://engine-light.codeforamerica.org
+    '''
+    try:
+        org = db.session.query(Organization).limit(1).first()
+        project = db.session.query(Project).limit(1).first()
+    
+        if not hasattr(project, 'name'):
+            status = 'Sample project is missing a name'
+    
+        elif not hasattr(org, 'name'):
+            status = 'Sample project is missing a name'
+    
+        else:
+            status = 'ok'
+        
+    except Exception, e:
+        status = 'Error: ' + str(e)
+    
+    state = dict(status=status, updated=int(time.time()), resources=[])
+    state.update(dict(dependencies=['Meetup', 'Github', 'PostgreSQL']))
+    
+    response = make_response(json.dumps(state, indent=2))
+    response.headers['Content-Type'] = 'application/json'
+    
+    return response
 
 @app.route("/")
 def index():
