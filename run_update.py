@@ -100,6 +100,7 @@ def get_organizations():
 
 def get_stories(organization):
     '''
+        Get two recent stories from an rss feed.
     '''
     # If there is no given rss link, try the website url.
     if organization.rss:
@@ -117,14 +118,11 @@ def get_stories(organization):
 
     d = feedparser.parse(get(url).text)
 
-    #
-    # Repeated code here, need to refactor
-    #
+    # If blog posts are found
     if d.entries:
-        if len(d.entries) > 1:
-            # Grab the two most recent stories.
-            for i in range(0,2):
-                # Search for the same story
+        # Grab the top two
+        for i in range(2):
+            try:
                 filter = Story.title == d.entries[i].title
                 existing_story = db.session.query(Story).filter(filter).first()
                 if existing_story:
@@ -133,10 +131,10 @@ def get_stories(organization):
                     story_dict = dict(title=d.entries[i].title, link=d.entries[i].link, type="blog", organization_name=organization.name)
                     new_story = Story(**story_dict)
                     db.session.add(new_story)
-        else:
-            story_dict = dict(title=entry.title, link=entry.link, type="blog", organization_name=organization.name)
-            new_story = Story(**story_dict)
-            db.session.add(new_story)
+            # If only one post, catch the IndexError and pass
+            except IndexError:
+                pass
+
 
 def get_adjoined_json_lists(response):
     ''' Github uses the Link header (RFC 5988) to do pagination.
