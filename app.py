@@ -100,7 +100,7 @@ class Organization(db.Model):
         '''
             Return the two most recent events
         '''
-        recent_events = Event.query.order_by(Event.start_time.desc()).limit(2).all()
+        recent_events = Event.query.filter_by(organization_name=self.name).order_by(Event.start_time.desc()).limit(2).all()
         recent_events_json = [row.asdict() for row in recent_events]
         return recent_events_json
 
