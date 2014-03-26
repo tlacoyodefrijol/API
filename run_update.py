@@ -115,17 +115,24 @@ def get_stories(organization):
     if not url:
         return None
 
-    d = feedparser.parse(url)
-    
+    d = feedparser.parse(get(url).text)
+
     #
-    # Search for the two most recent entries.
-    # 
-    for entry in d.entries[:2]:
-        # Search for the same story
-        filter = Story.title == entry.title
-        existing_story = db.session.query(Story).filter(filter).first()
-        if existing_story:
-            continue
+    # Repeated code here, need to refactor
+    #
+    if d.entries:
+        if len(d.entries) > 1:
+            # Grab the two most recent stories.
+            for i in range(0,2):
+                # Search for the same story
+                filter = Story.title == d.entries[i].title
+                existing_story = db.session.query(Story).filter(filter).first()
+                if existing_story:
+                    continue
+                else:
+                    story_dict = dict(title=d.entries[i].title, link=d.entries[i].link, type="blog", organization_name=organization.name)
+                    new_story = Story(**story_dict)
+                    db.session.add(new_story)
         else:
             story_dict = dict(title=entry.title, link=entry.link, type="blog", organization_name=organization.name)
             new_story = Story(**story_dict)
