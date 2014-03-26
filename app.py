@@ -118,19 +118,19 @@ class Organization(db.Model):
         '''
             API link to all an orgs events
         '''
-        return 'http://civic-tech-movement.codeforamerica.org/api/'+self.name+'/events'
+        return 'http://civic-tech-movement.codeforamerica.org/api/organizations/'+self.name+'/events'
 
     def all_projects(self):
         '''
             API link to all an orgs projects
         '''
-        return 'http://civic-tech-movement.codeforamerica.org/api/'+self.name+'/projects'
+        return 'http://civic-tech-movement.codeforamerica.org/api/organizations/'+self.name+'/projects'
 
     def all_stories(self):
         '''
             API link to all an orgs stories
         '''
-        return 'http://civic-tech-movement.codeforamerica.org/api/'+self.name+'/stories'
+        return 'http://civic-tech-movement.codeforamerica.org/api/organizations/'+self.name+'/stories'
 
 class Story(db.Model):
     '''
