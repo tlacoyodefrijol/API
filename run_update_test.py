@@ -84,6 +84,12 @@ class RunUpdateTestCase(unittest.TestCase):
             events_file.close()
             return response(200, events_content)
 
+        elif url.geturl() == 'http://www.codeforamerica.org/blog/feed/' or match(r'http:\/\/.+\.rss', url.geturl()):
+            stories_file=open('blog.xml')
+            stories_content = stories_file.read()
+            stories_file.close()
+            return response(200, stories_content)
+
         else:
             raise Exception('Asked for unknown URL ' + url.geturl())
 
@@ -208,6 +214,12 @@ class RunUpdateTestCase(unittest.TestCase):
                 events_file.close()
                 return response(200, events_content)
 
+            elif url.geturl() == 'http://www.codeforamerica.org/blog/feed/':
+                stories_file=open('blog.xml')
+                stories_content = stories_file.read()
+                stories_file.close()
+                return response(200, stories_content)
+
             else:
                 raise Exception('Asked for unknown URL ' + url.geturl())
 
@@ -236,6 +248,12 @@ class RunUpdateTestCase(unittest.TestCase):
 
             elif url.geturl() == 'https://api.github.com/repos/codeforamerica/cityvoice':
                 return response(422, '''Unprocessable Entity''')
+
+            elif url.geturl() == 'http://www.codeforamerica.org/blog/feed/':
+                stories_file=open('blog.xml')
+                stories_content = stories_file.read()
+                stories_file.close()
+                return response(200, stories_content)
 
         with HTTMock(response_content):
             import run_update
@@ -318,7 +336,11 @@ class RunUpdateTestCase(unittest.TestCase):
 
             elif url.geturl() == 'https://api.github.com/repos/codeforamerica/cityvoice/issues?labels=project-needs':
                 return response(200, '''[ ]''')
-
+            elif url.geturl() == 'http://www.codeforamerica.org/blog/feed/':
+                stories_file=open('blog.xml')
+                stories_content = stories_file.read()
+                stories_file.close()
+                return response(200, stories_content)
             else:
                 raise Exception('Asked for unknown URL ' + url.geturl())
 
@@ -367,6 +389,12 @@ class RunUpdateTestCase(unittest.TestCase):
             elif match(r'https:\/\/api\.meetup\.com\/2\/events\?status=past,upcoming&format=json&group_urlname=Code-For-Charlotte&key=', url.geturl()):
                 return response(404, '''Not Found!''')
 
+            elif url.geturl() == 'http://www.codeforamerica.org/blog/feed/':
+                stories_file=open('blog.xml')
+                stories_content = stories_file.read()
+                stories_file.close()
+                return response(200, stories_content)
+
             else:
                 raise Exception('Asked for unknown URL ' + url.geturl())
 
@@ -380,6 +408,31 @@ class RunUpdateTestCase(unittest.TestCase):
             run_update.main()
 
         logging.error.assert_called_with('Code for America\'s meetup page cannot be found')
+
+    def test_main_with_stories(self):
+        '''
+        Test that two most recent blog posts are in the db.
+        '''
+        self.mock_rss_response()
+
+        from factories import OrganizationFactory
+        organization = OrganizationFactory(name='Code for America')
+
+        with HTTMock(self.response_content):
+            import run_update as ru
+            ru.get_stories(organization)
+
+        self.db.session.flush()
+
+        from app import Story
+
+        stories_count = self.db.session.query(Story).count()
+        self.assertEqual(stories_count, 2)
+
+        stories = self.db.session.query(Story).all()
+        self.assertEqual(stories[0].title, "Four Great Years")
+        self.assertEqual(stories[1].title, "Open, transparent Chattanooga")
+
 
 if __name__ == '__main__':
     unittest.main()

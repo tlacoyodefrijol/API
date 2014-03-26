@@ -115,17 +115,24 @@ def get_stories(organization):
     if not url:
         return None
 
-    d = feedparser.parse(url)
-    
+    d = feedparser.parse(get(url).text)
+
     #
-    # Search for the two most recent entries.
-    # 
-    for entry in d.entries[:2]:
-        # Search for the same story
-        filter = Story.title == entry.title
-        existing_story = db.session.query(Story).filter(filter).first()
-        if existing_story:
-            continue
+    # Repeated code here, need to refactor
+    #
+    if d.entries:
+        if len(d.entries) > 1:
+            # Grab the two most recent stories.
+            for i in range(0,2):
+                # Search for the same story
+                filter = Story.title == d.entries[i].title
+                existing_story = db.session.query(Story).filter(filter).first()
+                if existing_story:
+                    continue
+                else:
+                    story_dict = dict(title=d.entries[i].title, link=d.entries[i].link, type="blog", organization_name=organization.name)
+                    new_story = Story(**story_dict)
+                    db.session.add(new_story)
         else:
             story_dict = dict(title=entry.title, link=entry.link, type="blog", organization_name=organization.name)
             new_story = Story(**story_dict)
@@ -133,17 +140,17 @@ def get_stories(organization):
 
 def get_adjoined_json_lists(response):
     ''' Github uses the Link header (RFC 5988) to do pagination.
-    
+
         If we see a Link header, assume we're dealing with lists
         and concat them all together.
     '''
     result = response.json()
-    
+
     if type(result) is list:
         while 'next' in response.links:
             response = get(response.links['next']['url'])
             result += response.json()
-    
+
     return result
 
 def get_projects(organization):
@@ -154,18 +161,18 @@ def get_projects(organization):
     '''
     _, host, path, _, _, _ = urlparse(organization.projects_list_url)
     matched = match(r'(/orgs)?/(?P<name>[^/]+)/?$', path)
-    
+
     if host in ('www.github.com', 'github.com') and matched:
         projects_url = 'https://api.github.com/users/%s/repos' % matched.group('name')
     else:
         projects_url = organization.projects_list_url
-    
+
     logging.info('Asking for ' + projects_url)
     response = get(projects_url)
 
     try:
         data = get_adjoined_json_lists(response)
-    
+
     except ValueError:
         # If projects_list_url is a type of csv
         data = response.text.splitlines()
@@ -173,24 +180,24 @@ def get_projects(organization):
         projects = list(DictReader(data, dialect=dialect))
         for project in projects:
             project['organization_name'] = organization.name
-    
+
     else:
         # If projects_list_url is a json file
         if len(data) and type(data[0]) in (str, unicode):
             # Likely that the JSON data is a simple list of strings
             projects = [dict(organization_name=organization.name, code_url=item)
                         for item in data]
-        
+
         elif len(data) and type(data[0]) is dict:
             # Map data to name, description, link_url, code_url (skip type, categories)
             projects = [dict(name=p['name'], description=p['description'],
                              link_url=p['homepage'], code_url=p['html_url'],
                              organization_name=organization.name)
                         for p in data]
-        
+
         elif len(data):
             raise Exception('Unknown type for first project: "%s"' % repr(type(data[0])))
-        
+
         else:
             projects = []
 
@@ -463,7 +470,7 @@ def main():
             projects = get_projects(organization)
             for proj_info in projects:
                 save_project_info(db.session, proj_info)
-        
+
         if organization.events_url:
             logging.info("Gathering all of %s's events." % organization.name)
             identifier = get_event_group_identifier(organization.events_url)
