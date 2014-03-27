@@ -195,8 +195,8 @@ class Event(db.Model):
     event_url = db.Column(db.Unicode())
     location = db.Column(db.Unicode())
     created_at = db.Column(db.Unicode())
-    start_time = db.Column(db.DateTime())
-    end_time = db.Column(db.DateTime())
+    start_time = db.Column(db.DateTime(True))
+    end_time = db.Column(db.DateTime(True))
     keep = db.Column(db.Boolean())
 
     # Relationships

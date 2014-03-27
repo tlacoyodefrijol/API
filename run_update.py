@@ -7,6 +7,7 @@ from operator import itemgetter
 from StringIO import StringIO
 from requests import get
 from datetime import datetime
+from dateutil.tz import tzoffset
 import requests
 from feeds import extract_feed_links, get_first_working_feed_link
 import feedparser
@@ -45,11 +46,12 @@ def get_github_api(url):
 
     return got
 
-def format_date(time_in_milliseconds):
+def format_date(time_in_milliseconds, utc_offset_msec):
     '''
         Create a datetime object from a time in milliseconds from the epoch
     '''
-    return datetime.fromtimestamp(time_in_milliseconds/1000.0)
+    tz = tzoffset(None, utc_offset_msec/1000.0)
+    return datetime.fromtimestamp(time_in_milliseconds/1000.0, tz)
 
 def format_location(venue):
     address = venue['address_1']
@@ -76,15 +78,17 @@ def get_meetup_events(organization, group_urlname):
         results = got.json()['results']
         events = []
         for event in results:
+            event = dict(organization_name=organization.name,
+                         name=event['name'],
+                         description=event['description'],
+                         event_url=event['event_url'],
+                         start_time=format_date(event['time'], event['utc_offset']),
+                         created_at=format_date(event['created'], event['utc_offset']))
+
             # Some events don't have locations.
             if 'venue' in event:
-                event = dict(organization_name=organization.name, name=event['name'], description=event['description'],
-                       event_url=event['event_url'], start_time=format_date(event['time']),
-                       location=format_location(event['venue']), created_at=format_date(event['created']))
-            else:
-                event = dict(organization_name=organization.name, name=event['name'], description=event['description'],
-                       event_url=event['event_url'], start_time=format_date(event['time']),
-                       created_at=format_date(event['created']))
+                event['location'] = format_location(event['venue'])
+
             events.append(event)
         return events
 
