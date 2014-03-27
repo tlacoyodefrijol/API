@@ -195,21 +195,23 @@ class Event(db.Model):
     event_url = db.Column(db.Unicode())
     location = db.Column(db.Unicode())
     created_at = db.Column(db.Unicode())
-    start_time = db.Column(db.DateTime(True))
-    end_time = db.Column(db.DateTime(True))
+    start_time = db.Column(db.DateTime(False))
+    end_time = db.Column(db.DateTime(False))
+    utc_offset = db.Column(db.Integer())
     keep = db.Column(db.Boolean())
 
     # Relationships
     organization = db.relationship('Organization')
     organization_name = db.Column(db.Unicode(), db.ForeignKey('organization.name'))
 
-    def __init__(self, name, event_url, start_time, created_at,
+    def __init__(self, name, event_url, start_time, created_at, utc_offset,
                  organization_name, location=None, end_time=None, description=None):
         self.name = name
         self.description = description
         self.location = location
         self.event_url = event_url
         self.start_time = start_time
+        self.utc_offset = utc_offset
         self.end_time = end_time
         self.organization_name = organization_name
         self.created_at = created_at

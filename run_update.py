@@ -51,7 +51,8 @@ def format_date(time_in_milliseconds, utc_offset_msec):
         Create a datetime object from a time in milliseconds from the epoch
     '''
     tz = tzoffset(None, utc_offset_msec/1000.0)
-    return datetime.fromtimestamp(time_in_milliseconds/1000.0, tz)
+    dt = datetime.fromtimestamp(time_in_milliseconds/1000.0, tz)
+    return datetime(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second)
 
 def format_location(venue):
     address = venue['address_1']
@@ -83,7 +84,8 @@ def get_meetup_events(organization, group_urlname):
                          description=event['description'],
                          event_url=event['event_url'],
                          start_time=format_date(event['time'], event['utc_offset']),
-                         created_at=format_date(event['created'], event['utc_offset']))
+                         created_at=format_date(event['created'], event['utc_offset']),
+                         utc_offset=event['utc_offset']/1000.0)
 
             # Some events don't have locations.
             if 'venue' in event:
