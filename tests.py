@@ -118,6 +118,23 @@ class ApiTest(unittest.TestCase):
         assert isinstance(response['objects'][0]['organization_name'], unicode)
         assert isinstance(response['objects'][0]['type'], unicode)
 
+    def test_good_orgs_projects(self):
+        organization = OrganizationFactory(name="Code for America")
+        project = ProjectFactory(organization_name="Code for America")
+        db.session.flush()
+
+        response = self.app.get('/api/organizations/Code for America/projects')
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+        assert isinstance(response, dict)
+
+    def test_bad_orgs_projects(self):
+        ProjectFactory()
+        db.session.flush()
+
+        response = self.app.get('/api/organizations/Whatever/projects')
+        self.assertEqual(response.status_code, 404)
+
     def test_stories(self):
         StoryFactory()
         db.session.flush()
@@ -132,6 +149,16 @@ class ApiTest(unittest.TestCase):
         assert isinstance(response['objects'][0]['organization_name'], unicode)
         assert isinstance(response['objects'][0]['title'], unicode)
         assert isinstance(response['objects'][0]['type'], unicode)
+
+    def test_orgs_stories(self):
+        organization = OrganizationFactory(name="Code for America")
+        story = StoryFactory(organization_name="Code for America")
+        db.session.flush()
+
+        response = self.app.get('/api/organizations/Code for America/stories')
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+        assert isinstance(response, dict)
 
     def test_events(self):
         EventFactory()
@@ -150,6 +177,16 @@ class ApiTest(unittest.TestCase):
         assert isinstance(response['objects'][0]['organization'], dict)
         assert isinstance(response['objects'][0]['organization_name'], unicode)
         assert isinstance(response['objects'][0]['start_time'], unicode)
+
+    def test_orgs_events(self):
+        organization = OrganizationFactory(name="Code for America")
+        event = EventFactory(organization_name="Code for America")
+        db.session.flush()
+
+        response = self.app.get('/api/organizations/Code for America/events')
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+        assert isinstance(response, dict)
 
 if __name__ == '__main__':
     unittest.main()
