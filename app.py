@@ -154,13 +154,18 @@ class Organization(db.Model):
         # Make a nice org name
         organization_name = quote(self.name.replace(" ","_"))
         return '%s://%s/api/organizations/%s/stories' % (scheme, host, organization_name)
+    
+    def api_id(self):
+        '''
+        '''
+        return quote(self.name.replace(" ","_"))
 
     def api_url(self):
         ''' API link to itself
         '''
         scheme, host, _, _, _, _ = urlparse(request.url)
         # Make a nice org name
-        organization_name = quote(self.name.replace(" ","_"))
+        organization_name = self.api_id()
         return '%s://%s/api/organizations/%s' % (scheme, host, organization_name)
 
 class Story(db.Model):
@@ -269,16 +274,14 @@ def get_organizations_geojson():
     geojson = dict(type='GeometryCollection', features=[])
 
     for org in db.session.query(Organization):
-        # The unique identifier of an organization is its name.
-        id = org.name
-
-        # Pick out all the field names without an underscore as the first char.
-        keys = [k for k in org.__dict__.keys() if not k.startswith('_')]
+        # The unique identifier of an organization.
+        id = org.api_id()
 
         # Pick out all the properties that aren't part of the location.
+        keys = org.asdict().keys()
         names = [k for k in keys if k not in ('latitude', 'longitude', 'keep')]
         props = dict([(k, getattr(org, k)) for k in names])
-
+        
         # GeoJSON Point geometry, http://geojson.org/geojson-spec.html#point
         geom = dict(type='Point', coordinates=[org.longitude, org.latitude])
 
