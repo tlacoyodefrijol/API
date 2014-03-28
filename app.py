@@ -34,13 +34,14 @@ def clean_urls(endpoint, values):
     /api/organizations/Code_for_America
     will search the db for Code for America
     '''
-    if "instid" in values:
-        if values["instid"]:
-            if "_" in values["instid"]:
-                values["instid"] = values["instid"].replace("_", " ")
-    if "organization_name" in values:
-        if "_" in values["organization_name"]:
-            values["organization_name"] = values["organization_name"].replace("_", " ")
+    if values:
+        if "instid" in values:
+            if values["instid"]:
+                if "_" in values["instid"]:
+                    values["instid"] = values["instid"].replace("_", " ")
+        if "organization_name" in values:
+            if "_" in values["organization_name"]:
+                values["organization_name"] = values["organization_name"].replace("_", " ")
 
 def add_cors_header(response):
     response.headers['Access-Control-Allow-Origin'] = '*'
