@@ -1,4 +1,5 @@
 import unittest, requests, json, os
+from datetime import datetime
 from urlparse import urlparse
 
 from app import *
@@ -24,10 +25,10 @@ class ApiTest(unittest.TestCase):
         organization = OrganizationFactory(name='Collective of Ericas')
         db.session.flush()
         # Create multiple events with different times
-        oldest_event = EventFactory(organization_name=organization.name, name="Oldest event", start_time="2014-01-01T00:01:00")
-        second_most_recent_event = EventFactory(organization_name=organization.name, name="Second most recent event", start_time="2014-01-01T01:01:00")
-        most_recent_event = EventFactory(organization_name=organization.name, name="Most recent event", start_time="2014-01-02T01:00:00")
-        old_event = EventFactory(organization_name=organization.name, name="Old event", start_time="2014-01-01T01:00:00")
+        oldest_event = EventFactory(organization_name=organization.name, name="Oldest event", start_time_notz=datetime(2014, 1, 1, 0, 1, 0))
+        second_most_recent_event = EventFactory(organization_name=organization.name, name="Second most recent event", start_time_notz=datetime(2014, 1, 1, 1, 1, 0))
+        most_recent_event = EventFactory(organization_name=organization.name, name="Most recent event", start_time_notz=datetime(2014, 1, 2, 1, 0, 0))
+        old_event = EventFactory(organization_name=organization.name, name="Old event", start_time_notz=datetime(2014, 1, 1, 1, 0, 0))
 
         db.session.flush()
         response = self.app.get('/api/organizations/Collective%20of%20Ericas')
