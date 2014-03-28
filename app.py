@@ -155,6 +155,14 @@ class Organization(db.Model):
         organization_name = quote(self.name.replace(" ","_"))
         return '%s://%s/api/organizations/%s/stories' % (scheme, host, organization_name)
 
+    def api_url(self):
+        ''' API link to itself
+        '''
+        scheme, host, _, _, _, _ = urlparse(request.url)
+        # Make a nice org name
+        organization_name = quote(self.name.replace(" ","_"))
+        return '%s://%s/api/organizations/%s' % (scheme, host, organization_name)
+
 class Story(db.Model):
     '''
         Blog posts from a Brigade.
@@ -247,7 +255,7 @@ class Event(db.Model):
 manager = flask.ext.restless.APIManager(app, flask_sqlalchemy_db=db)
 kwargs = dict(exclude_columns=['keep'], max_results_per_page=None)
 org_kwargs = kwargs.copy()
-org_kwargs['include_methods'] = ['recent_events','recent_projects','all_stories','all_events','all_projects']
+org_kwargs['include_methods'] = ['recent_events','recent_projects','all_stories','all_events','all_projects','api_url']
 org_kwargs['exclude_columns'] = ['keep','events','projects']
 manager.create_api(Organization, collection_name='organizations', **org_kwargs)
 manager.create_api(Story, collection_name='stories', **kwargs)

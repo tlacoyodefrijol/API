@@ -88,6 +88,7 @@ class ApiTest(unittest.TestCase):
         response = json.loads(response.data)
         assert isinstance(response, dict)
         assert isinstance(response['objects'], list)
+        assert isinstance(response['objects'][0]['api_url'], unicode)
         assert isinstance(response['objects'][0]['city'], unicode)
         assert isinstance(response['objects'][0]['recent_events'], list)
         assert isinstance(response['objects'][0]['latitude'], float)
