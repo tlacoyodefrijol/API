@@ -267,75 +267,78 @@ def get_orgs_events(organization_name):
         A cleaner url for getting an organizations events
         Better than /api/events?q={"filters":[{"name":"organization_name","op":"eq","val":"Code for San Francisco"}]}
     '''
+    # Check org name
+    organization = Organization.query.filter_by(name=organization_name).first()
+    if not organization:
+        return "Organization not found", 404
     # Get event objects
     orgs_events = Event.query.filter_by(organization_name=organization_name).all()
-    if orgs_events:
-        # Convert them to dicts
-        # Remove the keep column
-        orgs_events_as_dicts = []
-        for event in orgs_events:
-            event = event.asdict()
-            del event['keep']
-            orgs_events_as_dicts.append(event)
-        response = {
-            "num_results" : len(orgs_events_as_dicts),
-            "objects" : orgs_events_as_dicts,
-            "page" : 1,
-            "total_pages" : 1
-        }
-        return jsonify(response)
-    else:
-        return "Organization not found.", 404
+    # Convert them to dicts
+    # Remove the keep column
+    orgs_events_as_dicts = []
+    for event in orgs_events:
+        event = event.asdict()
+        del event['keep']
+        orgs_events_as_dicts.append(event)
+    response = {
+        "num_results" : len(orgs_events_as_dicts),
+        "objects" : orgs_events_as_dicts,
+        "page" : 1,
+        "total_pages" : 1
+    }
+    return jsonify(response)
 
 @app.route("/api/organizations/<organization_name>/stories")
 def get_orgs_stories(organization_name):
     '''
         A cleaner url for getting an organizations stories
     '''
+    # Check org name
+    organization = Organization.query.filter_by(name=organization_name).first()
+    if not organization:
+        return "Organization not found", 404
     # Get stories objects
     orgs_stories = Story.query.filter_by(organization_name=organization_name).all()
-    if orgs_stories:
-        # Convert them to dicts
-        # Remove the keep column
-        orgs_stories_as_dicts = []
-        for story in orgs_stories:
-            story = story.asdict()
-            del story['keep']
-            orgs_stories_as_dicts.append(story)
-        response = {
-            "num_results" : len(orgs_stories_as_dicts),
-            "objects" : orgs_stories_as_dicts,
-            "page" : 1,
-            "total_pages" : 1
-        }
-        return jsonify(response)
-    else:
-        return "Organization not found.", 404
+    # Convert them to dicts
+    # Remove the keep column
+    orgs_stories_as_dicts = []
+    for story in orgs_stories:
+        story = story.asdict()
+        del story['keep']
+        orgs_stories_as_dicts.append(story)
+    response = {
+        "num_results" : len(orgs_stories_as_dicts),
+        "objects" : orgs_stories_as_dicts,
+        "page" : 1,
+        "total_pages" : 1
+    }
+    return jsonify(response)
 
 @app.route("/api/organizations/<organization_name>/projects")
 def get_orgs_projects(organization_name):
     '''
         A cleaner url for getting an organizations projects
     '''
+    # Check org name
+    organization = Organization.query.filter_by(name=organization_name).first()
+    if not organization:
+        return "Organization not found", 404
     # Get project objects
     orgs_projects = Project.query.filter_by(organization_name=organization_name).all()
-    if orgs_projects:
-        # Convert them to dicts
-        # Remove the keep column
-        orgs_projects_as_dicts = []
-        for project in orgs_projects:
-            project = project.asdict()
-            del project['keep']
-            orgs_projects_as_dicts.append(project)
-        response = {
-            "num_results" : len(orgs_projects_as_dicts),
-            "objects" : orgs_projects_as_dicts,
-            "page" : 1,
-            "total_pages" : 1
-        }
-        return jsonify(response)
-    else:
-        return "Organization not found.", 404
+    # Convert them to dicts
+    # Remove the keep column
+    orgs_projects_as_dicts = []
+    for project in orgs_projects:
+        project = project.asdict()
+        del project['keep']
+        orgs_projects_as_dicts.append(project)
+    response = {
+        "num_results" : len(orgs_projects_as_dicts),
+        "objects" : orgs_projects_as_dicts,
+        "page" : 1,
+        "total_pages" : 1
+    }
+    return jsonify(response)
 
 
 # -------------------
