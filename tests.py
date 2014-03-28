@@ -1,4 +1,5 @@
 import unittest, requests, json, os
+from urlparse import urlparse
 
 from app import *
 from factories import OrganizationFactory, ProjectFactory, EventFactory, StoryFactory
@@ -150,6 +151,72 @@ class ApiTest(unittest.TestCase):
         assert isinstance(response['objects'][0]['organization'], dict)
         assert isinstance(response['objects'][0]['organization_name'], unicode)
         assert isinstance(response['objects'][0]['start_time'], unicode)
+
+    def test_underscores_and_spaces(self):
+        organization = OrganizationFactory(name="Code for America")
+        db.session.add(organization)
+        db.session.commit()
+
+        response = self.app.get('/api/organizations/Code for America')
+        self.assertEqual(response.status_code,200)
+        response = json.loads(response.data)
+        scheme, netloc, path, _, _, _  = urlparse(response["all_events"])
+        self.assertTrue("_" in path)
+        self.assertFalse(" " in path)
+        scheme, netloc, path, _, _, _  = urlparse(response["all_stories"])
+        self.assertTrue("_" in path)
+        self.assertFalse(" " in path)
+        scheme, netloc, path, _, _, _  = urlparse(response["all_projects"])
+        self.assertTrue("_" in path)
+        self.assertFalse(" " in path)
+
+        response = self.app.get('/api/organizations/Code_for_America')
+        self.assertEqual(response.status_code,200)
+        response = json.loads(response.data)
+        self.assertEqual(response["name"], "Code for America")
+
+        project = ProjectFactory(organization_name="Code for America")
+        db.session.add(project)
+        db.session.commit()
+
+        response = self.app.get('/api/organizations/Code for America/projects')
+        self.assertEqual(response.status_code,200)
+        response = json.loads(response.data)
+        self.assertEqual(response["objects"][0]["organization_name"], "Code for America")
+
+        response = self.app.get('/api/organizations/Code_for_America/projects')
+        self.assertEqual(response.status_code,200)
+        response = json.loads(response.data)
+        self.assertEqual(response["objects"][0]["organization_name"], "Code for America")
+
+        event = EventFactory(organization_name="Code for America")
+        db.session.add(event)
+        db.session.commit()
+
+        response = self.app.get('/api/organizations/Code for America/events')
+        self.assertEqual(response.status_code,200)
+        response = json.loads(response.data)
+        self.assertEqual(response["objects"][0]["organization_name"], "Code for America")
+
+        response = self.app.get('/api/organizations/Code_for_America/events')
+        self.assertEqual(response.status_code,200)
+        response = json.loads(response.data)
+        self.assertEqual(response["objects"][0]["organization_name"], "Code for America")
+
+        story = StoryFactory(organization_name="Code for America")
+        db.session.add(story)
+        db.session.commit()
+
+        response = self.app.get('/api/organizations/Code for America/stories')
+        self.assertEqual(response.status_code,200)
+        response = json.loads(response.data)
+        self.assertEqual(response["objects"][0]["organization_name"], "Code for America")
+
+        response = self.app.get('/api/organizations/Code_for_America/stories')
+        self.assertEqual(response.status_code,200)
+        response = json.loads(response.data)
+        self.assertEqual(response["objects"][0]["organization_name"], "Code for America")
+
 
 if __name__ == '__main__':
     unittest.main()
