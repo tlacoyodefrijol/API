@@ -218,7 +218,7 @@ class Event(db.Model):
         self.created_at = created_at
         self.keep = True
     
-    def start_time_tz(self):
+    def start_time(self):
         ''' Get a string representation of the start time with UTC offset.
         '''
         if self.start_time_notz is None:
@@ -228,7 +228,7 @@ class Event(db.Model):
         dt = datetime(st.year, st.month, st.day, st.hour, st.minute, st.second, tzinfo=tz)
         return dt.strftime('%Y-%m-%d %H:%M:%S %z')
     
-    def end_time_tz(self):
+    def end_time(self):
         ''' Get a string representation of the end time with UTC offset.
         '''
         if self.end_time_notz is None:
@@ -250,7 +250,7 @@ manager.create_api(Organization, collection_name='organizations', **org_kwargs)
 manager.create_api(Story, collection_name='stories', **kwargs)
 manager.create_api(Project, collection_name='projects', **kwargs)
 event_kwargs = kwargs.copy()
-event_kwargs['include_methods'] = ['start_time_tz', 'end_time_tz']
+event_kwargs['include_methods'] = ['start_time', 'end_time']
 event_kwargs['exclude_columns'] = ['keep','start_time_notz','end_time_notz','utc_offset']
 manager.create_api(Event, collection_name='events', **event_kwargs)
 

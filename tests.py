@@ -143,14 +143,14 @@ class ApiTest(unittest.TestCase):
         assert isinstance(response, dict)
         assert isinstance(response['objects'], list)
         assert isinstance(response['objects'][0]['description'], unicode)
-        assert isinstance(response['objects'][0]['end_time_tz'], unicode)
+        assert isinstance(response['objects'][0]['end_time'], unicode)
         assert isinstance(response['objects'][0]['event_url'], unicode)
         assert isinstance(response['objects'][0]['id'], int)
         assert isinstance(response['objects'][0]['location'], unicode)
         assert isinstance(response['objects'][0]['name'], unicode)
         assert isinstance(response['objects'][0]['organization'], dict)
         assert isinstance(response['objects'][0]['organization_name'], unicode)
-        assert isinstance(response['objects'][0]['start_time_tz'], unicode)
+        assert isinstance(response['objects'][0]['start_time'], unicode)
 
 if __name__ == '__main__':
     unittest.main()
