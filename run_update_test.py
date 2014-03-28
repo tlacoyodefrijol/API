@@ -186,16 +186,19 @@ class RunUpdateTestCase(unittest.TestCase):
 
         first_event = events.pop(0)
         # Thu, 16 Jan 2014 19:00:00 -05:00
+        self.assertEqual(first_event.utc_offset, -5 * 3600)
         self.assertEqual(first_event.start_time, datetime.datetime(2014, 1, 16, 19, 0, 0))
         self.assertEqual(first_event.name, 'Organizational meeting')
 
         second_event = events.pop(0)
         # Thu, 20 Feb 2014 18:30:00 -05:00
+        self.assertEqual(first_event.utc_offset, -5 * 3600)
         self.assertEqual(second_event.start_time, datetime.datetime(2014, 2, 20, 18, 30, 0))
         self.assertEqual(second_event.name, 'Code Across: Launch event')
 
         third_event = events.pop(0)
         # Wed, 05 Mar 2014 17:30:00 -05:00
+        self.assertEqual(first_event.utc_offset, -5 * 3600)
         self.assertEqual(third_event.start_time, datetime.datetime(2014, 3, 5, 17, 30, 0))
         self.assertEqual(third_event.name, 'Brigade Ideation (Brainstorm and Prototyping) Session.')
 

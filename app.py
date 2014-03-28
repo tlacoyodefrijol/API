@@ -12,6 +12,7 @@ from sqlalchemy.ext.mutable import Mutable
 from sqlalchemy import types
 import flask.ext.restless
 from dictalchemy import make_class_dictable
+from dateutil.tz import tzoffset
 
 # -------------------
 # Init
@@ -216,6 +217,26 @@ class Event(db.Model):
         self.organization_name = organization_name
         self.created_at = created_at
         self.keep = True
+    
+    def start_time_tz(self):
+        ''' Get a string representation of the start time with UTC offset.
+        '''
+        if self.start_time is None:
+            return None
+        tz = tzoffset(None, self.utc_offset)
+        st = self.start_time
+        dt = datetime(st.year, st.month, st.day, st.hour, st.minute, st.second, tzinfo=tz)
+        return dt.strftime('%Y-%m-%d %H:%M:%S %z')
+    
+    def end_time_tz(self):
+        ''' Get a string representation of the end time with UTC offset.
+        '''
+        if self.end_time is None:
+            return None
+        tz = tzoffset(None, self.utc_offset)
+        et = self.end_time
+        dt = datetime(et.year, et.month, et.day, et.hour, et.minute, et.second, tzinfo=tz)
+        return dt.strftime('%Y-%m-%d %H:%M:%S %z')
 
 # -------------------
 # API
@@ -228,7 +249,10 @@ org_kwargs['exclude_columns'] = ['keep','events','projects']
 manager.create_api(Organization, collection_name='organizations', **org_kwargs)
 manager.create_api(Story, collection_name='stories', **kwargs)
 manager.create_api(Project, collection_name='projects', **kwargs)
-manager.create_api(Event, collection_name='events', **kwargs)
+event_kwargs = kwargs.copy()
+event_kwargs['include_methods'] = ['start_time_tz', 'end_time_tz']
+event_kwargs['exclude_columns'] = ['keep','start_time','end_time','utc_offset']
+manager.create_api(Event, collection_name='events', **event_kwargs)
 
 @app.route('/api/organizations.geojson')
 def get_organizations_geojson():
@@ -265,7 +289,14 @@ def get_orgs_events(organization_name):
         Better than /api/events?q={"filters":[{"name":"organization_name","op":"eq","val":"Code for San Francisco"}]}
     '''
     orgs_events = Event.query.filter_by(organization_name=organization_name).all()
-    orgs_events = [event.asdict() for event in orgs_events]
+    
+    for (index, event) in enumerate(orgs_events):
+        orgs_events[index] = event.asdict()
+        for key in event_kwargs['exclude_columns']:
+            del orgs_events[index][key]
+        for key in event_kwargs['include_methods']:
+            orgs_events[index][key] = getattr(event, key)()
+    
     response = {
         "num_results" : len(orgs_events),
         "objects" : orgs_events,
