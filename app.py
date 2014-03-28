@@ -13,6 +13,8 @@ from sqlalchemy import types
 import flask.ext.restless
 from dictalchemy import make_class_dictable
 from dateutil.tz import tzoffset
+from urlparse import urlparse
+from urllib import quote
 
 # -------------------
 # Init
@@ -26,6 +28,21 @@ make_class_dictable(db.Model)
 # -------------------
 # Settings
 # -------------------
+@app.url_value_preprocessor
+def clean_urls(endpoint, values):
+    '''
+    Before every request, change underscores to spaces.
+    /api/organizations/Code_for_America
+    will search the db for Code for America
+    '''
+    if values:
+        if "instid" in values:
+            if values["instid"]:
+                if "_" in values["instid"]:
+                    values["instid"] = values["instid"].replace("_", " ")
+        if "organization_name" in values:
+            if "_" in values["organization_name"]:
+                values["organization_name"] = values["organization_name"].replace("_", " ")
 
 def add_cors_header(response):
     response.headers['Access-Control-Allow-Origin'] = '*'
@@ -116,22 +133,36 @@ class Organization(db.Model):
         return recent_projects
 
     def all_events(self):
+        ''' API link to all an orgs events
         '''
-            API link to all an orgs events
-        '''
-        return 'http://civic-tech-movement.codeforamerica.org/api/organizations/'+self.name+'/events'
+        scheme, host, _, _, _, _ = urlparse(request.url)
+        # Make a nice org name
+        organization_name = quote(self.name.replace(" ","_"))
+        return '%s://%s/api/organizations/%s/events' % (scheme, host, organization_name)
 
     def all_projects(self):
+        ''' API link to all an orgs projects
         '''
-            API link to all an orgs projects
-        '''
-        return 'http://civic-tech-movement.codeforamerica.org/api/organizations/'+self.name+'/projects'
+        scheme, host, _, _, _, _ = urlparse(request.url)
+        # Make a nice org name
+        organization_name = quote(self.name.replace(" ","_"))
+        return '%s://%s/api/organizations/%s/projects' % (scheme, host, organization_name)
 
     def all_stories(self):
+        ''' API link to all an orgs stories
         '''
-            API link to all an orgs stories
+        scheme, host, _, _, _, _ = urlparse(request.url)
+        # Make a nice org name
+        organization_name = quote(self.name.replace(" ","_"))
+        return '%s://%s/api/organizations/%s/stories' % (scheme, host, organization_name)
+
+    def api_url(self):
+        ''' API link to itself
         '''
-        return 'http://civic-tech-movement.codeforamerica.org/api/organizations/'+self.name+'/stories'
+        scheme, host, _, _, _, _ = urlparse(request.url)
+        # Make a nice org name
+        organization_name = quote(self.name.replace(" ","_"))
+        return '%s://%s/api/organizations/%s' % (scheme, host, organization_name)
 
 class Story(db.Model):
     '''
@@ -142,6 +173,7 @@ class Story(db.Model):
     title = db.Column(db.Unicode())
     link = db.Column(db.Unicode())
     type = db.Column(db.Unicode())
+    keep = db.Column(db.Boolean())
 
     # Relationships
     organization = db.relationship('Organization')
@@ -152,6 +184,7 @@ class Story(db.Model):
         self.link = link
         self.type = type
         self.organization_name = organization_name
+        self.keep = True
 
 class Project(db.Model):
     '''
@@ -241,10 +274,11 @@ class Event(db.Model):
 # -------------------
 # API
 # -------------------
+
 manager = flask.ext.restless.APIManager(app, flask_sqlalchemy_db=db)
 kwargs = dict(exclude_columns=['keep'], max_results_per_page=None)
 org_kwargs = kwargs.copy()
-org_kwargs['include_methods'] = ['recent_events','recent_projects','all_stories','all_events','all_projects']
+org_kwargs['include_methods'] = ['recent_events','recent_projects','all_stories','all_events','all_projects','api_url']
 org_kwargs['exclude_columns'] = ['keep','events','projects']
 manager.create_api(Organization, collection_name='organizations', **org_kwargs)
 manager.create_api(Story, collection_name='stories', **kwargs)
@@ -288,18 +322,27 @@ def get_orgs_events(organization_name):
         A cleaner url for getting an organizations events
         Better than /api/events?q={"filters":[{"name":"organization_name","op":"eq","val":"Code for San Francisco"}]}
     '''
+    # Check org name
+    organization = Organization.query.filter_by(name=organization_name).first()
+    if not organization:
+        return "Organization not found", 404
+    # Get event objects
     orgs_events = Event.query.filter_by(organization_name=organization_name).all()
+    orgs_events_as_dicts = []
     
-    for (index, event) in enumerate(orgs_events):
-        orgs_events[index] = event.asdict()
+    # Convert them to dicts,
+    # remove/add certain items.
+    for event in orgs_events:
+        event_dict = event.asdict()
+        orgs_events_as_dicts.append(event_dict)
         for key in event_kwargs['exclude_columns']:
-            del orgs_events[index][key]
+            del event_dict[key]
         for key in event_kwargs['include_methods']:
-            orgs_events[index][key] = getattr(event, key)()
+            event_dict[key] = getattr(event, key)()
     
     response = {
-        "num_results" : len(orgs_events),
-        "objects" : orgs_events,
+        "num_results" : len(orgs_events_as_dicts),
+        "objects" : orgs_events_as_dicts,
         "page" : 1,
         "total_pages" : 1
     }
@@ -310,11 +353,22 @@ def get_orgs_stories(organization_name):
     '''
         A cleaner url for getting an organizations stories
     '''
+    # Check org name
+    organization = Organization.query.filter_by(name=organization_name).first()
+    if not organization:
+        return "Organization not found", 404
+    # Get stories objects
     orgs_stories = Story.query.filter_by(organization_name=organization_name).all()
-    orgs_stories = [story.asdict() for story in orgs_stories]
+    # Convert them to dicts
+    # Remove the keep column
+    orgs_stories_as_dicts = []
+    for story in orgs_stories:
+        story = story.asdict()
+        del story['keep']
+        orgs_stories_as_dicts.append(story)
     response = {
-        "num_results" : len(orgs_stories),
-        "objects" : orgs_stories,
+        "num_results" : len(orgs_stories_as_dicts),
+        "objects" : orgs_stories_as_dicts,
         "page" : 1,
         "total_pages" : 1
     }
@@ -325,11 +379,22 @@ def get_orgs_projects(organization_name):
     '''
         A cleaner url for getting an organizations projects
     '''
+    # Check org name
+    organization = Organization.query.filter_by(name=organization_name).first()
+    if not organization:
+        return "Organization not found", 404
+    # Get project objects
     orgs_projects = Project.query.filter_by(organization_name=organization_name).all()
-    orgs_projects = [project.asdict() for project in orgs_projects]
+    # Convert them to dicts
+    # Remove the keep column
+    orgs_projects_as_dicts = []
+    for project in orgs_projects:
+        project = project.asdict()
+        del project['keep']
+        orgs_projects_as_dicts.append(project)
     response = {
-        "num_results" : len(orgs_projects),
-        "objects" : orgs_projects,
+        "num_results" : len(orgs_projects_as_dicts),
+        "objects" : orgs_projects_as_dicts,
         "page" : 1,
         "total_pages" : 1
     }
