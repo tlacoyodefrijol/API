@@ -12,6 +12,8 @@ from sqlalchemy.ext.mutable import Mutable
 from sqlalchemy import types
 import flask.ext.restless
 from dictalchemy import make_class_dictable
+from urlparse import urlparse
+from urllib import quote
 
 # -------------------
 # Init
@@ -115,22 +117,22 @@ class Organization(db.Model):
         return recent_projects
 
     def all_events(self):
+        ''' API link to all an orgs events
         '''
-            API link to all an orgs events
-        '''
-        return 'http://civic-tech-movement.codeforamerica.org/api/organizations/'+self.name+'/events'
+        scheme, host, _, _, _, _ = urlparse(request.url)
+        return '%s://%s/api/organizations/%s/events' % (scheme, host, quote(self.name))
 
     def all_projects(self):
+        ''' API link to all an orgs projects
         '''
-            API link to all an orgs projects
-        '''
-        return 'http://civic-tech-movement.codeforamerica.org/api/organizations/'+self.name+'/projects'
+        scheme, host, _, _, _, _ = urlparse(request.url)
+        return '%s://%s/api/organizations/%s/projects' % (scheme, host, quote(self.name))
 
     def all_stories(self):
+        ''' API link to all an orgs stories
         '''
-            API link to all an orgs stories
-        '''
-        return 'http://civic-tech-movement.codeforamerica.org/api/organizations/'+self.name+'/stories'
+        scheme, host, _, _, _, _ = urlparse(request.url)
+        return '%s://%s/api/organizations/%s/stories' % (scheme, host, quote(self.name))
 
 class Story(db.Model):
     '''
