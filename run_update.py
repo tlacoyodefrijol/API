@@ -109,18 +109,22 @@ def get_stories(organization):
         rss = organization.website
     try:
         url = get_first_working_feed_link(rss)
+
+        # If no blog found then give up
+        if not url:
+            url = None
+            return None
+
     except (HTTPError, ValueError):
         url = None
-
-    # If no blog found then give up
-    if not url:
         return None
 
+    logging.info('Asking cyberspace for ' + url)
     d = feedparser.parse(get(url).text)
 
     #
     # Search for the two most recent entries.
-    # 
+    #
     for entry in d.entries[:2]:
         # Search for the same story
         filter = Story.title == entry.title
@@ -451,6 +455,7 @@ def main():
     db.session.execute(db.update(Event, values={Event.keep: False}))
     db.session.execute(db.update(Project, values={Project.keep: False}))
     db.session.execute(db.update(Organization, values={Organization.keep: False}))
+    db.session.execute(db.update(Story, values={Story.keep: False}))
 
     # Iterate over organizations and projects, saving them to db.session.
     for org_info in get_organizations():
@@ -478,6 +483,7 @@ def main():
     db.session.execute(db.delete(Event).where(Event.keep == False))
     db.session.execute(db.delete(Project).where(Project.keep == False))
     db.session.execute(db.delete(Organization).where(Organization.keep == False))
+    db.session.execute(db.delete(Story).where(Story.keep == False))
     db.session.commit()
 
 if __name__ == "__main__":

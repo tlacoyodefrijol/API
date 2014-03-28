@@ -143,6 +143,7 @@ class Story(db.Model):
     title = db.Column(db.Unicode())
     link = db.Column(db.Unicode())
     type = db.Column(db.Unicode())
+    keep = db.Column(db.Boolean())
 
     # Relationships
     organization = db.relationship('Organization')
@@ -153,6 +154,7 @@ class Story(db.Model):
         self.link = link
         self.type = type
         self.organization_name = organization_name
+        self.keep = True
 
 class Project(db.Model):
     '''
