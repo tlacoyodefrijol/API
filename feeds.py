@@ -4,7 +4,7 @@
 
 
 """
-    Tools to extract feed links, test if they are valid and parse them 
+    Tools to extract feed links, test if they are valid and parse them
     with feedparser, returning content or a proper error.
 """
 
@@ -50,7 +50,7 @@ def extract_feed_links(html, feed_links_attributes=FEED_LINKS_ATTRIBUTES):
     for attrs in feed_links_attributes:
         for link in head.findAll('link', dict(attrs)):
             href = dict(link.attrs).get('href', '')
-            if href: 
+            if href:
                 yield unicode(href)
 
 
@@ -69,18 +69,18 @@ def get_first_working_feed_link(url):
     # if the url is a feed itself, returns it
     html = urllib2.urlopen(url).read(1000000)
     feed = feedparser.parse(html)
-    
+
     if not feed.get("bozo", 1):
         return unicode(url)
 
-    # construct the site url from the domain name and the protocole name    
+    # construct the site url from the domain name and the protocole name
     parsed_url = urllib2.urlparse.urlparse(url)
     site_url = u"%s://%s" % (parsed_url.scheme, parsed_url.netloc)
-    
+
     # parse the html extracted from the url, and get all the potiential
     # links from it then try them one by one
     for link in extract_feed_links(html):
-        if '://' not in link: # if we got a relative URL, make it absolute 
+        if '://' not in link: # if we got a relative URL, make it absolute
             link = site_url + link
         feed = feedparser.parse(link)
         if not feed.get("bozo", 1):
