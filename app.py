@@ -101,7 +101,7 @@ class Organization(db.Model):
         '''
             Return the two most recent events
         '''
-        recent_events = Event.query.filter_by(organization_name=self.name).order_by(Event.start_time.desc()).limit(2).all()
+        recent_events = Event.query.filter_by(organization_name=self.name).order_by(Event.start_time_notz.desc()).limit(2).all()
         recent_events_json = [row.asdict() for row in recent_events]
         return recent_events_json
 
@@ -196,8 +196,8 @@ class Event(db.Model):
     event_url = db.Column(db.Unicode())
     location = db.Column(db.Unicode())
     created_at = db.Column(db.Unicode())
-    start_time = db.Column(db.DateTime(False))
-    end_time = db.Column(db.DateTime(False))
+    start_time_notz = db.Column(db.DateTime(False))
+    end_time_notz = db.Column(db.DateTime(False))
     utc_offset = db.Column(db.Integer())
     keep = db.Column(db.Boolean())
 
@@ -205,15 +205,15 @@ class Event(db.Model):
     organization = db.relationship('Organization')
     organization_name = db.Column(db.Unicode(), db.ForeignKey('organization.name'))
 
-    def __init__(self, name, event_url, start_time, created_at, utc_offset,
-                 organization_name, location=None, end_time=None, description=None):
+    def __init__(self, name, event_url, start_time_notz, created_at, utc_offset,
+                 organization_name, location=None, end_time_notz=None, description=None):
         self.name = name
         self.description = description
         self.location = location
         self.event_url = event_url
-        self.start_time = start_time
+        self.start_time_notz = start_time_notz
         self.utc_offset = utc_offset
-        self.end_time = end_time
+        self.end_time_notz = end_time_notz
         self.organization_name = organization_name
         self.created_at = created_at
         self.keep = True
@@ -221,20 +221,20 @@ class Event(db.Model):
     def start_time_tz(self):
         ''' Get a string representation of the start time with UTC offset.
         '''
-        if self.start_time is None:
+        if self.start_time_notz is None:
             return None
         tz = tzoffset(None, self.utc_offset)
-        st = self.start_time
+        st = self.start_time_notz
         dt = datetime(st.year, st.month, st.day, st.hour, st.minute, st.second, tzinfo=tz)
         return dt.strftime('%Y-%m-%d %H:%M:%S %z')
     
     def end_time_tz(self):
         ''' Get a string representation of the end time with UTC offset.
         '''
-        if self.end_time is None:
+        if self.end_time_notz is None:
             return None
         tz = tzoffset(None, self.utc_offset)
-        et = self.end_time
+        et = self.end_time_notz
         dt = datetime(et.year, et.month, et.day, et.hour, et.minute, et.second, tzinfo=tz)
         return dt.strftime('%Y-%m-%d %H:%M:%S %z')
 
@@ -251,7 +251,7 @@ manager.create_api(Story, collection_name='stories', **kwargs)
 manager.create_api(Project, collection_name='projects', **kwargs)
 event_kwargs = kwargs.copy()
 event_kwargs['include_methods'] = ['start_time_tz', 'end_time_tz']
-event_kwargs['exclude_columns'] = ['keep','start_time','end_time','utc_offset']
+event_kwargs['exclude_columns'] = ['keep','start_time_notz','end_time_notz','utc_offset']
 manager.create_api(Event, collection_name='events', **event_kwargs)
 
 @app.route('/api/organizations.geojson')

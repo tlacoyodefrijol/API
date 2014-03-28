@@ -83,7 +83,7 @@ def get_meetup_events(organization, group_urlname):
                          name=event['name'],
                          description=event['description'],
                          event_url=event['event_url'],
-                         start_time=format_date(event['time'], event['utc_offset']),
+                         start_time_notz=format_date(event['time'], event['utc_offset']),
                          created_at=format_date(event['created'], event['utc_offset']),
                          utc_offset=event['utc_offset']/1000.0)
 
