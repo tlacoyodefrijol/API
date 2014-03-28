@@ -27,6 +27,21 @@ make_class_dictable(db.Model)
 # -------------------
 # Settings
 # -------------------
+@app.url_value_preprocessor
+def clean_urls(endpoint, values):
+    '''
+    Before every request, change underscores to spaces.
+    /api/organizations/Code_for_America
+    will search the db for Code for America
+    '''
+    if values:
+        if "instid" in values:
+            if values["instid"]:
+                if "_" in values["instid"]:
+                    values["instid"] = values["instid"].replace("_", " ")
+        if "organization_name" in values:
+            if "_" in values["organization_name"]:
+                values["organization_name"] = values["organization_name"].replace("_", " ")
 
 def add_cors_header(response):
     response.headers['Access-Control-Allow-Origin'] = '*'
@@ -120,19 +135,25 @@ class Organization(db.Model):
         ''' API link to all an orgs events
         '''
         scheme, host, _, _, _, _ = urlparse(request.url)
-        return '%s://%s/api/organizations/%s/events' % (scheme, host, quote(self.name))
+        # Make a nice org name
+        organization_name = quote(self.name.replace(" ","_"))
+        return '%s://%s/api/organizations/%s/events' % (scheme, host, organization_name)
 
     def all_projects(self):
         ''' API link to all an orgs projects
         '''
         scheme, host, _, _, _, _ = urlparse(request.url)
-        return '%s://%s/api/organizations/%s/projects' % (scheme, host, quote(self.name))
+        # Make a nice org name
+        organization_name = quote(self.name.replace(" ","_"))
+        return '%s://%s/api/organizations/%s/projects' % (scheme, host, organization_name)
 
     def all_stories(self):
         ''' API link to all an orgs stories
         '''
         scheme, host, _, _, _, _ = urlparse(request.url)
-        return '%s://%s/api/organizations/%s/stories' % (scheme, host, quote(self.name))
+        # Make a nice org name
+        organization_name = quote(self.name.replace(" ","_"))
+        return '%s://%s/api/organizations/%s/stories' % (scheme, host, organization_name)
 
 class Story(db.Model):
     '''
