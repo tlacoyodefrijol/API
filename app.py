@@ -2,7 +2,7 @@
 # Imports
 # -------------------
 
-from flask import Flask, make_response, request, current_app, jsonify
+from flask import Flask, make_response, request, current_app, jsonify, render_template
 from datetime import datetime, timedelta
 from functools import update_wrapper
 import json, os, requests, time
@@ -455,18 +455,7 @@ def well_known_status():
 
 @app.route("/")
 def index():
-    return '''<html>
-<head>
-    <title>Civic Tech Movement API</title>
-</head>
-<body>
-    <p>Read more about me at <a href="https://github.com/codeforamerica/civic-json-worker#readme">codeforamerica/civic-json-worker</a>.</p>
-    <p>Some data:</p>
-    <ul>
-    <li><a href="api/projects">Projects</a></li>
-    </ul>
-</body>
-</html>'''
+    return render_template('index.html')
 
 if __name__ == "__main__":
     app.run(debug=True)
