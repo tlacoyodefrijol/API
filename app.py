@@ -275,6 +275,32 @@ class Event(db.Model):
         et = self.end_time_notz
         dt = datetime(et.year, et.month, et.day, et.hour, et.minute, et.second, tzinfo=tz)
         return dt.strftime('%Y-%m-%d %H:%M:%S %z')
+        
+    @staticmethod
+    def include_methods():
+        return 'start_time', 'end_time'
+    
+    @staticmethod
+    def exclude_columns():
+        return 'keep', 'start_time_notz', 'end_time_notz', 'utc_offset'
+    
+    def asdict(self):
+        ''' Return Event as a dictionary, with some properties tweaked.
+        
+            Events are represented as dictionaries in two custom API responses:
+            Under an organization's shortlist of current events, and as part
+            of an organization's complete list of events. This method is used
+            to centralize the tweaks to make each representation consistent.
+        '''
+        event_dict = db.Model.asdict(self)
+        
+        for key in Event.exclude_columns():
+            del event_dict[key]
+
+        for key in Event.include_methods():
+            event_dict[key] = getattr(self, key)()
+
+        return event_dict
 
 # -------------------
 # API
@@ -289,8 +315,7 @@ manager.create_api(Organization, collection_name='organizations', **org_kwargs)
 manager.create_api(Story, collection_name='stories', **kwargs)
 manager.create_api(Project, collection_name='projects', **kwargs)
 event_kwargs = kwargs.copy()
-event_kwargs['include_methods'] = ['start_time', 'end_time']
-event_kwargs['exclude_columns'] = ['keep','start_time_notz','end_time_notz','utc_offset']
+event_kwargs.update(dict(include_methods=Event.include_methods(), exclude_columns=Event.exclude_columns()))
 manager.create_api(Event, collection_name='events', **event_kwargs)
 
 @app.route('/api/organizations.geojson')
@@ -330,22 +355,12 @@ def get_orgs_events(organization_name):
     if not organization:
         return "Organization not found", 404
     # Get event objects
-    orgs_events = Event.query.filter_by(organization_name=organization_name).all()
-    orgs_events_as_dicts = []
-    
-    # Convert them to dicts,
-    # remove/add certain items.
-    for event in orgs_events:
-        event_dict = event.asdict()
-        orgs_events_as_dicts.append(event_dict)
-        for key in event_kwargs['exclude_columns']:
-            del event_dict[key]
-        for key in event_kwargs['include_methods']:
-            event_dict[key] = getattr(event, key)()
+    events = Event.query.filter_by(organization_name=organization_name).all()
+    events_dicts = [event.asdict() for event in events]
     
     response = {
-        "num_results" : len(orgs_events_as_dicts),
-        "objects" : orgs_events_as_dicts,
+        "num_results" : len(events_dicts),
+        "objects" : events_dicts,
         "page" : 1,
         "total_pages" : 1
     }
