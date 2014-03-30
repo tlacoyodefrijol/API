@@ -27,7 +27,7 @@
     <li><a href="#api-organizations">Organizations</a> (also in <a href="#api-organizations-geojson">GeoJSON</a>)</li>
     <li><a href="#api-projects">Projects</a></li>
     <li><a href="#api-events">Events</a></li>
-    <li><a href="api/stories">Stories</a></li>
+    <li><a href="#api-stories">Stories</a></li>
     </ul>
 
     <h3>
@@ -189,7 +189,7 @@
                 <dd>URL source for projects list.</dd>
 
                 <dt>recent_stories</dt>
-                <dd>Selection of current stories.</dd>
+                <dd>Selection of current <a href="#story-properties">story dictionaries</a>.</dd>
                 <dt>all_stories</dt>
                 <dd>Link to API information for all organization stories.</dd>
                 <dt>rss</dt>
@@ -469,6 +469,104 @@
   "organization": { … }, 
   "organization_name": "Open Oakland", 
   "created_at": "2013-06-04 20:31:29"
+}</pre>
+        </div>
+    </div>
+
+    <h3>
+        Stories
+        <a id="api-stories" href="#api-stories">¶</a>
+    </h3>
+    <div class="clearfix">
+        <div class="half column">
+            <p>
+                Retrieve a list of stories.
+            </p>
+            <h4>Endpoint</h4>
+            <p>
+                /api/stories
+            </p>
+            <h4>Response Properties</h4>
+            <dl>
+                <dt>page</dt>
+                <dd>Page number in complete stories list.</dd>
+                <dt>num_results</dt>
+                <dd>Total number of stories.</dd>
+                <dt>total_pages</dt>
+                <dd>Page count for complete stories list.</dd>
+                <dt>objects</dt>
+                <dd>List of <a href="#story-properties">individual stories</a>.</dd>
+            </dl>
+        </div>
+        <div class="half column">
+            <h4>Sample Request</h4>
+            <p><code><a href="{{ api_base }}/api/stories">{{ api_base }}/api/stories</a></code></p>
+            <h4>Sample Response</h4>
+            <pre>{
+  "page": 1, 
+  "num_results": 2,
+  "total_pages": 1,
+  "objects": [
+  {
+    "id": 1, 
+    "title": "Here Are Our Values", 
+    "link": "http://www.codeforamerica.org/blog/2014/03/27/here-are-our-values/", 
+    "organization": { … }, 
+    "organization_name": "Code for San Francisco", 
+    "type": "blog"
+  },
+  {
+    "id": 2, 
+    "name": "Get Out There And Do Something", 
+    …
+  },
+   …
+  ]
+}</pre>
+        </div>
+    </div>
+
+    <h3>
+        One Story
+        <a id="api-one-story" href="#api-one-story">¶</a>
+    </h3>
+    <div class="clearfix">
+        <div class="half column">
+            <p>
+                Retrieve a single story.
+            </p>
+            <h4>Endpoint</h4>
+            <p>
+                /api/story/{story id}
+            </p>
+            <h4>
+                Story Properties
+                <a id="story-properties" href="#story-properties">¶</a>
+            </h4>
+            <dl>
+                <dt>id</dt>
+                <dd>Numeric ID.</dd>
+                <dt>title</dt>
+                <dd>Title.</dd>
+                <dt>link</dt>
+                <dd>Link.</dd>
+                <dt>organization</dt>
+                <dd>Dictionary of <a href="#organization-properties">organization details</a>.</dd>
+                <dt>organization_name</dt>
+                <dd>Name of organization.</dd>
+            </dl>
+        </div>
+        <div class="half column">
+            <h4>Sample Request</h4>
+            <p><code><a href="{{ api_base }}/api/stories/1">{{ api_base }}/api/stories/1</a></code></p>
+            <h4>Sample Response</h4>
+            <pre>{
+  "id": 1, 
+  "title": "Here Are Our Values", 
+  "link": "http://www.codeforamerica.org/blog/2014/03/27/here-are-our-values/", 
+  "organization": { … }, 
+  "organization_name": "Code for San Francisco", 
+  "type": "blog"
 }</pre>
         </div>
     </div>
