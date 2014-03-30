@@ -442,8 +442,10 @@ def save_story_info(session, story_dict):
         Save a dictionary of story into to the datastore session then return
         that story instance
     '''
-    filter = Story.title == story_dict['title']
-    existing_story = session.query(Story).filter(filter).first()
+    filter = Story.organization_name == story_dict['organization_name'], \
+             Story.link == story_dict['link']
+
+    existing_story = session.query(Story).filter(*filter).first()
     
     # If this is a new story, save and return it.
     if not existing_story:
