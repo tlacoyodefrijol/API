@@ -48,7 +48,7 @@
         </div>
         <div class="half column">
             <h4>Sample Request</h4>
-            <pre><a href="/api/organizations">/api/organizations</a></pre>
+            <p><code><a href="{{ api_base }}/api/organizations">{{ api_base }}/api/organizations</a></code></p>
             <h4>Sample Response</h4>
             <pre>{
   "page": 1, 
@@ -109,7 +109,7 @@
         </div>
         <div class="half column">
             <h4>Sample Request</h4>
-            <pre><a href="/api/organizations.geojson">/api/organizations.geojson</a></pre>
+            <p><code><a href="{{ api_base }}/api/organizations.geojson">{{ api_base }}/api/organizations.geojson</a></code></p>
             <h4>Sample Response</h4>
             <pre>{
   "type": "GeometryCollection", 
@@ -189,7 +189,7 @@
         </div>
         <div class="half column">
             <h4>Sample Request</h4>
-            <pre><a href="/api/organizations/Open_Oakland">/api/organizations/Open_Oakland</a></pre>
+            <p><code><a href="{{ api_base }}/api/organizations/Open_Oakland">{{ api_base }}/api/organizations/Open_Oakland</a></code></p>
             <h4>Sample Response</h4>
             <pre>{
   "type": "Brigade", 
@@ -198,18 +198,18 @@
   "city": "Oakland, CA", 
   "latitude": 37.8044, 
   "longitude": -122.2711, 
-  "api_url": "http://civic-tech-movement.codeforamerica.org/api/organizations/Open_Oakland", 
+  "api_url": "{{ api_base }}/api/organizations/Open_Oakland", 
 
   "recent_events": [ … ], 
-  "all_events": "http://civic-tech-movement.codeforamerica.org/api/organizations/Open_Oakland/events", 
+  "all_events": "{{ api_base }}/api/organizations/Open_Oakland/events", 
   "events_url": "http://www.meetup.com/OpenOakland/", 
 
   "recent_projects": [ … ], 
-  "all_projects": "http://civic-tech-movement.codeforamerica.org/api/organizations/Open_Oakland/projects", 
+  "all_projects": "{{ api_base }}/api/organizations/Open_Oakland/projects", 
   "projects_list_url": "https://docs.google.com/spreadsheet/pub?key=0AgNZYWcpRBQ7dHRnTUJtd3QtYkR5bk5lUmpNMDlpSEE&amp;single=true&amp;gid=0&amp;output=csv", 
 
   "recent_stories": [ … ], 
-  "all_stories": "http://civic-tech-movement.codeforamerica.org/api/organizations/Open_Oakland/stories", 
+  "all_stories": "{{ api_base }}/api/organizations/Open_Oakland/stories", 
   "rss": ""
 }</pre>
         </div>

@@ -455,7 +455,8 @@ def well_known_status():
 
 @app.route("/")
 def index():
-    return render_template('index.html')
+    scheme, host, _, _, _, _ = urlparse(request.url)
+    return render_template('index.html', api_base='%s://%s' % (scheme, host))
 
 if __name__ == "__main__":
     app.run(debug=True)
