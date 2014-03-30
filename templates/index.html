@@ -26,7 +26,7 @@
     <ul>
     <li><a href="#api-organizations">Organizations</a> (also in <a href="#api-organizations-geojson">GeoJSON</a>)</li>
     <li><a href="#api-projects">Projects</a></li>
-    <li><a href="api/events">Events</a></li>
+    <li><a href="#api-events">Events</a></li>
     <li><a href="api/stories">Stories</a></li>
     </ul>
 
@@ -175,7 +175,7 @@
                 <dd>Link to complete API information for this organization.</dd>
 
                 <dt>recent_events</dt>
-                <dd>Selection of current events.</dd>
+                <dd>Selection of current <a href="#event-properties">event dictionaries</a>.</dd>
                 <dt>all_events</dt>
                 <dd>Link to API information for all organization events.</dd>
                 <dt>events_url</dt>
@@ -355,6 +355,120 @@
     "updated_at": "2014-03-29T20:03:41Z", 
     "watchers_count": 14
   }
+}</pre>
+        </div>
+    </div>
+
+    <h3>
+        Events
+        <a id="api-events" href="#api-events">¶</a>
+    </h3>
+    <div class="clearfix">
+        <div class="half column">
+            <p>
+                Retrieve a list of events.
+            </p>
+            <h4>Endpoint</h4>
+            <p>
+                /api/events
+            </p>
+            <h4>Response Properties</h4>
+            <dl>
+                <dt>page</dt>
+                <dd>Page number in complete events list.</dd>
+                <dt>num_results</dt>
+                <dd>Total number of events.</dd>
+                <dt>total_pages</dt>
+                <dd>Page count for complete events list.</dd>
+                <dt>objects</dt>
+                <dd>List of <a href="#event-properties">individual events</a>.</dd>
+            </dl>
+        </div>
+        <div class="half column">
+            <h4>Sample Request</h4>
+            <p><code><a href="{{ api_base }}/api/events">{{ api_base }}/api/events</a></code></p>
+            <h4>Sample Response</h4>
+            <pre>{
+  "page": 1, 
+  "num_results": 2,
+  "total_pages": 1,
+  "objects": [
+  {
+    "id": 1, 
+    "name": "OpenOakland Civic Hack Night", 
+    "description": "&lt;p&gt;Join us for our weekly civic hack sessions inside City Hall.&lt;/p&gt;", 
+    "event_url": "http://www.meetup.com/OpenOakland/events/qbjtcgytdbfb/", 
+    "location": null, 
+    "start_time": "2015-02-03 18:30:00 -0800", 
+    "end_time": null, 
+    "organization": { … }, 
+    "organization_name": "Open Oakland", 
+    "created_at": "2013-06-04 20:31:29"
+  },
+  {
+    "id": 2, 
+    "name": "Get Out There And Do Something", 
+    …
+  },
+   …
+  ]
+}</pre>
+        </div>
+    </div>
+
+    <h3>
+        One Event
+        <a id="api-one-event" href="#api-one-event">¶</a>
+    </h3>
+    <div class="clearfix">
+        <div class="half column">
+            <p>
+                Retrieve a single event.
+            </p>
+            <h4>Endpoint</h4>
+            <p>
+                /api/event/{event id}
+            </p>
+            <h4>
+                Event Properties
+                <a id="event-properties" href="#event-properties">¶</a>
+            </h4>
+            <dl>
+                <dt>id</dt>
+                <dd>Numeric ID.</dd>
+                <dt>name</dt>
+                <dd>Name.</dd>
+                <dt>description</dt>
+                <dd>Description.</dd>
+                <dt>event_url</dt>
+                <dd>Link to page about event.</dd>
+                <dt>location</dt>
+                <dd>Optional location. Sometimes missing, and must be found in description.</dd>
+                <dt>start_time</dt>
+                <dd>Start time. In <q><code>YYYY-MM-DD HH:MM:SS ZZZZ</code></q> format, local to event if possible.</dd>
+                <dt>end_time</dt>
+                <dd>Optional end time. In <q><code>YYYY-MM-DD HH:MM:SS ZZZZ</code></q> format, local to event if possible.</dd>
+                <dt>organization</dt>
+                <dd>Dictionary of <a href="#organization-properties">organization details</a>.</dd>
+                <dt>organization_name</dt>
+                <dd>Name of organization.</dd>
+            </dl>
+        </div>
+        <div class="half column">
+            <h4>Sample Request</h4>
+            <p><code><a href="{{ api_base }}/api/events/1">{{ api_base }}/api/events/1</a></code></p>
+            <h4>Sample Response</h4>
+            <pre>{
+  "id": 1, 
+  "name": "OpenOakland Civic Hack Night", 
+  "description": "&lt;p&gt;Join us for our weekly civic hack sessions inside City Hall.&lt;/p&gt;", 
+  "event_url": "http://www.meetup.com/OpenOakland/events/qbjtcgytdbfb/", 
+  "location": null, 
+  "start_time": "2015-02-03 18:30:00 -0800", 
+  "end_time": null, 
+  "organization": { … }, 
+  "organization_name": "Open Oakland", 
+  "created_at": "2013-06-04 20:31:29"
 }</pre>
         </div>
     </div>
