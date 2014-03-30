@@ -7,8 +7,17 @@
 	<link href="{{ url_for('static', filename='grid.css') }}" rel="stylesheet" type="text/css">
     <style type="text/css">
     
-        dd { margin-left: 1.5em; margin-bottom: .5em }
+        dt
+        {
+            display: list-item;
+            list-style-type: disc;
+            list-style-position: inside;
+        }
 
+        dd dt { list-style-type: circle }
+
+        dd { margin-left: 1.5em; margin-bottom: .5em }
+        
     </style>
 </head>
 <body class="container">
@@ -16,7 +25,7 @@
     <p>Some data:</p>
     <ul>
     <li><a href="#api-organizations">Organizations</a> (also in <a href="#api-organizations-geojson">GeoJSON</a>)</li>
-    <li><a href="api/projects">Projects</a></li>
+    <li><a href="#api-projects">Projects</a></li>
     <li><a href="api/events">Events</a></li>
     <li><a href="api/stories">Stories</a></li>
     </ul>
@@ -173,7 +182,7 @@
                 <dd>URL source for event list.</dd>
 
                 <dt>recent_projects</dt>
-                <dd>Selection of current projects.</dd>
+                <dd>Selection of current <a href="#project-properties">project dictionaries</a>.</dd>
                 <dt>all_projects</dt>
                 <dd>Link to API information for all organization projects.</dd>
                 <dt>projects_list_url</dt>
@@ -211,6 +220,141 @@
   "recent_stories": [ … ], 
   "all_stories": "{{ api_base }}/api/organizations/Open_Oakland/stories", 
   "rss": ""
+}</pre>
+        </div>
+    </div>
+
+    <h3>
+        Projects
+        <a id="api-projects" href="#api-projects">¶</a>
+    </h3>
+    <div class="clearfix">
+        <div class="half column">
+            <p>
+                Retrieve a list of projects.
+            </p>
+            <h4>Endpoint</h4>
+            <p>
+                /api/projects
+            </p>
+            <h4>Response Properties</h4>
+            <dl>
+                <dt>page</dt>
+                <dd>Page number in complete projects list.</dd>
+                <dt>num_results</dt>
+                <dd>Total number of projects.</dd>
+                <dt>total_pages</dt>
+                <dd>Page count for complete projects list.</dd>
+                <dt>objects</dt>
+                <dd>List of <a href="#project-properties">individual projects</a>.</dd>
+            </dl>
+        </div>
+        <div class="half column">
+            <h4>Sample Request</h4>
+            <p><code><a href="{{ api_base }}/api/projects">{{ api_base }}/api/projects</a></code></p>
+            <h4>Sample Response</h4>
+            <pre>{
+  "page": 1, 
+  "num_results": 2,
+  "total_pages": 1,
+  "objects": [
+  {
+    "id": 1, 
+    "name": "cityvoice", 
+    "link_url": "http://www.cityvoiceapp.com/", 
+    "code_url": "https://github.com/codeforamerica/cityvoice", 
+    "categories": "community engagement, housing", 
+    "description": "A place-based call-in system for gathering and sharing community feedback", 
+    "github_details": { … }, 
+    "organization": { … }, 
+    "organization_name": "Code for America", 
+    "type": "web service"
+  },
+  {
+    "id": 2, 
+    "name": "Adopt-a-Thingie", 
+    …
+  },
+   …
+  ]
+}</pre>
+        </div>
+    </div>
+
+    <h3>
+        One Project
+        <a id="api-one-project" href="#api-one-project">¶</a>
+    </h3>
+    <div class="clearfix">
+        <div class="half column">
+            <p>
+                Retrieve a single project.
+            </p>
+            <h4>Endpoint</h4>
+            <p>
+                /api/project/{project id}
+            </p>
+            <h4>
+                Project Properties
+                <a id="project-properties" href="#project-properties">¶</a>
+            </h4>
+            <dl>
+                <dt>id</dt>
+                <dd>Numeric ID.</dd>
+                <dt>name</dt>
+                <dd>Name.</dd>
+                <dt>link_url</dt>
+                <dd>Homepage.</dd>
+                <dt>code_url</dt>
+                <dd>Source code URL, e.g. a Github repository.</dd>
+                <dt>categories</dt>
+                <dd>String with comma-separated list of categories.</dd>
+                <dt>description</dt>
+                <dd>Prose description.</dd>
+                <dt>organization</dt>
+                <dd>Dictionary of <a href="#organization-properties">organization details</a>.</dd>
+                <dt>organization_name</dt>
+                <dd>Name of organization.</dd>
+                <dt>type</dt>
+                <dd>String type.</dd>
+                <dt>github_details</dt>
+                <dd>Dictionary of Github-specific information, for projects hosted on Github.</dd>
+            </dl>
+        </div>
+        <div class="half column">
+            <h4>Sample Request</h4>
+            <p><code><a href="{{ api_base }}/api/projects/1">{{ api_base }}/api/projects/1</a></code></p>
+            <h4>Sample Response</h4>
+            <pre>{
+  "id": 1, 
+  "name": "cityvoice", 
+  "link_url": "http://www.cityvoiceapp.com/", 
+  "code_url": "https://github.com/codeforamerica/cityvoice", 
+  "categories": "community engagement, housing", 
+  "description": "A place-based call-in system for gathering and sharing community feedback", 
+  "organization": { … }, 
+  "organization_name": "Code for America", 
+  "type": "web service", 
+  "github_details":
+  {
+    "id": 10515516, 
+    "contributors": [ … ], 
+    "contributors_url": "https://api.github.com/repos/codeforamerica/cityvoice/contributors", 
+    "created_at": "2013-06-06T00:12:30Z", 
+    "description": "A place-based call-in system for gathering and sharing community feedback", 
+    "forks_count": 18, 
+    "homepage": "http://www.cityvoiceapp.com/", 
+    "html_url": "https://github.com/codeforamerica/cityvoice", 
+    "language": "Ruby", 
+    "name": "cityvoice", 
+    "open_issues": 38, 
+    "owner": { … }, 
+    "participation": [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 18, 13, 0, 0, 83, 20, 11, 25, 63, 66 ], 
+    "project_needs": [], 
+    "pushed_at": "2014-03-29T20:03:41Z", 
+    "updated_at": "2014-03-29T20:03:41Z", 
+    "watchers_count": 14
+  }
 }</pre>
         </div>
     </div>
