@@ -3,15 +3,216 @@
 <head>
 	<meta charset="utf-8" />
 	<title>Civic Tech Movement API</title>
+	<link href="{{ url_for('static', filename='normalize.css') }}" rel="stylesheet" type="text/css">
+	<link href="{{ url_for('static', filename='grid.css') }}" rel="stylesheet" type="text/css">
+    <style type="text/css">
+    
+        dd { margin-left: 1.5em; margin-bottom: .5em }
+
+    </style>
 </head>
-<body>
+<body class="container">
     <p>Read more about me at <a href="https://github.com/codeforamerica/civic-json-worker#readme">codeforamerica/civic-json-worker</a>.</p>
     <p>Some data:</p>
     <ul>
-    <li><a href="api/organizations">Organizations</a> (also in <a href="api/organizations.geojson">GeoJSON</a>)</li>
+    <li><a href="#api-organizations">Organizations</a> (also in <a href="#api-organizations-geojson">GeoJSON</a>)</li>
     <li><a href="api/projects">Projects</a></li>
     <li><a href="api/events">Events</a></li>
     <li><a href="api/stories">Stories</a></li>
     </ul>
+
+    <h3>
+        Organizations
+        <a id="api-organizations" href="#api-organizations">¶</a>
+    </h3>
+    <div class="clearfix">
+        <div class="half column">
+            <p>
+                Retrieve a list of organizations, also called brigades.
+            </p>
+            <h4>Endpoint</h4>
+            <p>
+                /api/organizations
+            </p>
+            <h4>Response Properties</h4>
+            <dl>
+                <dt>page</dt>
+                <dd>Page number in complete organizations list.</dd>
+                <dt>num_results</dt>
+                <dd>Total number of organizations.</dd>
+                <dt>total_pages</dt>
+                <dd>Page count for complete organizations list.</dd>
+                <dt>objects</dt>
+                <dd>List of <a href="#organization-properties">individual organizations</a>.</dd>
+            </dl>
+        </div>
+        <div class="half column">
+            <h4>Sample Request</h4>
+            <pre><a href="/api/organizations">/api/organizations</a></pre>
+            <h4>Sample Response</h4>
+            <pre>{
+  "page": 1, 
+  "num_results": 2,
+  "total_pages": 1,
+  "objects": [
+   {
+     "type": "Brigade", 
+     "name": "Open Oakland", 
+     …
+   },
+   {
+     "type": "Brigade", 
+     "name": "Code for Chicago", 
+     …
+   },
+   …
+  ]
+}</pre>
+        </div>
+    </div>
+
+    <h3>
+        Organizations GeoJSON
+        <a id="api-organizations-geojson" href="#api-organizations-geojson">¶</a>
+    </h3>
+    <div class="clearfix">
+        <div class="half column">
+            <p>
+                Retrieve a list of organizations, in
+                <a href="http://geojson.org">GeoJSON format</a>
+                for geographic applications..
+            </p>
+            <h4>Endpoint</h4>
+            <p>
+                /api/organizations.geojson
+            </p>
+            <h4>Response Properties</h4>
+            <dl>
+                <dt>type</dt>
+                <dd><q>GeometryCollection</q></dd>
+                <dt>features</dt>
+                <dd>
+                    List of <a href="http://geojson.org/geojson-spec.html#feature-objects">feature objects</a>
+                    with these properties:
+                    <dl>
+                        <dt>type</dt>
+                        <dd><q>Feature</q></dd>
+                        <dt>id</dt>
+                        <dd>Unique identifier for organization.</dd>
+                        <dt>geometry</dt>
+                        <dd>Point <a href="http://geojson.org/geojson-spec.html#geometry-objects">geometry object</a> with organization location.</dd>
+                        <dt>properties</dt>
+                        <dd>Feature properties, selected from <a href="#organization-properties">properties for a single organization</a>.</dd>
+                    </dl>
+                </dd>
+            </dl>
+        </div>
+        <div class="half column">
+            <h4>Sample Request</h4>
+            <pre><a href="/api/organizations.geojson">/api/organizations.geojson</a></pre>
+            <h4>Sample Response</h4>
+            <pre>{
+  "type": "GeometryCollection", 
+  "features": [
+    {
+      "type": "Feature", 
+      "id": "Open_Oakland", 
+      "geometry": {
+        "type": "Point",
+        "coordinates": [ -122.2711, 37.8044 ]
+      }, 
+      "properties": {
+        "name": "Open Oakland", 
+        "website": "http://openoakland.org/", 
+        "city": "Oakland, CA", 
+        …
+      }
+    }, 
+    …
+  ]
+}</pre>
+        </div>
+    </div>
+
+    <h3>
+        One Organization
+        <a id="api-one-organization" href="#api-one-organization">¶</a>
+    </h3>
+    <div class="clearfix">
+        <div class="half column">
+            <p>
+                Retrieve a single organization.
+            </p>
+            <h4>Endpoint</h4>
+            <p>
+                /api/organization/{organization id}
+            </p>
+            <h4>
+                Organization Properties
+                <a id="organization-properties" href="#organization-properties">¶</a>
+            </h4>
+            <dl>
+                <dt>name</dt>
+                <dd>Offical name.</dd>
+                <dt>website</dt>
+                <dd>Informational website.</dd>
+                <dt>city</dt>
+                <dd>Home city of the organization.</dd>
+                <dt>latitude</dt>
+                <dd>Geographic latitude, in degrees.</dd>
+                <dt>longitude</dt>
+                <dd>Geographic longitude, in degrees.</dd>
+                <dt>api_url</dt>
+                <dd>Link to complete API information for this organization.</dd>
+
+                <dt>recent_events</dt>
+                <dd>Selection of current events.</dd>
+                <dt>all_events</dt>
+                <dd>Link to API information for all organization events.</dd>
+                <dt>events_url</dt>
+                <dd>URL source for event list.</dd>
+
+                <dt>recent_projects</dt>
+                <dd>Selection of current projects.</dd>
+                <dt>all_projects</dt>
+                <dd>Link to API information for all organization projects.</dd>
+                <dt>projects_list_url</dt>
+                <dd>URL source for projects list.</dd>
+
+                <dt>recent_stories</dt>
+                <dd>Selection of current stories.</dd>
+                <dt>all_stories</dt>
+                <dd>Link to API information for all organization stories.</dd>
+                <dt>rss</dt>
+                <dd>URL source for stories list.</dd>
+            </dl>
+        </div>
+        <div class="half column">
+            <h4>Sample Request</h4>
+            <pre><a href="/api/organizations/Open_Oakland">/api/organizations/Open_Oakland</a></pre>
+            <h4>Sample Response</h4>
+            <pre>{
+  "type": "Brigade", 
+  "name": "Open Oakland", 
+  "website": "http://openoakland.org/", 
+  "city": "Oakland, CA", 
+  "latitude": 37.8044, 
+  "longitude": -122.2711, 
+  "api_url": "http://civic-tech-movement.codeforamerica.org/api/organizations/Open_Oakland", 
+
+  "recent_events": [ … ], 
+  "all_events": "http://civic-tech-movement.codeforamerica.org/api/organizations/Open_Oakland/events", 
+  "events_url": "http://www.meetup.com/OpenOakland/", 
+
+  "recent_projects": [ … ], 
+  "all_projects": "http://civic-tech-movement.codeforamerica.org/api/organizations/Open_Oakland/projects", 
+  "projects_list_url": "https://docs.google.com/spreadsheet/pub?key=0AgNZYWcpRBQ7dHRnTUJtd3QtYkR5bk5lUmpNMDlpSEE&amp;single=true&amp;gid=0&amp;output=csv", 
+
+  "recent_stories": [ … ], 
+  "all_stories": "http://civic-tech-movement.codeforamerica.org/api/organizations/Open_Oakland/stories", 
+  "rss": ""
+}</pre>
+        </div>
+    </div>
 </body>
 </html>
