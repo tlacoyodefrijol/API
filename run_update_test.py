@@ -430,7 +430,8 @@ class RunUpdateTestCase(unittest.TestCase):
 
         with HTTMock(self.response_content):
             import run_update as ru
-            ru.get_stories(organization)
+            for story_info in ru.get_stories(organization):
+                ru.save_story_info(self.db.session, story_info)
 
         self.db.session.flush()
 

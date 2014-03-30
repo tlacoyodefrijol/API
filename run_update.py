@@ -127,20 +127,12 @@ def get_stories(organization):
 
     logging.info('Asking cyberspace for ' + url)
     d = feedparser.parse(get(url).text)
-
+    
     #
-    # Search for the two most recent entries.
+    # Return dictionaries for the two most recent entries.
     #
-    for entry in d.entries[:2]:
-        # Search for the same story
-        filter = Story.title == entry.title
-        existing_story = db.session.query(Story).filter(filter).first()
-        if existing_story:
-            continue
-        else:
-            story_dict = dict(title=entry.title, link=entry.link, type="blog", organization_name=organization.name)
-            new_story = Story(**story_dict)
-            db.session.add(new_story)
+    return [dict(title=e.title, link=e.link, type="blog", organization_name=organization.name)
+            for e in d.entries[:2]]
 
 def get_adjoined_json_lists(response):
     ''' Github uses the Link header (RFC 5988) to do pagination.
@@ -445,6 +437,30 @@ def save_event_info(session, event_dict):
     # Flush existing object, to prevent a sqlalchemy.orm.exc.StaleDataError.
     session.flush()
 
+def save_story_info(session, story_dict):
+    '''
+        Save a dictionary of story into to the datastore session then return
+        that story instance
+    '''
+    filter = Story.title == story_dict['title']
+    existing_story = session.query(Story).filter(filter).first()
+    
+    # If this is a new story, save and return it.
+    if not existing_story:
+        new_story = Story(**story_dict)
+        session.add(new_story)
+        return new_story
+    
+    # Mark the existing story for safekeeping.
+    existing_story.keep = True
+
+    # Update existing story details
+    for (field, value) in story_dict.items():
+        setattr(existing_story, field, value)
+
+    # Flush existing object, to prevent a sqlalchemy.orm.exc.StaleDataError.
+    session.flush()
+
 def get_event_group_identifier(events_url):
     parse_result = urlparse(events_url)
     url_parts = parse_result.path.split('/')
@@ -466,9 +482,12 @@ def main():
     # Iterate over organizations and projects, saving them to db.session.
     for org_info in get_organizations():
         organization = save_organization_info(db.session, org_info)
-
-        logging.info("Gathering all of %s's stories." % organization.name)
-        get_stories(organization)
+        
+        if organization.rss or organization.website:
+            logging.info("Gathering all of %s's stories." % organization.name)
+            stories = get_stories(organization)
+            for story_info in stories:
+                save_story_info(db.session, story_info)
 
         if organization.projects_list_url:
             logging.info("Gathering all of %s's projects." % organization.name)
