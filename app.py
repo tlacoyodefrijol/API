@@ -223,6 +223,38 @@ class Project(db.Model):
         self.organization_name = organization_name
         self.keep = True
 
+    @staticmethod
+    def include_methods():
+        return ['api_url']
+    
+    @staticmethod
+    def exclude_columns():
+        return ['keep']
+    
+    def api_url(self):
+        ''' API link to itself
+        '''
+        scheme, host, _, _, _, _ = urlparse(request.url)
+        return '%s://%s/api/projects/%s' % (scheme, host, str(self.id))
+    
+    def asdict(self):
+        ''' Return Project as a dictionary, with some properties tweaked.
+        
+            Projects are represented as dictionaries in two custom API responses:
+            Under an organization's shortlist of current projects, and as part
+            of an organization's complete list of projects. This method is used
+            to centralize the tweaks to make each representation consistent.
+        '''
+        project_dict = db.Model.asdict(self)
+        
+        for key in Project.exclude_columns():
+            del project_dict[key]
+
+        for key in Project.include_methods():
+            project_dict[key] = getattr(self, key)()
+
+        return project_dict
+
 class Event(db.Model):
     '''
         Organizations events from Meetup
@@ -308,12 +340,18 @@ class Event(db.Model):
 
 manager = flask.ext.restless.APIManager(app, flask_sqlalchemy_db=db)
 kwargs = dict(exclude_columns=['keep'], max_results_per_page=None)
+
 org_kwargs = kwargs.copy()
 org_kwargs['include_methods'] = ['recent_events','recent_projects','all_stories','all_events','all_projects','api_url']
 org_kwargs['exclude_columns'] = ['keep','events','projects']
 manager.create_api(Organization, collection_name='organizations', **org_kwargs)
+
 manager.create_api(Story, collection_name='stories', **kwargs)
-manager.create_api(Project, collection_name='projects', **kwargs)
+
+project_kwargs = kwargs.copy()
+project_kwargs.update(dict(include_methods=Project.include_methods()))
+manager.create_api(Project, collection_name='projects', **project_kwargs)
+
 event_kwargs = kwargs.copy()
 event_kwargs.update(dict(include_methods=Event.include_methods(), exclude_columns=Event.exclude_columns()))
 manager.create_api(Event, collection_name='events', **event_kwargs)
@@ -402,17 +440,12 @@ def get_orgs_projects(organization_name):
     if not organization:
         return "Organization not found", 404
     # Get project objects
-    orgs_projects = Project.query.filter_by(organization_name=organization_name).all()
-    # Convert them to dicts
-    # Remove the keep column
-    orgs_projects_as_dicts = []
-    for project in orgs_projects:
-        project = project.asdict()
-        del project['keep']
-        orgs_projects_as_dicts.append(project)
+    projects = Project.query.filter_by(organization_name=organization_name).all()
+    projects_dicts = [project.asdict() for project in projects]
+
     response = {
-        "num_results" : len(orgs_projects_as_dicts),
-        "objects" : orgs_projects_as_dicts,
+        "num_results" : len(projects_dicts),
+        "objects" : projects_dicts,
         "page" : 1,
         "total_pages" : 1
     }
