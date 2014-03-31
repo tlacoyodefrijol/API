@@ -310,11 +310,17 @@ class Event(db.Model):
         
     @staticmethod
     def include_methods():
-        return 'start_time', 'end_time'
+        return 'start_time', 'end_time', 'api_url'
     
     @staticmethod
     def exclude_columns():
         return 'keep', 'start_time_notz', 'end_time_notz', 'utc_offset'
+    
+    def api_url(self):
+        ''' API link to itself
+        '''
+        scheme, host, _, _, _, _ = urlparse(request.url)
+        return '%s://%s/api/events/%s' % (scheme, host, str(self.id))
     
     def asdict(self):
         ''' Return Event as a dictionary, with some properties tweaked.

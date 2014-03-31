@@ -313,7 +313,7 @@
                 <dt>description</dt>
                 <dd>Prose description.</dd>
                 <dt>api_url</dt>
-                <dd>Link to complete API information for this organization.</dd>
+                <dd>Link to complete API information for this project.</dd>
 
                 <dt>organization</dt>
                 <dd>Dictionary of <a href="#organization-properties">organization details</a>.</dd>
@@ -403,6 +403,7 @@
     "name": "OpenOakland Civic Hack Night", 
     "description": "&lt;p&gt;Join us for our weekly civic hack sessions inside City Hall.&lt;/p&gt;", 
     "event_url": "http://www.meetup.com/OpenOakland/events/qbjtcgytdbfb/", 
+    "api_url": "{{ api_base }}/api/events/1", 
     "location": null, 
     "start_time": "2015-02-03 18:30:00 -0800", 
     "end_time": null, 
@@ -447,12 +448,15 @@
                 <dd>Description.</dd>
                 <dt>event_url</dt>
                 <dd>Link to page about event.</dd>
+                <dt>api_url</dt>
+                <dd>Link to complete API information for this event.</dd>
                 <dt>location</dt>
                 <dd>Optional location. Sometimes missing, and must be found in description.</dd>
                 <dt>start_time</dt>
                 <dd>Start time. In <q><code>YYYY-MM-DD HH:MM:SS ZZZZ</code></q> format, local to event if possible.</dd>
                 <dt>end_time</dt>
                 <dd>Optional end time. In <q><code>YYYY-MM-DD HH:MM:SS ZZZZ</code></q> format, local to event if possible.</dd>
+
                 <dt>organization</dt>
                 <dd>Dictionary of <a href="#organization-properties">organization details</a>.</dd>
                 <dt>organization_name</dt>
@@ -468,6 +472,7 @@
   "name": "OpenOakland Civic Hack Night", 
   "description": "&lt;p&gt;Join us for our weekly civic hack sessions inside City Hall.&lt;/p&gt;", 
   "event_url": "http://www.meetup.com/OpenOakland/events/qbjtcgytdbfb/", 
+  "api_url": "{{ api_base }}/api/events/1", 
   "location": null, 
   "start_time": "2015-02-03 18:30:00 -0800", 
   "end_time": null, 

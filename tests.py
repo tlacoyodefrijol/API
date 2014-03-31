@@ -175,6 +175,7 @@ class ApiTest(unittest.TestCase):
         assert isinstance(response['objects'][0]['description'], unicode)
         assert isinstance(response['objects'][0]['end_time'], unicode)
         assert isinstance(response['objects'][0]['event_url'], unicode)
+        assert isinstance(response['objects'][0]['api_url'], unicode)
         assert isinstance(response['objects'][0]['id'], int)
         assert isinstance(response['objects'][0]['location'], unicode)
         assert isinstance(response['objects'][0]['name'], unicode)
