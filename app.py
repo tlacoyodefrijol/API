@@ -14,6 +14,7 @@ import flask.ext.restless
 from dictalchemy import make_class_dictable
 from dateutil.tz import tzoffset
 from urlparse import urlparse
+from copy import deepcopy
 from urllib import quote
 
 # -------------------
@@ -155,6 +156,15 @@ class Organization(db.Model):
         # Make a nice org name
         organization_name = quote(self.name.replace(" ","_"))
         return '%s://%s/api/organizations/%s/stories' % (scheme, host, organization_name)
+    
+    @staticmethod
+    def include_methods():
+        return 'recent_events', 'recent_projects', 'all_stories', \
+               'all_events', 'all_projects', 'api_url'
+    
+    @staticmethod
+    def exclude_columns():
+        return 'keep', 'events', 'projects'
     
     def api_id(self):
         '''
@@ -345,21 +355,25 @@ class Event(db.Model):
 # -------------------
 
 manager = flask.ext.restless.APIManager(app, flask_sqlalchemy_db=db)
-kwargs = dict(exclude_columns=['keep'], max_results_per_page=None)
 
-org_kwargs = kwargs.copy()
-org_kwargs['include_methods'] = ['recent_events','recent_projects','all_stories','all_events','all_projects','api_url']
-org_kwargs['exclude_columns'] = ['keep','events','projects']
+kwargs = dict(include_methods=['organization.api_url'],
+              exclude_columns=['keep', 'organization.keep'],
+              max_results_per_page=None)
+
+org_kwargs = deepcopy(kwargs)
+org_kwargs['include_methods'].extend(Organization.include_methods())
+org_kwargs['exclude_columns'].extend(Organization.exclude_columns())
 manager.create_api(Organization, collection_name='organizations', **org_kwargs)
 
 manager.create_api(Story, collection_name='stories', **kwargs)
 
-project_kwargs = kwargs.copy()
-project_kwargs.update(dict(include_methods=Project.include_methods()))
+project_kwargs = deepcopy(kwargs)
+project_kwargs['include_methods'].extend(Project.include_methods())
 manager.create_api(Project, collection_name='projects', **project_kwargs)
 
-event_kwargs = kwargs.copy()
-event_kwargs.update(dict(include_methods=Event.include_methods(), exclude_columns=Event.exclude_columns()))
+event_kwargs = deepcopy(kwargs)
+event_kwargs['include_methods'].extend(Event.include_methods())
+event_kwargs['exclude_columns'].extend(Event.exclude_columns())
 manager.create_api(Event, collection_name='events', **event_kwargs)
 
 @app.route('/api/organizations.geojson')
