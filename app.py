@@ -395,12 +395,6 @@ class Event(db.Model):
 # API
 # -------------------
 
-def base_url():
-    '''
-    '''
-    scheme, host, _, _, _, _ = urlparse(request.url)
-    return '%s://%s' % (scheme, host)
-
 def page_info(query, page, limit):
     ''' Return last page and offset for a query.
     '''
@@ -411,16 +405,18 @@ def page_info(query, page, limit):
     
     return last, offset
 
-def pages_dict(url, page, last):
+def pages_dict(page, last):
     ''' Return a dictionary of pages to return in API responses.
     '''
+    url = '%s://%s%s' % (request.scheme, request.host, request.path)
+    
     pages = dict(last='%s?page=%d' % (url, last))
     
     if page > 1:
         pages['prev'] = '%s?page=%d' % (url, page - 1)
     
     if page < last:
-        pages['prev'] = '%s?page=%d' % (url, page + 1)
+        pages['next'] = '%s?page=%d' % (url, page + 1)
     
     return pages
 
@@ -523,16 +519,19 @@ def get_orgs_projects(organization_name):
     organization = Organization.query.filter_by(name=organization_name.replace('_', ' ')).first()
     if not organization:
         return "Organization not found", 404
+
     # Get project objects
-    projects = Project.query.filter_by(organization_name=organization.name).all()
-    projects_dicts = [project.asdict() for project in projects]
+    query = Project.query.filter_by(organization_name=organization.name)
+    page, per_page = int(request.args.get('page', 1)), 10
+
+    last, offset = page_info(query, page, per_page)
+    proj_dicts = [p.asdict(True) for p in query.limit(per_page).offset(offset)]
 
     response = {
-        "num_results" : len(projects_dicts),
-        "objects" : projects_dicts,
-        "page" : 1,
-        "total_pages" : 1
+        'pages': pages_dict(page, last),
+        'objects': proj_dicts
     }
+
     return jsonify(response)
 
 @app.route('/api/projects')
@@ -554,7 +553,7 @@ def get_projects(id=None):
     proj_dicts = [p.asdict(True) for p in query.limit(per_page).offset(offset)]
 
     response = {
-        'pages': pages_dict(base_url() + '/api/projects', page, last),
+        'pages': pages_dict(page, last),
         'objects': proj_dicts
     }
 
