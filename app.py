@@ -356,7 +356,7 @@ class Event(db.Model):
         scheme, host, _, _, _, _ = urlparse(request.url)
         return '%s://%s/api/events/%s' % (scheme, host, str(self.id))
     
-    def asdict(self):
+    def asdict(self, include_organization=False):
         ''' Return Event as a dictionary, with some properties tweaked.
         
             Events are represented as dictionaries in two custom API responses:
@@ -371,6 +371,9 @@ class Event(db.Model):
 
         for key in Event.include_methods():
             event_dict[key] = getattr(self, key)()
+        
+        if include_organization:
+            event_dict['organization'] = self.organization.asdict(False)
 
         return event_dict
 
@@ -385,11 +388,6 @@ kwargs = dict(include_methods=['organization.api_url'],
               max_results_per_page=None)
 
 manager.create_api(Story, collection_name='stories', **kwargs)
-
-event_kwargs = deepcopy(kwargs)
-event_kwargs['include_methods'].extend(Event.include_methods())
-event_kwargs['exclude_columns'].extend(Event.exclude_columns())
-manager.create_api(Event, collection_name='events', **event_kwargs)
 
 @app.route('/api/organizations')
 @app.route('/api/organizations/<name>')
@@ -526,6 +524,29 @@ def get_projects(id=None):
     response = {
         "num_results" : len(proj_dicts),
         "objects" : proj_dicts,
+        "page" : 1,
+        "total_pages" : 1
+    }
+
+    return jsonify(response)
+
+@app.route('/api/events')
+@app.route('/api/events/<int:id>')
+def get_events(id=None):
+    ''' Regular response option for events.
+    '''
+    if id:
+        # Get one named event.
+        filter = Event.id == id
+        event = db.session.query(Event).filter(filter).first()
+        return jsonify(event.asdict(True))
+
+    # Get a bunch of events.
+    event_dicts = [event.asdict(True) for event in db.session.query(Event)]
+
+    response = {
+        "num_results" : len(event_dicts),
+        "objects" : event_dicts,
         "page" : 1,
         "total_pages" : 1
     }
