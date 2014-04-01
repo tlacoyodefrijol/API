@@ -477,16 +477,19 @@ def get_orgs_events(organization_name):
     organization = Organization.query.filter_by(name=organization_name.replace('_', ' ')).first()
     if not organization:
         return "Organization not found", 404
+
     # Get event objects
-    events = Event.query.filter_by(organization_name=organization.name).all()
-    events_dicts = [event.asdict() for event in events]
-    
+    query = Event.query.filter_by(organization_name=organization.name)
+    page, per_page = int(request.args.get('page', 1)), 25
+
+    last, offset = page_info(query, page, per_page)
+    event_dicts = [e.asdict(True) for e in query.limit(per_page).offset(offset)]
+
     response = {
-        "num_results" : len(events_dicts),
-        "objects" : events_dicts,
-        "page" : 1,
-        "total_pages" : 1
+        '_pages': pages_dict(page, last),
+        'objects': event_dicts
     }
+
     return jsonify(response)
 
 @app.route("/api/organizations/<organization_name>/stories")
@@ -571,13 +574,15 @@ def get_events(id=None):
         return jsonify(event.asdict(True))
 
     # Get a bunch of events.
-    event_dicts = [event.asdict(True) for event in db.session.query(Event)]
+    query = db.session.query(Event)
+    page, per_page = int(request.args.get('page', 1)), 25
+
+    last, offset = page_info(query, page, per_page)
+    event_dicts = [e.asdict(True) for e in query.limit(per_page).offset(offset)]
 
     response = {
-        "num_results" : len(event_dicts),
-        "objects" : event_dicts,
-        "page" : 1,
-        "total_pages" : 1
+        '_pages': pages_dict(page, last),
+        'objects': event_dicts
     }
 
     return jsonify(response)
