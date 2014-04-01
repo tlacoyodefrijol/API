@@ -488,8 +488,9 @@ def main():
         if organization.rss or organization.website:
             logging.info("Gathering all of %s's stories." % organization.name)
             stories = get_stories(organization)
-            for story_info in stories:
-                save_story_info(db.session, story_info)
+            if stories:
+                for story_info in stories:
+                    save_story_info(db.session, story_info)
 
         if organization.projects_list_url:
             logging.info("Gathering all of %s's projects." % organization.name)
