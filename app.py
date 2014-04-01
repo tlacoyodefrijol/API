@@ -2,6 +2,8 @@
 # Imports
 # -------------------
 
+from __future__ import division
+
 from flask import Flask, make_response, request, current_app, jsonify, render_template
 from datetime import datetime, timedelta
 from functools import update_wrapper
@@ -15,6 +17,7 @@ from dateutil.tz import tzoffset
 from urlparse import urlparse
 from copy import deepcopy
 from urllib import quote
+from math import ceil
 
 # -------------------
 # Init
@@ -392,6 +395,35 @@ class Event(db.Model):
 # API
 # -------------------
 
+def base_url():
+    '''
+    '''
+    scheme, host, _, _, _, _ = urlparse(request.url)
+    return '%s://%s' % (scheme, host)
+
+def page_info(query, page, limit):
+    ''' Return last page and offset for a query.
+    '''
+    # Get a bunch of projects.
+    total = query.count()
+    last = int(ceil(total / limit))
+    offset = (page - 1) * limit
+    
+    return last, offset
+
+def pages_dict(url, page, last):
+    ''' Return a dictionary of pages to return in API responses.
+    '''
+    pages = dict(last='%s?page=%d' % (url, last))
+    
+    if page > 1:
+        pages['prev'] = '%s?page=%d' % (url, page - 1)
+    
+    if page < last:
+        pages['prev'] = '%s?page=%d' % (url, page + 1)
+    
+    return pages
+
 @app.route('/api/organizations')
 @app.route('/api/organizations/<name>')
 def get_organizations(name=None):
@@ -515,13 +547,15 @@ def get_projects(id=None):
         return jsonify(proj.asdict(True))
 
     # Get a bunch of projects.
-    proj_dicts = [proj.asdict(True) for proj in db.session.query(Project)]
+    query = db.session.query(Project)
+    page, per_page = int(request.args.get('page', 1)), 10
+
+    last, offset = page_info(query, page, per_page)
+    proj_dicts = [p.asdict(True) for p in query.limit(per_page).offset(offset)]
 
     response = {
-        "num_results" : len(proj_dicts),
-        "objects" : proj_dicts,
-        "page" : 1,
-        "total_pages" : 1
+        'pages': pages_dict(base_url() + '/api/projects', page, last),
+        'objects': proj_dicts
     }
 
     return jsonify(response)
