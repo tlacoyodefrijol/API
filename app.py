@@ -14,7 +14,6 @@ from sqlalchemy.ext.mutable import Mutable
 from sqlalchemy import types
 from dictalchemy import make_class_dictable
 from dateutil.tz import tzoffset
-from urlparse import urlparse
 from copy import deepcopy
 from urllib import quote
 from math import ceil
@@ -131,26 +130,23 @@ class Organization(db.Model):
     def all_events(self):
         ''' API link to all an orgs events
         '''
-        scheme, host, _, _, _, _ = urlparse(request.url)
         # Make a nice org name
         organization_name = quote(self.name.replace(" ","_"))
-        return '%s://%s/api/organizations/%s/events' % (scheme, host, organization_name)
+        return '%s://%s/api/organizations/%s/events' % (request.scheme, request.host, organization_name)
 
     def all_projects(self):
         ''' API link to all an orgs projects
         '''
-        scheme, host, _, _, _, _ = urlparse(request.url)
         # Make a nice org name
         organization_name = quote(self.name.replace(" ","_"))
-        return '%s://%s/api/organizations/%s/projects' % (scheme, host, organization_name)
+        return '%s://%s/api/organizations/%s/projects' % (request.scheme, request.host, organization_name)
 
     def all_stories(self):
         ''' API link to all an orgs stories
         '''
-        scheme, host, _, _, _, _ = urlparse(request.url)
         # Make a nice org name
         organization_name = quote(self.name.replace(" ","_"))
-        return '%s://%s/api/organizations/%s/stories' % (scheme, host, organization_name)
+        return '%s://%s/api/organizations/%s/stories' % (request.scheme, request.host, organization_name)
     
     @staticmethod
     def include_methods():
@@ -169,8 +165,7 @@ class Organization(db.Model):
     def api_url(self):
         ''' API link to itself
         '''
-        scheme, host, _, _, _, _ = urlparse(request.url)
-        return '%s://%s/api/organizations/%s' % (scheme, host, self.api_id())
+        return '%s://%s/api/organizations/%s' % (request.scheme, request.host, self.api_id())
     
     def asdict(self, include_extras=False):
         ''' Return Organization as a dictionary, with some properties tweaked.
@@ -221,8 +216,7 @@ class Story(db.Model):
     def api_url(self):
         ''' API link to itself
         '''
-        scheme, host, _, _, _, _ = urlparse(request.url)
-        return '%s://%s/api/stories/%s' % (scheme, host, str(self.id))
+        return '%s://%s/api/stories/%s' % (request.scheme, request.host, str(self.id))
     
     def asdict(self, include_organization=False):
         ''' Return Story as a dictionary, with some properties tweaked.
@@ -285,8 +279,7 @@ class Project(db.Model):
     def api_url(self):
         ''' API link to itself
         '''
-        scheme, host, _, _, _, _ = urlparse(request.url)
-        return '%s://%s/api/projects/%s' % (scheme, host, str(self.id))
+        return '%s://%s/api/projects/%s' % (request.scheme, request.host, str(self.id))
     
     def asdict(self, include_organization=False):
         ''' Return Project as a dictionary, with some properties tweaked.
@@ -370,8 +363,7 @@ class Event(db.Model):
     def api_url(self):
         ''' API link to itself
         '''
-        scheme, host, _, _, _, _ = urlparse(request.url)
-        return '%s://%s/api/events/%s' % (scheme, host, str(self.id))
+        return '%s://%s/api/events/%s' % (request.scheme, request.host, str(self.id))
     
     def asdict(self, include_organization=False):
         ''' Return Event as a dictionary, with some properties tweaked.
@@ -604,8 +596,7 @@ def well_known_status():
 
 @app.route("/")
 def index():
-    scheme, host, _, _, _, _ = urlparse(request.url)
-    return render_template('index.html', api_base='%s://%s' % (scheme, host))
+    return render_template('index.html', api_base='%s://%s' % (request.scheme, request.host))
 
 if __name__ == "__main__":
     app.run(debug=True)
