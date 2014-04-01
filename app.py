@@ -28,27 +28,13 @@ make_class_dictable(db.Model)
 # -------------------
 # Settings
 # -------------------
-@app.url_value_preprocessor
-def clean_urls(endpoint, values):
-    '''
-    Before every request, change underscores to spaces.
-    /api/organizations/Code_for_America
-    will search the db for Code for America
-    '''
-    if values:
-        if "instid" in values:
-            if values["instid"]:
-                if "_" in values["instid"]:
-                    values["instid"] = values["instid"].replace("_", " ")
-        if "organization_name" in values:
-            if "_" in values["organization_name"]:
-                values["organization_name"] = values["organization_name"].replace("_", " ")
 
 def add_cors_header(response):
     response.headers['Access-Control-Allow-Origin'] = '*'
     response.headers['Access-Control-Allow-Headers'] = 'Authorization, Content-Type'
     response.headers['Access-Control-Allow-Methods'] = 'POST, GET, PUT, PATCH, DELETE, OPTIONS'
     return response
+
 app.after_request(add_cors_header)
 
 
@@ -173,20 +159,20 @@ class Organization(db.Model):
         return ['keep']
     
     def api_id(self):
+        ''' Return organization name made safe for use in a URL.
         '''
-        '''
-        return quote(self.name.replace(" ","_"))
+        return quote(self.name.replace(' ', '_'))
 
     def api_url(self):
         ''' API link to itself
         '''
         scheme, host, _, _, _, _ = urlparse(request.url)
-        # Make a nice org name
-        organization_name = self.api_id()
-        return '%s://%s/api/organizations/%s' % (scheme, host, organization_name)
+        return '%s://%s/api/organizations/%s' % (scheme, host, self.api_id())
     
-    def asdict(self, include_extras=True):
+    def asdict(self, include_extras=False):
         ''' Return Organization as a dictionary, with some properties tweaked.
+        
+            Optionally include linked projects, events, and stories.
         '''
         organization_dict = db.Model.asdict(self)
         
@@ -238,10 +224,7 @@ class Story(db.Model):
     def asdict(self, include_organization=False):
         ''' Return Story as a dictionary, with some properties tweaked.
         
-            Stories are represented as dictionaries in two custom API responses:
-            Under an organization's shortlist of current stories, and as part
-            of an organization's complete list of projects. This method is used
-            to centralize the tweaks to make each representation consistent.
+            Optionally include linked organization.
         '''
         story_dict = db.Model.asdict(self)
         
@@ -252,7 +235,7 @@ class Story(db.Model):
             story_dict[key] = getattr(self, key)()
         
         if include_organization:
-            story_dict['organization'] = self.organization.asdict(False)
+            story_dict['organization'] = self.organization.asdict()
 
         return story_dict
 
@@ -305,10 +288,7 @@ class Project(db.Model):
     def asdict(self, include_organization=False):
         ''' Return Project as a dictionary, with some properties tweaked.
         
-            Projects are represented as dictionaries in two custom API responses:
-            Under an organization's shortlist of current projects, and as part
-            of an organization's complete list of projects. This method is used
-            to centralize the tweaks to make each representation consistent.
+            Optionally include linked organization.
         '''
         project_dict = db.Model.asdict(self)
         
@@ -319,7 +299,7 @@ class Project(db.Model):
             project_dict[key] = getattr(self, key)()
         
         if include_organization:
-            project_dict['organization'] = self.organization.asdict(False)
+            project_dict['organization'] = self.organization.asdict()
 
         return project_dict
 
@@ -393,10 +373,7 @@ class Event(db.Model):
     def asdict(self, include_organization=False):
         ''' Return Event as a dictionary, with some properties tweaked.
         
-            Events are represented as dictionaries in two custom API responses:
-            Under an organization's shortlist of current events, and as part
-            of an organization's complete list of events. This method is used
-            to centralize the tweaks to make each representation consistent.
+            Optionally include linked organization.
         '''
         event_dict = db.Model.asdict(self)
         
@@ -407,7 +384,7 @@ class Event(db.Model):
             event_dict[key] = getattr(self, key)()
         
         if include_organization:
-            event_dict['organization'] = self.organization.asdict(False)
+            event_dict['organization'] = self.organization.asdict()
 
         return event_dict
 
@@ -424,10 +401,10 @@ def get_organizations(name=None):
         # Get one named organization.
         filter = Organization.name == name.replace('_', ' ')
         org = db.session.query(Organization).filter(filter).first()
-        return jsonify(org.asdict())
+        return jsonify(org.asdict(True))
 
     # Get a bunch of organizations.
-    org_dicts = [org.asdict() for org in db.session.query(Organization)]
+    org_dicts = [org.asdict(True) for org in db.session.query(Organization)]
 
     response = {
         "num_results" : len(org_dicts),
@@ -449,9 +426,7 @@ def get_organizations_geojson():
         id = org.api_id()
 
         # Pick out all the properties that aren't part of the location.
-        keys = org.asdict().keys()
-        names = [k for k in keys if k not in ('latitude', 'longitude', 'keep')]
-        props = dict([(k, getattr(org, k)) for k in names])
+        props = org.asdict()
         
         # GeoJSON Point geometry, http://geojson.org/geojson-spec.html#point
         geom = dict(type='Point', coordinates=[org.longitude, org.latitude])
@@ -497,13 +472,8 @@ def get_orgs_stories(organization_name):
         return "Organization not found", 404
     # Get stories objects
     orgs_stories = Story.query.filter_by(organization_name=organization_name).all()
-    # Convert them to dicts
-    # Remove the keep column
-    orgs_stories_as_dicts = []
-    for story in orgs_stories:
-        story = story.asdict()
-        del story['keep']
-        orgs_stories_as_dicts.append(story)
+    orgs_stories_as_dicts = [story.asdict() for story in orgs_stories]
+
     response = {
         "num_results" : len(orgs_stories_as_dicts),
         "objects" : orgs_stories_as_dicts,
