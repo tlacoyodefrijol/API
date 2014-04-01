@@ -10,7 +10,6 @@ from flask.ext.heroku import Heroku
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy.ext.mutable import Mutable
 from sqlalchemy import types
-import flask.ext.restless
 from dictalchemy import make_class_dictable
 from dateutil.tz import tzoffset
 from urlparse import urlparse
@@ -221,6 +220,41 @@ class Story(db.Model):
         self.type = type
         self.organization_name = organization_name
         self.keep = True
+    
+    @staticmethod
+    def include_methods():
+        return ['api_url']
+    
+    @staticmethod
+    def exclude_columns():
+        return ['keep']
+    
+    def api_url(self):
+        ''' API link to itself
+        '''
+        scheme, host, _, _, _, _ = urlparse(request.url)
+        return '%s://%s/api/stories/%s' % (scheme, host, str(self.id))
+    
+    def asdict(self, include_organization=False):
+        ''' Return Story as a dictionary, with some properties tweaked.
+        
+            Stories are represented as dictionaries in two custom API responses:
+            Under an organization's shortlist of current stories, and as part
+            of an organization's complete list of projects. This method is used
+            to centralize the tweaks to make each representation consistent.
+        '''
+        story_dict = db.Model.asdict(self)
+        
+        for key in Story.exclude_columns():
+            del story_dict[key]
+
+        for key in Story.include_methods():
+            story_dict[key] = getattr(self, key)()
+        
+        if include_organization:
+            story_dict['organization'] = self.organization.asdict(False)
+
+        return story_dict
 
 class Project(db.Model):
     '''
@@ -381,14 +415,6 @@ class Event(db.Model):
 # API
 # -------------------
 
-manager = flask.ext.restless.APIManager(app, flask_sqlalchemy_db=db)
-
-kwargs = dict(include_methods=['organization.api_url'],
-              exclude_columns=['keep', 'organization.keep'],
-              max_results_per_page=None)
-
-manager.create_api(Story, collection_name='stories', **kwargs)
-
 @app.route('/api/organizations')
 @app.route('/api/organizations/<name>')
 def get_organizations(name=None):
@@ -547,6 +573,29 @@ def get_events(id=None):
     response = {
         "num_results" : len(event_dicts),
         "objects" : event_dicts,
+        "page" : 1,
+        "total_pages" : 1
+    }
+
+    return jsonify(response)
+
+@app.route('/api/stories')
+@app.route('/api/stories/<int:id>')
+def get_stories(id=None):
+    ''' Regular response option for stories.
+    '''
+    if id:
+        # Get one named story.
+        filter = Story.id == id
+        story = db.session.query(Story).filter(filter).first()
+        return jsonify(story.asdict(True))
+
+    # Get a bunch of stories.
+    story_dicts = [story.asdict(True) for story in db.session.query(Story)]
+
+    response = {
+        "num_results" : len(story_dicts),
+        "objects" : story_dicts,
         "page" : 1,
         "total_pages" : 1
     }
