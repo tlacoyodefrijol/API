@@ -99,7 +99,6 @@ class Organization(db.Model):
 
     # Relationships
     events = db.relationship('Event')
-    recent_stories = db.relationship('Story') # Stories already limited to two most recent
     projects = db.relationship('Project')
 
     def __init__(self, name, website=None, events_url=None,
@@ -133,6 +132,14 @@ class Organization(db.Model):
         recent_projects = all_projects_json[0:3]
         return recent_projects
 
+    def recent_stories(self):
+        '''
+            Return the two most recent stories
+        '''
+        recent_stories = Story.query.filter_by(organization_name=self.name).limit(2).all()
+        recent_stories_json = [row.asdict() for row in recent_stories]
+        return recent_stories_json
+
     def all_events(self):
         ''' API link to all an orgs events
         '''
@@ -159,12 +166,12 @@ class Organization(db.Model):
     
     @staticmethod
     def include_methods():
-        return 'recent_events', 'recent_projects', 'all_stories', \
-               'all_events', 'all_projects', 'api_url'
+        return 'recent_events', 'recent_projects', 'recent_stories', \
+               'all_events', 'all_projects', 'all_stories', 'api_url'
     
     @staticmethod
     def exclude_columns():
-        return 'keep', 'events', 'projects'
+        return ['keep']
     
     def api_id(self):
         '''
@@ -178,6 +185,19 @@ class Organization(db.Model):
         # Make a nice org name
         organization_name = self.api_id()
         return '%s://%s/api/organizations/%s' % (scheme, host, organization_name)
+    
+    def asdict(self):
+        ''' Return Organization as a dictionary, with some properties tweaked.
+        '''
+        organization_dict = db.Model.asdict(self)
+        
+        for key in Organization.exclude_columns():
+            del organization_dict[key]
+
+        for key in Organization.include_methods():
+            organization_dict[key] = getattr(self, key)()
+
+        return organization_dict
 
 class Story(db.Model):
     '''
@@ -360,11 +380,6 @@ kwargs = dict(include_methods=['organization.api_url'],
               exclude_columns=['keep', 'organization.keep'],
               max_results_per_page=None)
 
-org_kwargs = deepcopy(kwargs)
-org_kwargs['include_methods'].extend(Organization.include_methods())
-org_kwargs['exclude_columns'].extend(Organization.exclude_columns())
-manager.create_api(Organization, collection_name='organizations', **org_kwargs)
-
 manager.create_api(Story, collection_name='stories', **kwargs)
 
 project_kwargs = deepcopy(kwargs)
@@ -375,6 +390,29 @@ event_kwargs = deepcopy(kwargs)
 event_kwargs['include_methods'].extend(Event.include_methods())
 event_kwargs['exclude_columns'].extend(Event.exclude_columns())
 manager.create_api(Event, collection_name='events', **event_kwargs)
+
+@app.route('/api/organizations')
+@app.route('/api/organizations/<name>')
+def get_organizations(name=None):
+    ''' Regular response option for organizations.
+    '''
+    if name:
+        # Get one named organization.
+        filter = Organization.name == name.replace('_', ' ')
+        org = db.session.query(Organization).filter(filter).first()
+        return jsonify(org.asdict())
+
+    # Get a bunch of organizations.
+    org_dicts = [org.asdict() for org in db.session.query(Organization)]
+
+    response = {
+        "num_results" : len(org_dicts),
+        "objects" : org_dicts,
+        "page" : 1,
+        "total_pages" : 1
+    }
+
+    return jsonify(response)
 
 @app.route('/api/organizations.geojson')
 def get_organizations_geojson():
