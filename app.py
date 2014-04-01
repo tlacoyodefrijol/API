@@ -186,7 +186,7 @@ class Organization(db.Model):
         organization_name = self.api_id()
         return '%s://%s/api/organizations/%s' % (scheme, host, organization_name)
     
-    def asdict(self):
+    def asdict(self, include_extras=True):
         ''' Return Organization as a dictionary, with some properties tweaked.
         '''
         organization_dict = db.Model.asdict(self)
@@ -195,7 +195,8 @@ class Organization(db.Model):
             del organization_dict[key]
 
         for key in Organization.include_methods():
-            organization_dict[key] = getattr(self, key)()
+            if include_extras or not key.startswith('recent_'):
+                organization_dict[key] = getattr(self, key)()
 
         return organization_dict
 
@@ -267,7 +268,7 @@ class Project(db.Model):
         scheme, host, _, _, _, _ = urlparse(request.url)
         return '%s://%s/api/projects/%s' % (scheme, host, str(self.id))
     
-    def asdict(self):
+    def asdict(self, include_organization=False):
         ''' Return Project as a dictionary, with some properties tweaked.
         
             Projects are represented as dictionaries in two custom API responses:
@@ -282,6 +283,9 @@ class Project(db.Model):
 
         for key in Project.include_methods():
             project_dict[key] = getattr(self, key)()
+        
+        if include_organization:
+            project_dict['organization'] = self.organization.asdict(False)
 
         return project_dict
 
@@ -381,10 +385,6 @@ kwargs = dict(include_methods=['organization.api_url'],
               max_results_per_page=None)
 
 manager.create_api(Story, collection_name='stories', **kwargs)
-
-project_kwargs = deepcopy(kwargs)
-project_kwargs['include_methods'].extend(Project.include_methods())
-manager.create_api(Project, collection_name='projects', **project_kwargs)
 
 event_kwargs = deepcopy(kwargs)
 event_kwargs['include_methods'].extend(Event.include_methods())
@@ -509,6 +509,28 @@ def get_orgs_projects(organization_name):
     }
     return jsonify(response)
 
+@app.route('/api/projects')
+@app.route('/api/projects/<int:id>')
+def get_projects(id=None):
+    ''' Regular response option for projects.
+    '''
+    if id:
+        # Get one named project.
+        filter = Project.id == id
+        proj = db.session.query(Project).filter(filter).first()
+        return jsonify(proj.asdict(True))
+
+    # Get a bunch of projects.
+    proj_dicts = [proj.asdict(True) for proj in db.session.query(Project)]
+
+    response = {
+        "num_results" : len(proj_dicts),
+        "objects" : proj_dicts,
+        "page" : 1,
+        "total_pages" : 1
+    }
+
+    return jsonify(response)
 
 # -------------------
 # Routes
