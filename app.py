@@ -478,11 +478,11 @@ def get_orgs_events(organization_name):
         Better than /api/events?q={"filters":[{"name":"organization_name","op":"eq","val":"Code for San Francisco"}]}
     '''
     # Check org name
-    organization = Organization.query.filter_by(name=organization_name).first()
+    organization = Organization.query.filter_by(name=organization_name.replace('_', ' ')).first()
     if not organization:
         return "Organization not found", 404
     # Get event objects
-    events = Event.query.filter_by(organization_name=organization_name).all()
+    events = Event.query.filter_by(organization_name=organization.name).all()
     events_dicts = [event.asdict() for event in events]
     
     response = {
@@ -499,11 +499,11 @@ def get_orgs_stories(organization_name):
         A cleaner url for getting an organizations stories
     '''
     # Check org name
-    organization = Organization.query.filter_by(name=organization_name).first()
+    organization = Organization.query.filter_by(name=organization_name.replace('_', ' ')).first()
     if not organization:
         return "Organization not found", 404
     # Get stories objects
-    orgs_stories = Story.query.filter_by(organization_name=organization_name).all()
+    orgs_stories = Story.query.filter_by(organization_name=organization.name).all()
     orgs_stories_as_dicts = [story.asdict() for story in orgs_stories]
 
     response = {
@@ -520,11 +520,11 @@ def get_orgs_projects(organization_name):
         A cleaner url for getting an organizations projects
     '''
     # Check org name
-    organization = Organization.query.filter_by(name=organization_name).first()
+    organization = Organization.query.filter_by(name=organization_name.replace('_', ' ')).first()
     if not organization:
         return "Organization not found", 404
     # Get project objects
-    projects = Project.query.filter_by(organization_name=organization_name).all()
+    projects = Project.query.filter_by(organization_name=organization.name).all()
     projects_dicts = [project.asdict() for project in projects]
 
     response = {

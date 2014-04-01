@@ -220,7 +220,7 @@ class ApiTest(unittest.TestCase):
         db.session.add(project)
         db.session.commit()
 
-        response = self.app.get('/api/organizations/Code for America/projects')
+        response = self.app.get('/api/organizations/Code_for_America/projects')
         self.assertEqual(response.status_code,200)
         response = json.loads(response.data)
         self.assertEqual(response["objects"][0]["organization_name"], "Code for America")
