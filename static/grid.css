@@ -1,3 +1,10 @@
+/*
+
+Simple responsive site layout based on Adam Kaplan's guide:
+http://www.adamkaplan.me/grid/
+
+*/
+
 *, *:before, *:after {
   -moz-box-sizing: border-box;
   -webkit-box-sizing: border-box;
@@ -18,7 +25,7 @@ div
   width: 90%;
 }
 
-@media (min-width: 40rem) {
+@media (min-width: 50rem) {
   .column {
     float: left;
     /* padding-left: 1rem; */
