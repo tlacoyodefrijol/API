@@ -501,16 +501,19 @@ def get_orgs_stories(organization_name):
     organization = Organization.query.filter_by(name=organization_name.replace('_', ' ')).first()
     if not organization:
         return "Organization not found", 404
-    # Get stories objects
-    orgs_stories = Story.query.filter_by(organization_name=organization.name).all()
-    orgs_stories_as_dicts = [story.asdict() for story in orgs_stories]
+
+    # Get story objects
+    query = Story.query.filter_by(organization_name=organization.name)
+    page, per_page = int(request.args.get('page', 1)), 25
+
+    last, offset = page_info(query, page, per_page)
+    story_dicts = [s.asdict(True) for s in query.limit(per_page).offset(offset)]
 
     response = {
-        "num_results" : len(orgs_stories_as_dicts),
-        "objects" : orgs_stories_as_dicts,
-        "page" : 1,
-        "total_pages" : 1
+        'pages': pages_dict(page, last),
+        'objects': story_dicts
     }
+
     return jsonify(response)
 
 @app.route("/api/organizations/<organization_name>/projects")
@@ -599,13 +602,15 @@ def get_stories(id=None):
         return jsonify(story.asdict(True))
 
     # Get a bunch of stories.
-    story_dicts = [story.asdict(True) for story in db.session.query(Story)]
+    query = db.session.query(Story)
+    page, per_page = int(request.args.get('page', 1)), 25
+
+    last, offset = page_info(query, page, per_page)
+    story_dicts = [s.asdict(True) for s in query.limit(per_page).offset(offset)]
 
     response = {
-        "num_results" : len(story_dicts),
-        "objects" : story_dicts,
-        "page" : 1,
-        "total_pages" : 1
+        '_pages': pages_dict(page, last),
+        'objects': story_dicts
     }
 
     return jsonify(response)
