@@ -410,15 +410,29 @@ def pages_dict(page, last):
     '''
     url = '%s://%s%s' % (request.scheme, request.host, request.path)
     
-    pages = dict(last='%s?page=%d' % (url, last))
+    pages = dict()
     
     if page > 1:
+        pages['first'] = url
+    
+    if page == 2:
+        pages['prev'] = url
+    elif page > 2:
         pages['prev'] = '%s?page=%d' % (url, page - 1)
     
     if page < last:
         pages['next'] = '%s?page=%d' % (url, page + 1)
+        pages['last'] = '%s?page=%d' % (url, last)
     
     return pages
+
+def paged_results(query, page, per_page):
+    '''
+    '''
+    last, offset = page_info(query, page, per_page)
+    model_dicts = [o.asdict(True) for o in query.limit(per_page).offset(offset)]
+
+    return dict(pages=pages_dict(page, last), objects=model_dicts)
 
 @app.route('/api/organizations')
 @app.route('/api/organizations/<name>')
@@ -432,15 +446,8 @@ def get_organizations(name=None):
         return jsonify(org.asdict(True))
 
     # Get a bunch of organizations.
-    org_dicts = [org.asdict(True) for org in db.session.query(Organization)]
-
-    response = {
-        "num_results" : len(org_dicts),
-        "objects" : org_dicts,
-        "page" : 1,
-        "total_pages" : 1
-    }
-
+    query = db.session.query(Organization)
+    response = paged_results(query, int(request.args.get('page', 1)), 10)
     return jsonify(response)
 
 @app.route('/api/organizations.geojson')
@@ -480,16 +487,7 @@ def get_orgs_events(organization_name):
 
     # Get event objects
     query = Event.query.filter_by(organization_name=organization.name)
-    page, per_page = int(request.args.get('page', 1)), 25
-
-    last, offset = page_info(query, page, per_page)
-    event_dicts = [e.asdict(True) for e in query.limit(per_page).offset(offset)]
-
-    response = {
-        '_pages': pages_dict(page, last),
-        'objects': event_dicts
-    }
-
+    response = paged_results(query, int(request.args.get('page', 1)), 25)
     return jsonify(response)
 
 @app.route("/api/organizations/<organization_name>/stories")
@@ -504,16 +502,7 @@ def get_orgs_stories(organization_name):
 
     # Get story objects
     query = Story.query.filter_by(organization_name=organization.name)
-    page, per_page = int(request.args.get('page', 1)), 25
-
-    last, offset = page_info(query, page, per_page)
-    story_dicts = [s.asdict(True) for s in query.limit(per_page).offset(offset)]
-
-    response = {
-        'pages': pages_dict(page, last),
-        'objects': story_dicts
-    }
-
+    response = paged_results(query, int(request.args.get('page', 1)), 25)
     return jsonify(response)
 
 @app.route("/api/organizations/<organization_name>/projects")
@@ -528,16 +517,7 @@ def get_orgs_projects(organization_name):
 
     # Get project objects
     query = Project.query.filter_by(organization_name=organization.name)
-    page, per_page = int(request.args.get('page', 1)), 10
-
-    last, offset = page_info(query, page, per_page)
-    proj_dicts = [p.asdict(True) for p in query.limit(per_page).offset(offset)]
-
-    response = {
-        'pages': pages_dict(page, last),
-        'objects': proj_dicts
-    }
-
+    response = paged_results(query, int(request.args.get('page', 1)), 10)
     return jsonify(response)
 
 @app.route('/api/projects')
@@ -553,16 +533,7 @@ def get_projects(id=None):
 
     # Get a bunch of projects.
     query = db.session.query(Project)
-    page, per_page = int(request.args.get('page', 1)), 10
-
-    last, offset = page_info(query, page, per_page)
-    proj_dicts = [p.asdict(True) for p in query.limit(per_page).offset(offset)]
-
-    response = {
-        'pages': pages_dict(page, last),
-        'objects': proj_dicts
-    }
-
+    response = paged_results(query, int(request.args.get('page', 1)), 10)
     return jsonify(response)
 
 @app.route('/api/events')
@@ -578,16 +549,7 @@ def get_events(id=None):
 
     # Get a bunch of events.
     query = db.session.query(Event)
-    page, per_page = int(request.args.get('page', 1)), 25
-
-    last, offset = page_info(query, page, per_page)
-    event_dicts = [e.asdict(True) for e in query.limit(per_page).offset(offset)]
-
-    response = {
-        '_pages': pages_dict(page, last),
-        'objects': event_dicts
-    }
-
+    response = paged_results(query, int(request.args.get('page', 1)), 25)
     return jsonify(response)
 
 @app.route('/api/stories')
@@ -603,16 +565,7 @@ def get_stories(id=None):
 
     # Get a bunch of stories.
     query = db.session.query(Story)
-    page, per_page = int(request.args.get('page', 1)), 25
-
-    last, offset = page_info(query, page, per_page)
-    story_dicts = [s.asdict(True) for s in query.limit(per_page).offset(offset)]
-
-    response = {
-        '_pages': pages_dict(page, last),
-        'objects': story_dicts
-    }
-
+    response = paged_results(query, int(request.args.get('page', 1)), 25)
     return jsonify(response)
 
 # -------------------
