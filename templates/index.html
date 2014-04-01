@@ -45,12 +45,8 @@
             </p>
             <h4>Response Properties</h4>
             <dl>
-                <dt>page</dt>
-                <dd>Page number in complete organizations list.</dd>
-                <dt>num_results</dt>
-                <dd>Total number of organizations.</dd>
-                <dt>total_pages</dt>
-                <dd>Page count for complete organizations list.</dd>
+                <dt>pages</dt>
+                <dd>Dictionary of pagination links, optionally including <i>first</i>, <i>prev</i>, <i>next</i>, and <i>last</i>.</dd>
                 <dt>objects</dt>
                 <dd>List of <a href="#organization-properties">individual organizations</a>.</dd>
             </dl>
@@ -60,9 +56,10 @@
             <p><code><a href="{{ api_base }}/api/organizations">{{ api_base }}/api/organizations</a></code></p>
             <h4>Sample Response</h4>
             <pre>{
-  "page": 1, 
-  "num_results": 2,
-  "total_pages": 1,
+  "pages": {
+    "next": …,
+    "last": …
+  },
   "objects": [
    {
      "type": "Brigade", 
@@ -239,12 +236,8 @@
             </p>
             <h4>Response Properties</h4>
             <dl>
-                <dt>page</dt>
-                <dd>Page number in complete projects list.</dd>
-                <dt>num_results</dt>
-                <dd>Total number of projects.</dd>
-                <dt>total_pages</dt>
-                <dd>Page count for complete projects list.</dd>
+                <dt>pages</dt>
+                <dd>Dictionary of pagination links, optionally including <i>first</i>, <i>prev</i>, <i>next</i>, and <i>last</i>.</dd>
                 <dt>objects</dt>
                 <dd>List of <a href="#project-properties">individual projects</a>.</dd>
             </dl>
@@ -254,9 +247,10 @@
             <p><code><a href="{{ api_base }}/api/projects">{{ api_base }}/api/projects</a></code></p>
             <h4>Sample Response</h4>
             <pre>{
-  "page": 1, 
-  "num_results": 2,
-  "total_pages": 1,
+  "pages": {
+    "next": …,
+    "last": …
+  },
   "objects": [
   {
     "id": 1, 
@@ -379,12 +373,8 @@
             </p>
             <h4>Response Properties</h4>
             <dl>
-                <dt>page</dt>
-                <dd>Page number in complete events list.</dd>
-                <dt>num_results</dt>
-                <dd>Total number of events.</dd>
-                <dt>total_pages</dt>
-                <dd>Page count for complete events list.</dd>
+                <dt>pages</dt>
+                <dd>Dictionary of pagination links, optionally including <i>first</i>, <i>prev</i>, <i>next</i>, and <i>last</i>.</dd>
                 <dt>objects</dt>
                 <dd>List of <a href="#event-properties">individual events</a>.</dd>
             </dl>
@@ -394,9 +384,10 @@
             <p><code><a href="{{ api_base }}/api/events">{{ api_base }}/api/events</a></code></p>
             <h4>Sample Response</h4>
             <pre>{
-  "page": 1, 
-  "num_results": 2,
-  "total_pages": 1,
+  "pages": {
+    "next": …,
+    "last": …
+  },
   "objects": [
   {
     "id": 1, 
@@ -498,12 +489,8 @@
             </p>
             <h4>Response Properties</h4>
             <dl>
-                <dt>page</dt>
-                <dd>Page number in complete stories list.</dd>
-                <dt>num_results</dt>
-                <dd>Total number of stories.</dd>
-                <dt>total_pages</dt>
-                <dd>Page count for complete stories list.</dd>
+                <dt>pages</dt>
+                <dd>Dictionary of pagination links, optionally including <i>first</i>, <i>prev</i>, <i>next</i>, and <i>last</i>.</dd>
                 <dt>objects</dt>
                 <dd>List of <a href="#story-properties">individual stories</a>.</dd>
             </dl>
@@ -513,9 +500,10 @@
             <p><code><a href="{{ api_base }}/api/stories">{{ api_base }}/api/stories</a></code></p>
             <h4>Sample Response</h4>
             <pre>{
-  "page": 1, 
-  "num_results": 2,
-  "total_pages": 1,
+  "pages": {
+    "next": …,
+    "last": …
+  },
   "objects": [
   {
     "id": 1, 
