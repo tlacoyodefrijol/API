@@ -12,7 +12,7 @@ import requests
 from feeds import extract_feed_links, get_first_working_feed_link
 import feedparser
 from urllib2 import HTTPError
-from app import db, app, Project, Organization, Story, Event, safe_name, raw_name
+from app import db, app, Project, Organization, Story, Event, is_safe_name
 from urlparse import urlparse
 from re import match
 
@@ -362,7 +362,7 @@ def save_organization_info(session, org_dict):
 
         Return an app.Organization instance.
     '''
-    if org_dict['name'] != raw_name(safe_name(org_dict['name'])):
+    if not is_safe_name(org_dict['name']):
         raise ValueError('Bad organization name: "%(name)s"' % org_dict)
     
     # Select an existing organization by name.

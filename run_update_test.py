@@ -330,7 +330,7 @@ class RunUpdateTestCase(unittest.TestCase):
             import run_update
 
             if url.geturl() == run_update.gdocs_url:
-                return response(200, '''name,website,events_url,rss,projects_list_url\nCode_for_America,http://codeforamerica.org,http://www.meetup.com/events/foo-%%%,http://www.codeforamerica.org/blog/feed/,http://example.com/cfa-projects.csv''')
+                return response(200, '''name,website,events_url,rss,projects_list_url\nCode_for_America,http://codeforamerica.org,http://www.meetup.com/events/foo-%%%,http://www.codeforamerica.org/blog/feed/,http://example.com/cfa-projects.csv\nCode/for/America,http://codeforamerica.org,http://www.meetup.com/events/foo-%%%,http://www.codeforamerica.org/blog/feed/,http://example.com/cfa-projects.csv''')
 
             else:
                 raise Exception('Asked for unknown URL ' + url.geturl())

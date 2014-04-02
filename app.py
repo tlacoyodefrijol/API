@@ -390,10 +390,17 @@ def paged_results(query, page, per_page):
 
     return dict(total=total, pages=pages_dict(page, last), objects=model_dicts)
 
+def is_safe_name(name):
+    ''' Return True if the string is a safe name.
+    '''
+    return raw_name(safe_name(name)) == name
+
 def safe_name(name):
     ''' Return URL-safe organization name with spaces replaced by underscores.
+    
+        Slashes will be removed, which is incompatible with raw_name().
     '''
-    return name.replace(' ', '_')
+    return name.replace(' ', '_').replace('/', '')
 
 def raw_name(name):
     ''' Return raw organization name with underscores replaced by spaces.
