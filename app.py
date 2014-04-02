@@ -106,28 +106,28 @@ class Organization(db.Model):
             Return the two soonest upcoming events
         '''
         filter_old = Event.start_time_notz >= datetime.utcnow()
-        current_events = Event.query.filter_by(organization_name=self.name).filter(
-     filter_old).order_by(Event.start_time_notz.asc()).limit(2).all()
+        current_events = Event.query.filter_by(organization_name=self.name)\
+            .filter(filter_old).order_by(Event.start_time_notz.asc()).limit(2).all()
         current_events_json = [row.asdict() for row in current_events]
         return current_events_json
 
-    def recent_projects(self):
+    def current_projects(self):
         '''
-            Return the three most recent projects
+            Return the three most current projects
         '''
         all_projects = Project.query.filter_by(organization_name=self.name).all()
         all_projects_json = [project.asdict() for project in all_projects]
         all_projects_json.sort(key=lambda k: k['github_details']['updated_at'], reverse=True)
-        recent_projects = all_projects_json[0:3]
-        return recent_projects
+        current_projects = all_projects_json[0:3]
+        return current_projects
 
-    def recent_stories(self):
+    def current_stories(self):
         '''
-            Return the two most recent stories
+            Return the two most current stories
         '''
-        recent_stories = Story.query.filter_by(organization_name=self.name).limit(2).all()
-        recent_stories_json = [row.asdict() for row in recent_stories]
-        return recent_stories_json
+        current_stories = Story.query.filter_by(organization_name=self.name).limit(2).all()
+        current_stories_json = [row.asdict() for row in current_stories]
+        return current_stories_json
 
     def all_events(self):
         ''' API link to all an orgs events
@@ -173,7 +173,7 @@ class Organization(db.Model):
             organization_dict[key] = getattr(self, key)()
 
         if include_extras:
-            for key in ('current_events', 'recent_projects', 'recent_stories'):
+            for key in ('current_events', 'current_projects', 'current_stories'):
                 organization_dict[key] = getattr(self, key)()
 
         return organization_dict
