@@ -148,15 +148,6 @@ class Organization(db.Model):
         organization_name = quote(self.name.replace(" ","_"))
         return '%s://%s/api/organizations/%s/stories' % (request.scheme, request.host, organization_name)
     
-    @staticmethod
-    def include_methods():
-        return 'recent_events', 'recent_projects', 'recent_stories', \
-               'all_events', 'all_projects', 'all_stories', 'api_url'
-    
-    @staticmethod
-    def exclude_columns():
-        return ['keep']
-    
     def api_id(self):
         ''' Return organization name made safe for use in a URL.
         '''
@@ -174,11 +165,13 @@ class Organization(db.Model):
         '''
         organization_dict = db.Model.asdict(self)
         
-        for key in Organization.exclude_columns():
-            del organization_dict[key]
+        del organization_dict['keep']
 
-        for key in Organization.include_methods():
-            if include_extras or not key.startswith('recent_'):
+        for key in ('all_events', 'all_projects', 'all_stories', 'api_url'):
+            organization_dict[key] = getattr(self, key)()
+
+        if include_extras:
+            for key in ('recent_events', 'recent_projects', 'recent_stories'):
                 organization_dict[key] = getattr(self, key)()
 
         return organization_dict
@@ -205,14 +198,6 @@ class Story(db.Model):
         self.organization_name = organization_name
         self.keep = True
     
-    @staticmethod
-    def include_methods():
-        return ['api_url']
-    
-    @staticmethod
-    def exclude_columns():
-        return ['keep']
-    
     def api_url(self):
         ''' API link to itself
         '''
@@ -225,11 +210,8 @@ class Story(db.Model):
         '''
         story_dict = db.Model.asdict(self)
         
-        for key in Story.exclude_columns():
-            del story_dict[key]
-
-        for key in Story.include_methods():
-            story_dict[key] = getattr(self, key)()
+        del story_dict['keep']
+        story_dict['api_url'] = self.api_url()
         
         if include_organization:
             story_dict['organization'] = self.organization.asdict()
@@ -268,14 +250,6 @@ class Project(db.Model):
         self.organization_name = organization_name
         self.keep = True
 
-    @staticmethod
-    def include_methods():
-        return ['api_url']
-    
-    @staticmethod
-    def exclude_columns():
-        return ['keep']
-    
     def api_url(self):
         ''' API link to itself
         '''
@@ -288,11 +262,8 @@ class Project(db.Model):
         '''
         project_dict = db.Model.asdict(self)
         
-        for key in Project.exclude_columns():
-            del project_dict[key]
-
-        for key in Project.include_methods():
-            project_dict[key] = getattr(self, key)()
+        del project_dict['keep']
+        project_dict['api_url'] = self.api_url()
         
         if include_organization:
             project_dict['organization'] = self.organization.asdict()
@@ -352,14 +323,6 @@ class Event(db.Model):
         dt = datetime(et.year, et.month, et.day, et.hour, et.minute, et.second, tzinfo=tz)
         return dt.strftime('%Y-%m-%d %H:%M:%S %z')
         
-    @staticmethod
-    def include_methods():
-        return 'start_time', 'end_time', 'api_url'
-    
-    @staticmethod
-    def exclude_columns():
-        return 'keep', 'start_time_notz', 'end_time_notz', 'utc_offset'
-    
     def api_url(self):
         ''' API link to itself
         '''
@@ -372,10 +335,10 @@ class Event(db.Model):
         '''
         event_dict = db.Model.asdict(self)
         
-        for key in Event.exclude_columns():
+        for key in ('keep', 'start_time_notz', 'end_time_notz', 'utc_offset'):
             del event_dict[key]
 
-        for key in Event.include_methods():
+        for key in ('start_time', 'end_time', 'api_url'):
             event_dict[key] = getattr(self, key)()
         
         if include_organization:
