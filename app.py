@@ -109,15 +109,15 @@ class Organization(db.Model):
         recent_events_json = [row.asdict() for row in recent_events]
         return recent_events_json
 
-    def recent_projects(self):
+    def current_projects(self):
         '''
-            Return the three most recent projects
+            Return the three most current projects
         '''
         all_projects = Project.query.filter_by(organization_name=self.name).all()
         all_projects_json = [project.asdict() for project in all_projects]
         all_projects_json.sort(key=lambda k: k['github_details']['updated_at'], reverse=True)
-        recent_projects = all_projects_json[0:3]
-        return recent_projects
+        current_projects = all_projects_json[0:3]
+        return current_projects
 
     def recent_stories(self):
         '''
@@ -157,21 +157,21 @@ class Organization(db.Model):
         ''' API link to itself
         '''
         return '%s://%s/api/organizations/%s' % (request.scheme, request.host, self.api_id())
-    
+
     def asdict(self, include_extras=False):
         ''' Return Organization as a dictionary, with some properties tweaked.
-        
+
             Optionally include linked projects, events, and stories.
         '''
         organization_dict = db.Model.asdict(self)
-        
+
         del organization_dict['keep']
 
         for key in ('all_events', 'all_projects', 'all_stories', 'api_url'):
             organization_dict[key] = getattr(self, key)()
 
         if include_extras:
-            for key in ('recent_events', 'recent_projects', 'recent_stories'):
+            for key in ('recent_events', 'current_projects', 'recent_stories'):
                 organization_dict[key] = getattr(self, key)()
 
         return organization_dict
