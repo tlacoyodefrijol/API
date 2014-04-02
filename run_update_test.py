@@ -323,6 +323,33 @@ class RunUpdateTestCase(unittest.TestCase):
                                 'avatar_url', 'location', 'login', 'contributions'):
                         assert key in person
 
+    def test_main_with_bad_organization_name(self):
+        ''' When an organization has a bad name, ...
+        '''
+        def response_content(url, request):
+            import run_update
+
+            if url.geturl() == run_update.gdocs_url:
+                return response(200, '''name,website,events_url,rss,projects_list_url\nCode_for_America,http://codeforamerica.org,http://www.meetup.com/events/foo-%%%,http://www.codeforamerica.org/blog/feed/,http://example.com/cfa-projects.csv''')
+
+            else:
+                raise Exception('Asked for unknown URL ' + url.geturl())
+
+        import logging
+        logging.error = Mock()
+
+        self.mock_rss_response()
+
+        with HTTMock(response_content):
+            import run_update
+            self.assertRaises(ValueError, run_update.main)
+        
+        from app import Organization
+
+        # Make sure no organizations exist
+        orgs_count = self.db.session.query(Organization).count()
+        self.assertEqual(orgs_count, 0)
+
     def test_main_with_bad_events_url(self):
         ''' When an organization has a badly formed events url is passed, no events are saved
         '''

@@ -131,27 +131,27 @@ class Organization(db.Model):
         ''' API link to all an orgs events
         '''
         # Make a nice org name
-        organization_name = quote(self.name.replace(" ","_"))
+        organization_name = quote(safe_name(self.name))
         return '%s://%s/api/organizations/%s/events' % (request.scheme, request.host, organization_name)
 
     def all_projects(self):
         ''' API link to all an orgs projects
         '''
         # Make a nice org name
-        organization_name = quote(self.name.replace(" ","_"))
+        organization_name = quote(safe_name(self.name))
         return '%s://%s/api/organizations/%s/projects' % (request.scheme, request.host, organization_name)
 
     def all_stories(self):
         ''' API link to all an orgs stories
         '''
         # Make a nice org name
-        organization_name = quote(self.name.replace(" ","_"))
+        organization_name = quote(safe_name(self.name))
         return '%s://%s/api/organizations/%s/stories' % (request.scheme, request.host, organization_name)
     
     def api_id(self):
         ''' Return organization name made safe for use in a URL.
         '''
-        return quote(self.name.replace(' ', '_'))
+        return quote(safe_name(self.name))
 
     def api_url(self):
         ''' API link to itself
@@ -390,6 +390,16 @@ def paged_results(query, page, per_page):
 
     return dict(total=total, pages=pages_dict(page, last), objects=model_dicts)
 
+def safe_name(name):
+    ''' Return URL-safe organization name with spaces replaced by underscores.
+    '''
+    return name.replace(' ', '_')
+
+def raw_name(name):
+    ''' Return raw organization name with underscores replaced by spaces.
+    '''
+    return name.replace('_', ' ')
+
 @app.route('/api/organizations')
 @app.route('/api/organizations/<name>')
 def get_organizations(name=None):
@@ -397,7 +407,7 @@ def get_organizations(name=None):
     '''
     if name:
         # Get one named organization.
-        filter = Organization.name == name.replace('_', ' ')
+        filter = Organization.name == raw_name(name)
         org = db.session.query(Organization).filter(filter).first()
         return jsonify(org.asdict(True))
 
@@ -437,7 +447,7 @@ def get_orgs_events(organization_name):
         Better than /api/events?q={"filters":[{"name":"organization_name","op":"eq","val":"Code for San Francisco"}]}
     '''
     # Check org name
-    organization = Organization.query.filter_by(name=organization_name.replace('_', ' ')).first()
+    organization = Organization.query.filter_by(name=raw_name(organization_name)).first()
     if not organization:
         return "Organization not found", 404
 
@@ -452,7 +462,7 @@ def get_orgs_stories(organization_name):
         A cleaner url for getting an organizations stories
     '''
     # Check org name
-    organization = Organization.query.filter_by(name=organization_name.replace('_', ' ')).first()
+    organization = Organization.query.filter_by(name=raw_name(organization_name)).first()
     if not organization:
         return "Organization not found", 404
 
@@ -467,7 +477,7 @@ def get_orgs_projects(organization_name):
         A cleaner url for getting an organizations projects
     '''
     # Check org name
-    organization = Organization.query.filter_by(name=organization_name.replace('_', ' ')).first()
+    organization = Organization.query.filter_by(name=raw_name(organization_name)).first()
     if not organization:
         return "Organization not found", 404
 
