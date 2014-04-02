@@ -101,13 +101,15 @@ class Organization(db.Model):
         self.longitude = longitude
         self.keep = True
 
-    def recent_events(self):
+    def current_events(self):
         '''
-            Return the two most recent events
+            Return the two soonest upcoming events
         '''
-        recent_events = Event.query.filter_by(organization_name=self.name).order_by(Event.start_time_notz.desc()).limit(2).all()
-        recent_events_json = [row.asdict() for row in recent_events]
-        return recent_events_json
+        filter_old = Event.start_time_notz >= datetime.utcnow()
+        current_events = Event.query.filter_by(organization_name=self.name).filter(
+     filter_old).order_by(Event.start_time_notz.asc()).limit(2).all()
+        current_events_json = [row.asdict() for row in current_events]
+        return current_events_json
 
     def recent_projects(self):
         '''
@@ -147,7 +149,7 @@ class Organization(db.Model):
         # Make a nice org name
         organization_name = quote(safe_name(self.name))
         return '%s://%s/api/organizations/%s/stories' % (request.scheme, request.host, organization_name)
-    
+
     def api_id(self):
         ''' Return organization name made safe for use in a URL.
         '''
@@ -157,21 +159,21 @@ class Organization(db.Model):
         ''' API link to itself
         '''
         return '%s://%s/api/organizations/%s' % (request.scheme, request.host, self.api_id())
-    
+
     def asdict(self, include_extras=False):
         ''' Return Organization as a dictionary, with some properties tweaked.
-        
+
             Optionally include linked projects, events, and stories.
         '''
         organization_dict = db.Model.asdict(self)
-        
+
         del organization_dict['keep']
 
         for key in ('all_events', 'all_projects', 'all_stories', 'api_url'):
             organization_dict[key] = getattr(self, key)()
 
         if include_extras:
-            for key in ('recent_events', 'recent_projects', 'recent_stories'):
+            for key in ('current_events', 'recent_projects', 'recent_stories'):
                 organization_dict[key] = getattr(self, key)()
 
         return organization_dict
@@ -197,22 +199,22 @@ class Story(db.Model):
         self.type = type
         self.organization_name = organization_name
         self.keep = True
-    
+
     def api_url(self):
         ''' API link to itself
         '''
         return '%s://%s/api/stories/%s' % (request.scheme, request.host, str(self.id))
-    
+
     def asdict(self, include_organization=False):
         ''' Return Story as a dictionary, with some properties tweaked.
-        
+
             Optionally include linked organization.
         '''
         story_dict = db.Model.asdict(self)
-        
+
         del story_dict['keep']
         story_dict['api_url'] = self.api_url()
-        
+
         if include_organization:
             story_dict['organization'] = self.organization.asdict()
 
@@ -254,17 +256,17 @@ class Project(db.Model):
         ''' API link to itself
         '''
         return '%s://%s/api/projects/%s' % (request.scheme, request.host, str(self.id))
-    
+
     def asdict(self, include_organization=False):
         ''' Return Project as a dictionary, with some properties tweaked.
-        
+
             Optionally include linked organization.
         '''
         project_dict = db.Model.asdict(self)
-        
+
         del project_dict['keep']
         project_dict['api_url'] = self.api_url()
-        
+
         if include_organization:
             project_dict['organization'] = self.organization.asdict()
 
@@ -302,7 +304,7 @@ class Event(db.Model):
         self.organization_name = organization_name
         self.created_at = created_at
         self.keep = True
-    
+
     def start_time(self):
         ''' Get a string representation of the start time with UTC offset.
         '''
@@ -312,7 +314,7 @@ class Event(db.Model):
         st = self.start_time_notz
         dt = datetime(st.year, st.month, st.day, st.hour, st.minute, st.second, tzinfo=tz)
         return dt.strftime('%Y-%m-%d %H:%M:%S %z')
-    
+
     def end_time(self):
         ''' Get a string representation of the end time with UTC offset.
         '''
@@ -322,25 +324,25 @@ class Event(db.Model):
         et = self.end_time_notz
         dt = datetime(et.year, et.month, et.day, et.hour, et.minute, et.second, tzinfo=tz)
         return dt.strftime('%Y-%m-%d %H:%M:%S %z')
-        
+
     def api_url(self):
         ''' API link to itself
         '''
         return '%s://%s/api/events/%s' % (request.scheme, request.host, str(self.id))
-    
+
     def asdict(self, include_organization=False):
         ''' Return Event as a dictionary, with some properties tweaked.
-        
+
             Optionally include linked organization.
         '''
         event_dict = db.Model.asdict(self)
-        
+
         for key in ('keep', 'start_time_notz', 'end_time_notz', 'utc_offset'):
             del event_dict[key]
 
         for key in ('start_time', 'end_time', 'api_url'):
             event_dict[key] = getattr(self, key)()
-        
+
         if include_organization:
             event_dict['organization'] = self.organization.asdict()
 
@@ -357,28 +359,28 @@ def page_info(query, page, limit):
     total = query.count()
     last = int(ceil(total / limit))
     offset = (page - 1) * limit
-    
+
     return last, offset
 
 def pages_dict(page, last):
     ''' Return a dictionary of pages to return in API responses.
     '''
     url = '%s://%s%s' % (request.scheme, request.host, request.path)
-    
+
     pages = dict()
-    
+
     if page > 1:
         pages['first'] = url
-    
+
     if page == 2:
         pages['prev'] = url
     elif page > 2:
         pages['prev'] = '%s?page=%d' % (url, page - 1)
-    
+
     if page < last:
         pages['next'] = '%s?page=%d' % (url, page + 1)
         pages['last'] = '%s?page=%d' % (url, last)
-    
+
     return pages
 
 def paged_results(query, page, per_page):
@@ -397,7 +399,7 @@ def is_safe_name(name):
 
 def safe_name(name):
     ''' Return URL-safe organization name with spaces replaced by underscores.
-    
+
         Slashes will be removed, which is incompatible with raw_name().
     '''
     return name.replace(' ', '_').replace('/', '')
@@ -435,7 +437,7 @@ def get_organizations_geojson():
 
         # Pick out all the properties that aren't part of the location.
         props = org.asdict()
-        
+
         # GeoJSON Point geometry, http://geojson.org/geojson-spec.html#point
         geom = dict(type='Point', coordinates=[org.longitude, org.latitude])
 
