@@ -478,15 +478,15 @@ def get_event_group_identifier(events_url):
         return None
 
 def main():
-    # Mark everything for deletion at first.
-    db.session.execute(db.update(Event, values={Event.keep: False}))
-    db.session.execute(db.update(Project, values={Project.keep: False}))
-    db.session.execute(db.update(Organization, values={Organization.keep: False}))
-    db.session.execute(db.update(Story, values={Story.keep: False}))
-
     # Iterate over organizations and projects, saving them to db.session.
     for org_info in get_organizations():
         organization = save_organization_info(db.session, org_info)
+
+        # Mark everything for deletion at first.
+        db.update(Organization, values={'keep': False}).where(Organization.name==organization.name)
+        db.update(Project, values={'keep': False}).where(Organization.name==organization.name)
+        db.update(Event, values={'keep': False}).where(Organization.name==organization.name)
+        db.update(Story, values={'keep': False}).where(Organization.name==organization.name)
         
         if organization.rss or organization.website:
             logging.info("Gathering all of %s's stories." % organization.name)
@@ -510,12 +510,12 @@ def main():
             else:
                 logging.error("%s does not have a valid events url" % organization.name)
 
-    # Remove everything marked for deletion.
-    db.session.execute(db.delete(Event).where(Event.keep == False))
-    db.session.execute(db.delete(Project).where(Project.keep == False))
-    db.session.execute(db.delete(Organization).where(Organization.keep == False))
-    db.session.execute(db.delete(Story).where(Story.keep == False))
-    db.session.commit()
+        # Remove everything marked for deletion.
+        db.delete(Organization).where(Organization.keep==False)
+        db.delete(Project).where(Project.keep==False)
+        db.delete(Event).where(Event.keep==False)
+        db.delete(Story).where(Story.keep==False)
+        db.session.commit()
 
 if __name__ == "__main__":
     main()
