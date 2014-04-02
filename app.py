@@ -119,13 +119,13 @@ class Organization(db.Model):
         current_projects = all_projects_json[0:3]
         return current_projects
 
-    def recent_stories(self):
+    def current_stories(self):
         '''
-            Return the two most recent stories
+            Return the two most current stories
         '''
-        recent_stories = Story.query.filter_by(organization_name=self.name).limit(2).all()
-        recent_stories_json = [row.asdict() for row in recent_stories]
-        return recent_stories_json
+        current_stories = Story.query.filter_by(organization_name=self.name).limit(2).all()
+        current_stories_json = [row.asdict() for row in current_stories]
+        return current_stories_json
 
     def all_events(self):
         ''' API link to all an orgs events
@@ -171,7 +171,7 @@ class Organization(db.Model):
             organization_dict[key] = getattr(self, key)()
 
         if include_extras:
-            for key in ('recent_events', 'current_projects', 'recent_stories'):
+            for key in ('recent_events', 'current_projects', 'current_stories'):
                 organization_dict[key] = getattr(self, key)()
 
         return organization_dict

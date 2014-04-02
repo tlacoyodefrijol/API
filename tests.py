@@ -38,7 +38,7 @@ class ApiTest(unittest.TestCase):
         self.assertEqual(response_json['recent_events'][1]['name'], "Second most recent event")
         self.assertEqual(response_json['recent_events'][0]['organization_name'], "Collective of Ericas")
 
-    def test_recent_stories(self):
+    def test_current_stories(self):
         '''
         Test that only the two most recent stories are being returned
         '''
@@ -51,8 +51,8 @@ class ApiTest(unittest.TestCase):
 
         response = self.app.get('/api/organizations/Collective%20of%20Ericas')
         response_json = json.loads(response.data)
-        self.assertEqual(response_json['recent_stories'][0]['title'], 'First Story')
-        self.assertEqual(response_json['recent_stories'][1]['title'], 'Second Story')
+        self.assertEqual(response_json['current_stories'][0]['title'], 'First Story')
+        self.assertEqual(response_json['current_stories'][1]['title'], 'Second Story')
 
     def test_headers(self):
         OrganizationFactory()
@@ -77,7 +77,7 @@ class ApiTest(unittest.TestCase):
         assert isinstance(response['current_projects'], list)
         assert isinstance(response['projects_list_url'], unicode)
         assert isinstance(response['rss'], unicode)
-        assert isinstance(response['recent_stories'], list)
+        assert isinstance(response['current_stories'], list)
         assert isinstance(response['type'], unicode)
         assert isinstance(response['website'], unicode)
 
@@ -100,7 +100,7 @@ class ApiTest(unittest.TestCase):
         assert isinstance(response['objects'][0]['current_projects'], list)
         assert isinstance(response['objects'][0]['projects_list_url'], unicode)
         assert isinstance(response['objects'][0]['rss'], unicode)
-        assert isinstance(response['objects'][0]['recent_stories'], list)
+        assert isinstance(response['objects'][0]['current_stories'], list)
         assert isinstance(response['objects'][0]['type'], unicode)
         assert isinstance(response['objects'][0]['website'], unicode)
 
