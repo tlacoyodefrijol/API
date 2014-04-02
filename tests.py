@@ -1,6 +1,7 @@
 import unittest, requests, json, os
 from datetime import datetime
 from urlparse import urlparse
+from freezegun import freeze_time
 
 from app import *
 from factories import OrganizationFactory, ProjectFactory, EventFactory, StoryFactory
@@ -18,25 +19,30 @@ class ApiTest(unittest.TestCase):
 
     # Test API -----------------------
 
-    def test_recent_events(self):
+    def test_current_events(self):
         '''
-        Test that only the two most recent events are being returned
+        The three soonest upcoming events should be returned.
+        If there are no events in the future, no events will be returned
         '''
-        organization = OrganizationFactory(name='Collective of Ericas')
-        db.session.flush()
-        # Create multiple events with different times
-        oldest_event = EventFactory(organization_name=organization.name, name="Oldest event", start_time_notz=datetime(2014, 1, 1, 0, 1, 0))
-        second_most_recent_event = EventFactory(organization_name=organization.name, name="Second most recent event", start_time_notz=datetime(2014, 1, 1, 1, 1, 0))
-        most_recent_event = EventFactory(organization_name=organization.name, name="Most recent event", start_time_notz=datetime(2014, 1, 2, 1, 0, 0))
-        old_event = EventFactory(organization_name=organization.name, name="Old event", start_time_notz=datetime(2014, 1, 1, 1, 0, 0))
+        # Everyday is Christmas
+        with freeze_time("2012-12-25"):
+            organization = OrganizationFactory(name='Collective of Ericas')
+            db.session.flush()
 
-        db.session.flush()
-        response = self.app.get('/api/organizations/Collective%20of%20Ericas')
-        response_json = json.loads(response.data)
-        self.assertEqual(len(response_json['recent_events']), 2)
-        self.assertEqual(response_json['recent_events'][0]['name'], "Most recent event")
-        self.assertEqual(response_json['recent_events'][1]['name'], "Second most recent event")
-        self.assertEqual(response_json['recent_events'][0]['organization_name'], "Collective of Ericas")
+            # Create multiple events, some in the future, one in the past
+            EventFactory(organization_name=organization.name, name="Christmas Eve", start_time_notz=datetime(2012, 12, 24))
+            EventFactory(organization_name=organization.name, name="New Years", start_time_notz=datetime(2013, 1, 1))
+            EventFactory(organization_name=organization.name, name="MLK Day", start_time_notz=datetime(2013, 1, 19))
+            EventFactory(organization_name=organization.name, name="Cesar Chavez Day", start_time_notz=datetime(2013, 03, 31))
+            db.session.flush()
+
+            response = self.app.get('/api/organizations/Collective%20of%20Ericas')
+            response_json = json.loads(response.data)
+
+        self.assertEqual(len(response_json['current_events']), 2)
+        self.assertEqual(response_json['current_events'][0]['name'], "New Years")
+        self.assertEqual(response_json['current_events'][1]['name'], "MLK Day")
+        self.assertEqual(response_json['current_events'][0]['organization_name'], "Collective of Ericas")
 
     def test_recent_stories(self):
         '''
@@ -70,7 +76,7 @@ class ApiTest(unittest.TestCase):
         response = json.loads(response.data)
         assert isinstance(response, dict)
         assert isinstance(response['city'], unicode)
-        assert isinstance(response['recent_events'], list)
+        assert isinstance(response['current_events'], list)
         assert isinstance(response['latitude'], float)
         assert isinstance(response['longitude'], float)
         assert isinstance(response['name'], unicode)
@@ -93,7 +99,7 @@ class ApiTest(unittest.TestCase):
         assert isinstance(response['objects'], list)
         assert isinstance(response['objects'][0]['api_url'], unicode)
         assert isinstance(response['objects'][0]['city'], unicode)
-        assert isinstance(response['objects'][0]['recent_events'], list)
+        assert isinstance(response['objects'][0]['current_events'], list)
         assert isinstance(response['objects'][0]['latitude'], float)
         assert isinstance(response['objects'][0]['longitude'], float)
         assert isinstance(response['objects'][0]['name'], unicode)
