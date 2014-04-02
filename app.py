@@ -421,10 +421,11 @@ def pages_dict(page, last):
 def paged_results(query, page, per_page):
     '''
     '''
+    total = query.count()
     last, offset = page_info(query, page, per_page)
     model_dicts = [o.asdict(True) for o in query.limit(per_page).offset(offset)]
 
-    return dict(pages=pages_dict(page, last), objects=model_dicts)
+    return dict(total=total, pages=pages_dict(page, last), objects=model_dicts)
 
 @app.route('/api/organizations')
 @app.route('/api/organizations/<name>')
