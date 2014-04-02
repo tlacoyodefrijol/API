@@ -14,8 +14,10 @@ from sqlalchemy.ext.mutable import Mutable
 from sqlalchemy import types
 from dictalchemy import make_class_dictable
 from dateutil.tz import tzoffset
+from mimetypes import guess_type
 from copy import deepcopy
 from urllib import quote
+from os.path import join
 from math import ceil
 
 # -------------------
@@ -579,7 +581,22 @@ def well_known_status():
 
 @app.route("/")
 def index():
+    response = make_response('Look in /api', 302)
+    response.headers['Location'] = '/api'
+    return response
+
+@app.route("/api")
+@app.route("/api/")
+def api_index():
     return render_template('index.html', api_base='%s://%s' % (request.scheme, request.host))
+
+@app.route("/api/static/<path:path>")
+def api_static_file(path):
+    local_path = join('static', path)
+    mime_type, _ = guess_type(path)
+    response = make_response(open(local_path).read())
+    response.headers['Content-Type'] = mime_type
+    return response
 
 if __name__ == "__main__":
     app.run(debug=True)
