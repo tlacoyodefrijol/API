@@ -19,6 +19,7 @@ from copy import deepcopy
 from urllib import quote
 from os.path import join
 from math import ceil
+from time import time
 
 # -------------------
 # Init
@@ -84,6 +85,7 @@ class Organization(db.Model):
     city = db.Column(db.Unicode())
     latitude = db.Column(db.Float())
     longitude = db.Column(db.Float())
+    last_updated = db.Column(db.Integer())
     keep = db.Column(db.Boolean())
 
     # Relationships
@@ -102,6 +104,7 @@ class Organization(db.Model):
         self.latitude = latitude
         self.longitude = longitude
         self.keep = True
+        self.last_updated = time()
 
     def current_events(self):
         '''

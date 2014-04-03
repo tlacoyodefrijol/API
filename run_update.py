@@ -15,6 +15,7 @@ from app import db, app, Project, Organization, Story, Event, is_safe_name
 from urllib2 import HTTPError, URLError
 from urlparse import urlparse
 from random import shuffle
+from time import time
 from re import match
 
 # Logging Setup
@@ -389,6 +390,7 @@ def save_organization_info(session, org_dict):
         return new_organization
 
     # Mark the existing organization for safekeeping
+    existing_org.last_updated = time()
     existing_org.keep = True
 
     # Update existing organization details.
