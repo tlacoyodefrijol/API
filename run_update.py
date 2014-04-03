@@ -14,6 +14,7 @@ import feedparser
 from app import db, app, Project, Organization, Story, Event, is_safe_name
 from urllib2 import HTTPError, URLError
 from urlparse import urlparse
+from random import shuffle
 from re import match
 
 # Logging Setup
@@ -482,9 +483,14 @@ def main():
     # Keep a set of fresh organization names.
     organization_names = set()
     
+    # Retrieve all organizations and shuffle the list in place.
+    orgs_info = get_organizations()
+    shuffle(orgs_info)
+    
     # Iterate over organizations and projects, saving them to db.session.
-    for org_info in get_organizations():
-
+    for org_info in orgs_info:
+    
+      try:
         # Mark everything in this organization for deletion at first.
         db.session.execute(db.update(Event, values={'keep': False}).where(Event.organization_name == org_info['name']))
         db.session.execute(db.update(Story, values={'keep': False}).where(Story.organization_name == org_info['name']))
@@ -521,6 +527,13 @@ def main():
         db.session.execute(db.delete(Story).where(Story.keep == False))
         db.session.execute(db.delete(Project).where(Project.keep == False))
         db.session.execute(db.delete(Organization).where(Organization.keep == False))
+        
+      except:
+        # Raise the error, get out of main(), and don't commit the transaction.
+        raise
+      
+      else:
+        # Commit and move on to the next organization.
         db.session.commit()
     
     # Delete any organization not found on this round.
