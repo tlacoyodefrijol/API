@@ -174,6 +174,16 @@ def get_projects(organization):
         # If projects_list_url is a type of csv
         data = response.text.splitlines()
         dialect = Sniffer().sniff(data[0])
+        
+        #
+        # Google Docs CSV output uses double quotes instead of an escape char,
+        # but there's not typically a way to know that just from the dialect
+        # sniffer. If we see a comma delimiter and no escapechar, then set
+        # doublequote to True so that GDocs output doesn't barf.
+        #
+        if dialect.delimiter == ',' and dialect.doublequote is False and dialect.escapechar is None:
+            dialect.doublequote = True
+        
         projects = list(DictReader(data, dialect=dialect))
         for project in projects:
             project['organization_name'] = organization.name
