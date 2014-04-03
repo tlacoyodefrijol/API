@@ -11,8 +11,8 @@ from dateutil.tz import tzoffset
 import requests
 from feeds import extract_feed_links, get_first_working_feed_link
 import feedparser
-from urllib2 import HTTPError
 from app import db, app, Project, Organization, Story, Event, is_safe_name
+from urllib2 import HTTPError, URLError
 from urlparse import urlparse
 from re import match
 
@@ -121,7 +121,7 @@ def get_stories(organization):
             url = None
             return None
 
-    except (HTTPError, ValueError):
+    except (HTTPError, ValueError, URLError):
         url = None
         return None
 
@@ -222,11 +222,12 @@ def update_project_info(project):
         repo_url = 'https://api.github.com/repos' + path
 
         got = get_github_api(repo_url)
-
         if got.status_code in range(400, 499):
             if got.status_code == 404:
                 logging.error(repo_url + ' doesn\'t exist.')
                 return project
+            if got.status_code == 403:
+                logging.error("GitHub Rate Limit Remaining: " + got.headers["x-ratelimit-remaining"])
             raise IOError('We done got throttled')
 
         all_github_attributes = got.json()
