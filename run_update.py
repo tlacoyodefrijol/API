@@ -222,11 +222,12 @@ def update_project_info(project):
         repo_url = 'https://api.github.com/repos' + path
 
         got = get_github_api(repo_url)
-
         if got.status_code in range(400, 499):
             if got.status_code == 404:
                 logging.error(repo_url + ' doesn\'t exist.')
                 return project
+            if got.status_code == 403:
+                logging.error("GitHub Rate Limit Remaining: " + got.headers["x-ratelimit-remaining"])
             raise IOError('We done got throttled')
 
         all_github_attributes = got.json()
