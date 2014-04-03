@@ -449,10 +449,7 @@ def get_organizations_geojson():
         feature = dict(type='Feature', id=id, properties=props, geometry=geom)
         geojson['features'].append(feature)
 
-    response = make_response(json.dumps(geojson, indent=2))
-    response.headers['Content-Type'] = 'application/json'
-
-    return response
+    return jsonify(geojson)
 
 @app.route("/api/organizations/<organization_name>/events")
 def get_orgs_events(organization_name):
@@ -577,10 +574,7 @@ def well_known_status():
     state = dict(status=status, updated=int(time.time()), resources=[])
     state.update(dict(dependencies=['Meetup', 'Github', 'PostgreSQL']))
 
-    response = make_response(json.dumps(state, indent=2))
-    response.headers['Content-Type'] = 'application/json'
-
-    return response
+    return jsonify(state)
 
 @app.route("/")
 def index():
