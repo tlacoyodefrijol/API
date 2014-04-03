@@ -121,7 +121,7 @@ def get_stories(organization):
             url = None
             return None
 
-    except (HTTPError, ValueError):
+    except (HTTPError, ValueError, URLError):
         url = None
         return None
 
