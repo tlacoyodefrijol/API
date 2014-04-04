@@ -11,7 +11,7 @@ import json, os, requests, time
 from flask.ext.heroku import Heroku
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy.ext.mutable import Mutable
-from sqlalchemy import types
+from sqlalchemy import types, desc
 from dictalchemy import make_class_dictable
 from dateutil.tz import tzoffset
 from mimetypes import guess_type
@@ -477,6 +477,21 @@ def get_upcoming_events(organization_name):
         return "Organization not found", 404
     # Get upcoming event objects
     query = Event.query.filter(Event.organization_name == organization.name, Event.start_time_notz >= datetime.utcnow())
+    response = paged_results(query, int(request.args.get('page', 1)), 25)
+    return jsonify(response)
+
+@app.route("/api/organizations/<organization_name>/past_events")
+def get_past_events(organization_name):
+    '''
+        Get events that occur in the past. Order desc.
+    '''
+    # Check org name
+    organization = Organization.query.filter_by(name=raw_name(organization_name)).first()
+    if not organization:
+        return "Organization not found", 404
+    # Get past event objects
+    query = Event.query.filter(Event.organization_name == organization.name, Event.start_time_notz < datetime.utcnow()).\
+            order_by(desc(Event.start_time_notz))
     response = paged_results(query, int(request.args.get('page', 1)), 25)
     return jsonify(response)
 
