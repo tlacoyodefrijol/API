@@ -19,7 +19,6 @@ from copy import deepcopy
 from urllib import quote
 from os.path import join
 from math import ceil
-from time import time
 
 # -------------------
 # Init
@@ -104,7 +103,7 @@ class Organization(db.Model):
         self.latitude = latitude
         self.longitude = longitude
         self.keep = True
-        self.last_updated = time()
+        self.last_updated = time.time()
 
     def current_events(self):
         '''
