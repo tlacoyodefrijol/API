@@ -272,6 +272,31 @@ class ApiTest(unittest.TestCase):
         response = json.loads(response.data)
         self.assertEqual(response["objects"][0]["organization_name"], "Code for America")
 
+    def test_upcoming_events(self):
+        '''
+        Only return events occurring in the future
+        Make sure that they are ordered from most recent to
+        furthest away in the future
+        '''
+        # Everyday is Christmas
+        with freeze_time("2012-12-25"):
+            organization = OrganizationFactory(name="International Cat Association")
+            db.session.flush()
+
+            # Create multiple events, some in the future, one in the past
+            EventFactory(organization_name=organization.name, name="Christmas Eve", start_time_notz=datetime(2012, 12, 24))
+            EventFactory(organization_name=organization.name, name="New Years", start_time_notz=datetime(2013, 1, 1))
+            EventFactory(organization_name=organization.name, name="MLK Day", start_time_notz=datetime(2013, 1, 19))
+            db.session.flush()
+
+            # Check that future events are returned in the correct order
+            response = self.app.get('/api/organizations/International Cat Association/upcoming_events')
+            self.assertEqual(response.status_code, 200)
+            response = json.loads(response.data)
+            self.assertEqual(response['total'], 2)
+            self.assertEqual(response['objects'][0]['name'], 'New Years')
+            self.assertEqual(response['objects'][1]['name'], 'MLK Day')
+
 if __name__ == '__main__':
     unittest.main()
     

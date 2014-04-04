@@ -466,6 +466,20 @@ def get_orgs_events(organization_name):
     response = paged_results(query, int(request.args.get('page', 1)), 25)
     return jsonify(response)
 
+@app.route("/api/organizations/<organization_name>/upcoming_events")
+def get_upcoming_events(organization_name):
+    '''
+        Get events that occur in the future. Order asc.
+    '''
+    # Check org name
+    organization = Organization.query.filter_by(name=raw_name(organization_name)).first()
+    if not organization:
+        return "Organization not found", 404
+    # Get upcoming event objects
+    query = Event.query.filter(Event.organization_name == organization.name, Event.start_time_notz >= datetime.utcnow())
+    response = paged_results(query, int(request.args.get('page', 1)), 25)
+    return jsonify(response)
+
 @app.route("/api/organizations/<organization_name>/stories")
 def get_orgs_stories(organization_name):
     '''
