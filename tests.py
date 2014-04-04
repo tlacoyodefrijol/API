@@ -177,6 +177,9 @@ class ApiTest(unittest.TestCase):
         assert isinstance(response, dict)
 
     def test_events(self):
+        '''
+        Return all events past/future ordered by oldest to newest
+        '''
         EventFactory()
         db.session.flush()
 
