@@ -172,21 +172,21 @@
                 <dt>api_url</dt>
                 <dd>Link to complete API information for this organization.</dd>
 
-                <dt>recent_events</dt>
+                <dt>current_events</dt>
                 <dd>Selection of current <a href="#event-properties">event dictionaries</a>.</dd>
                 <dt>all_events</dt>
                 <dd>Link to API information for all organization events.</dd>
                 <dt>events_url</dt>
                 <dd>URL source for event list.</dd>
 
-                <dt>recent_projects</dt>
+                <dt>current_projects</dt>
                 <dd>Selection of current <a href="#project-properties">project dictionaries</a>.</dd>
                 <dt>all_projects</dt>
                 <dd>Link to API information for all organization projects.</dd>
                 <dt>projects_list_url</dt>
                 <dd>URL source for projects list.</dd>
 
-                <dt>recent_stories</dt>
+                <dt>current_stories</dt>
                 <dd>Selection of current <a href="#story-properties">story dictionaries</a>.</dd>
                 <dt>all_stories</dt>
                 <dd>Link to API information for all organization stories.</dd>
@@ -207,15 +207,15 @@
   "longitude": -122.2711, 
   "api_url": "{{ api_base }}/api/organizations/Open_Oakland", 
 
-  "recent_events": [ … ], 
+  "current_events": [ … ], 
   "all_events": "{{ api_base }}/api/organizations/Open_Oakland/events", 
   "events_url": "http://www.meetup.com/OpenOakland/", 
 
-  "recent_projects": [ … ], 
+  "current_projects": [ … ], 
   "all_projects": "{{ api_base }}/api/organizations/Open_Oakland/projects", 
   "projects_list_url": "https://docs.google.com/spreadsheet/pub?key=0AgNZYWcpRBQ7dHRnTUJtd3QtYkR5bk5lUmpNMDlpSEE&amp;single=true&amp;gid=0&amp;output=csv", 
 
-  "recent_stories": [ … ], 
+  "current_stories": [ … ], 
   "all_stories": "{{ api_base }}/api/organizations/Open_Oakland/stories", 
   "rss": ""
 }</pre>
@@ -231,9 +231,10 @@
             <p>
                 Retrieve a list of projects.
             </p>
-            <h4>Endpoint</h4>
+            <h4>Endpoints</h4>
             <p>
-                /api/projects
+                /api/projects <br>
+                /api/organization/{organization id}/projects
             </p>
             <h4>Response Properties</h4>
             <dl>
@@ -368,9 +369,12 @@
             <p>
                 Retrieve a list of events.
             </p>
-            <h4>Endpoint</h4>
+            <h4>Endpoints</h4>
             <p>
-                /api/events
+                /api/events <br>
+                /api/organization/{organization id}/events <br>
+                /api/organization/{organization id}/events/upcoming_events <br>
+                /api/organization/{organization id}/events/past_events
             </p>
             <h4>Response Properties</h4>
             <dl>
@@ -484,9 +488,10 @@
             <p>
                 Retrieve a list of stories.
             </p>
-            <h4>Endpoint</h4>
+            <h4>Endpoints</h4>
             <p>
-                /api/stories
+                /api/stories <br>
+                /api/organization/{organization id}/stories
             </p>
             <h4>Response Properties</h4>
             <dl>
