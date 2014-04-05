@@ -140,6 +140,20 @@ class Organization(db.Model):
         organization_name = quote(safe_name(self.name))
         return '%s://%s/api/organizations/%s/events' % (request.scheme, request.host, organization_name)
 
+    def upcoming_events(self):
+        ''' API link to an orgs upcoming events
+        '''
+        # Make a nice org name
+        organization_name = quote(safe_name(self.name))
+        return '%s://%s/api/organizations/%s/upcoming_events' % (request.scheme, request.host, organization_name)
+
+    def past_events(self):
+        ''' API link to an orgs past events
+        '''
+        # Make a nice org name
+        organization_name = quote(safe_name(self.name))
+        return '%s://%s/api/organizations/%s/past_events' % (request.scheme, request.host, organization_name)
+
     def all_projects(self):
         ''' API link to all an orgs projects
         '''
@@ -173,7 +187,8 @@ class Organization(db.Model):
 
         del organization_dict['keep']
 
-        for key in ('all_events', 'all_projects', 'all_stories', 'api_url'):
+        for key in ('all_events', 'all_projects', 'all_stories',
+                    'upcoming_events', 'past_events', 'api_url'):
             organization_dict[key] = getattr(self, key)()
 
         if include_extras:
