@@ -27,9 +27,9 @@ Below is the current **draft** workflow: please [contribute your thoughts on thi
 The new site will be powered by this [Brigade Information](https://docs.google.com/spreadsheet/ccc?key=0ArHmv-6U1drqdGNCLWV5Q0d5YmllUzE5WGlUY3hhT2c&usp=sharing) Google Spreadsheet. This way you don't need yet another account for our Brigade site. Just keep your Brigade's info up to date and you're good. The columns are:
 * Name
 * Website
-* Events Url - Point us to where ever you schedule your events. Meetup, Google Calendar, whatever. The /events endpoint is still under construction.
-* RSS - If you have a blog, point us to it. The /stories endpoint is still under construction.
-* Projects List Url - Keep a list of projects urls somewhere online we can read it.
+* Events Url - Point us to where ever you schedule your events. Only Meetup.com events are working right now.
+* RSS - If you have a blog, point us to it. It's pretty smart and can find the feed on its own. To show off your Google Group discussions, use a link like `https://groups.google.com/forum/feed/code-for-san-francisco/msgs/rss.xml?num=15`
+* Projects List Url - Can either be a GitHub organization url like `https://github.com/sfbrigade` or a link to an accessible csv of project urls described below.
 
 
 ##### Projects List
@@ -52,7 +52,7 @@ Lastly, the projects list URL can be a Github organization URL, like http://gith
 
 #### API
 
-Code for America will maintain a restful API of all of the Brigades' (CfA's volunteer civic hacking groups) activities. This API is under heavy development, with current focus on the /projects endpoint. There is a great discussion of what attributes should be included here on the BetaNYC [civic.json thread](https://github.com/BetaNYC/civic.json/issues/6). 
+Code for America will maintain a restful API of all of the Brigades' (CfA's volunteer civic hacking groups) activities. There is a great discussion of what attributes should be included in the /projects endpoint here on the BetaNYC [civic.json thread](https://github.com/BetaNYC/civic.json/issues/6). 
 
 Current output is formatted like:
 
@@ -78,7 +78,9 @@ Current output is formatted like:
 
 This API is built with the [Flask-Restless](http://flask-restless.readthedocs.org/en/latest/) plugin. Refer to its documentation for specifics.
 
-#### TODO: civic.json files
+#### TODOS:
+
+Check the [open GitHub Issues](https://github.com/codeforamerica/civic-json-worker/issues?state=open).
 
 `civic-json-worker` will also output data in the civic.json standard (see below) to a [public JSON File on S3](https://s3-us-west-2.amazonaws.com/project-list/projects.json) with CORS enabled, allowing it to be loaded with only 
 an Ajax call.
@@ -121,9 +123,6 @@ Besides that, there are a few environmental variables that you'll need to set:
 * `FLASK_KEY=[whatever you want]` — This is a string that you'll check to make sure that only trusted people are deleting things
 * `GITHUB_TOKEN=[Github API token]` — Read about setting that up here: http://developer.github.com/v3/oauth/
 * `MEETUP_KEY=[Meetup API Key]` — Read about setting that up here: https://secure.meetup.com/meetup_api/key/
-* `S3_BUCKET=[Name of the bucket]` — This is the bucket where you'll store the JSON files
-* `AWS_ACCESS_KEY_ID=[Amazon Web Services Key]` — Amazon access key for the bucket above, see also [boto config](https://code.google.com/p/boto/wiki/BotoConfig).
-* `AWS_SECRET_ACCESS_KEY=[Amazon Web Services Secret]` — Amazon secret key for the bucket above, see also [boto config](https://code.google.com/p/boto/wiki/BotoConfig).
 
 Probably easiest placed in the .bashrc (or the like) of 
 the user that the app is running as rather than manually set but you get the idea...
@@ -136,7 +135,7 @@ The ``run_update.py`` script will be run on Heroku once an hour and populate the
 ``` bash 
 $ python run_update.py
 ```
-
+There is a line near the top of run_update.py that sets the `gdocs_url` variable. Change it to the testing one for a faster testing.
 
 ## Contribute
 
