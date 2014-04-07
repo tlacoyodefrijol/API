@@ -79,7 +79,7 @@ The need for a way to show off good civic tech projects was apparent. Several Br
 
 <a href="http://betanyc.org"><img src="http://betanyc.us/images/apple70Gray.png" alt="Beta NYC"> Beta NYC </a>
 
-<a href="http://www.meetup.com/Code-for-Boston/"><img src="http://photos3.meetupstatic.com/photos/event/9/6/c/highres_218882412.jpeg" alt="Code for Boston"> Code for Boston </a>
+<a href="http://www.meetup.com/Code-for-Boston/"><img src="http://i.imgur.com/HlsvNQY.png" alt="Code for Boston"> Code for Boston </a>
 
 *For the full story behind this API, [read this](https://hackpad.com/Civic.json-planning-meeting-EusFEMPgMio#:h=Chicago's-Open-Gov-Hack-Night-).
 
@@ -108,7 +108,7 @@ This projects list you point us to will need the following columns:
 An example:
 ```
 name, description, link_url, code_url, type, categories
-South Bend Voices, "A redeploy of CityVoice for South Bend, IN.", http://www.southbendvoices.com/, https://github.com/codeforamerica/cityvoice, web service,	"community engagement, housing"
+South Bend Voices, "A redeploy of CityVoice for South Bend, IN.", http://www.southbendvoices.com/, https://github.com/codeforamerica/cityvoice, web service, "community engagement, housing"
 ```
 
 That projects list URL can be any flavor of csv. The easiest way is to make a Google Spreadsheet like [my example](https://docs.google.com/spreadsheet/ccc?key=0ArHmv-6U1drqdDBzNXpSZkVzRDJUQnpOS0RJM0FDWGc&usp=sharing) and then ```File > Publish it to the web```. Grab the published link and change ```?output=html to ?output=csv```. Put that in the Brigade Information sheet and you're done.
@@ -128,7 +128,7 @@ The CFAPI is built on [Flask](http://flask.pocoo.org/) and Python. The `app.py` 
 
 Here's how to get set up for development:
 
-1. Set up a [virtualenv](https://pypi.python.org/pypi/virtualenv)
+* Set up a [virtualenv](https://pypi.python.org/pypi/virtualenv)
 
 ```
 pip install virtualenv
@@ -136,20 +136,20 @@ virtualenv venv-cfapi
 source venv-cfapi/bin/activate
 ```
 
-2. Install the required libraries 
+* Install the required libraries 
 
 ```
 $ pip install -r requirements.txt
 ```
 
-3. Set up a new database
+* Set up a new database
 
 ```
 createdb cfapi
 python -c 'from app import db; db.create_all()'
 ```
 
-4. Set your environmental variables.
+* Set your environmental variables.
 
 
 * `DATABASE_URL=[db connection string]` — On Heroku with Postgres, this will be set for you. My local example is `postgres://hackyourcity@localhost/cfapi` When testing locally, “sqlite:///data.db” is a great way to skip Postgres installation.
@@ -158,7 +158,7 @@ python -c 'from app import db; db.create_all()'
 
 Set these environment variables in your `.bash-profile`. Then run `source ~/.bash_profile`.
 
-5. Run the updater
+* Run the updater
 
 The `run_update.py` script will be run on Heroku once an hour and populate the database. To run locally, try:
 
@@ -167,13 +167,13 @@ python run_update.py
 ```
 There is a line near the top of run_update.py that sets the `gdocs_url` variable. Change it to the testing one for a faster testing run through.
 
-6. Start the API
+* Start the API
 
 ```
 python app.py
 ```
 
-7. Visit http://localhost:5000/api/organizations/Code_for_America to see your results.
+* Visit http://localhost:5000/api/organizations/Code_for_America to see your results.
 
 
 ### Contribute
