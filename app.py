@@ -606,19 +606,24 @@ def well_known_status():
     meetup_key = os.environ['MEETUP_KEY']
 
     try:
-        org = db.session.query(Organization).limit(1).first()
+        org = db.session.query(Organization).order_by(Organization.last_updated).limit(1).first()
         project = db.session.query(Project).limit(1).first()
         rate_limit = requests.get('https://api.github.com/rate_limit', auth=github_auth)
         remaining_github = rate_limit.json()['resources']['core']['remaining']
         
         meetup_url = 'https://api.meetup.com/status?format=json&key='+meetup_key
         meetup_status = requests.get(meetup_url).json().get('status')
+        
+        time_since_updated = time.time() - getattr(org, 'last_updated', -1)
 
         if not hasattr(project, 'name'):
             status = 'Sample project is missing a name'
 
         elif not hasattr(org, 'name'):
             status = 'Sample project is missing a name'
+
+        elif time_since_updated > 6 * 60 * 60:
+            status = 'Oldest organization (%s) updated more than 6 hours ago' % org.name
 
         elif remaining_github < 10:
             status = 'Only %d remaining Github requests' % remaining_github
