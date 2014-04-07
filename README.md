@@ -1,25 +1,89 @@
-# civic-json-worker
+# The Code for America API
 
-A [Flask](http://flask.pocoo.org) API generalizing [OpenCity Chicago's similar app](https://github.com/open-city/civic-json-worker) to track civic tech projects around the world. Project data is stored / output using the [civic.json](https://github.com/BetaNYC/civic.json) data standard. (Soon!)
+### What the CFAPI is
+Code for America has developed this API to track all the activity across the civic technology movement. Our goal is to measure and motivate the movement by recognizing participation. The CFAPI describes an organizations projects, stories, and events. 
 
-A project by:
+The tools that the Brigades and other groups use to do their fine deeds are all different. The CFAPI does the diffcult job of being able to track these activities no matter what tools an organization is using. The participants don't need to change their activities to be included.
 
-<a href="http://opencityapps.org"><img src="http://opengovhacknight.org/images/sponsors/open-city-sm.jpg" alt="Open City"></a>
+### Projects powered by the CFAPI
+The Code for America Brigade website
+<img src="http://i.imgur.com/C96yBLE.png" width="500px">
 
-<a href="http://betanyc.org"><img src="http://betanyc.us/images/apple70Gray.png" alt="Beta NYC"></a>
+### Example Response
+See the full documentation at http://codeforamerica.org/api
 
-<a href="http://codeforamerica.com"><img src="http://codeforamerica.org/assets/logo.png" alt="Code for America"></a>
+```
+{
+  "type": "Brigade", 
+  "name": "Open Oakland", 
+  "website": "http://openoakland.org/", 
+  "city": "Oakland, CA", 
+  "latitude": 37.8044, 
+  "longitude": -122.2711, 
+  "api_url": "http://codeforamerica.org/api/organizations/Open_Oakland", 
+  "current_events": [ 
+ 	{
+		api_url: "http://codeforamerica.org/api/events/2010",
+		created_at: "2014-02-26 21:05:21",
+		description: "<p>Join Code for San Francisco for our weekly hack night ...",
+		end_time: null,
+		event_url: "http://www.meetup.com/Code-for-San-Francisco-Civic-Hack-Night/events/174976312/",
+		id: 2010,
+		location: null,
+		name: "Weekly Civic Hack Night",
+		organization_name: "Code for San Francisco",
+		start_time: "2014-04-09 18:30:00 -0700"
+	},
+	...
 
+  ], 
+  "all_events": "http://codeforamerica.org/api/organizations/Open_Oakland/events", 
+  "events_url": "http://www.meetup.com/OpenOakland/", 
+  "current_projects": [ 
+  	{
+		api_url: "http://codeforamerica.org/api/projects/216",
+		categories: null,
+		code_url: "https://github.com/sfbrigade/open_ballot",
+		description: "An educational tool around ballot measures",
+		github_details: {},
+		id: 216,
+		link_url: null,
+		name: "open_ballot",
+		organization_name: "Code for San Francisco",
+		type: null
+	},
+	...
+  ], 
+  "all_projects": "http://codeforamerica.org/api/organizations/Open_Oakland/projects", 
+  "projects_list_url": "https://docs.google.com/spreadsheet/pub?key=0AgNZYWcpRBQ7dHRnTUJtd3QtYkR5bk5lUmpNMDlpSEE&single=true&gid=0&output=csv", 
+  "current_stories": [
+  	{
+  		api_url: "http://codeforamerica.org/api/stories/4",
+		id: 4,
+		link: "https://groups.google.com/d/msg/code-for-san-francisco/sqkerXsrntY/yMhnsPhN6LwJ",
+		organization_name: "Code for San Francisco",
+		title: "Ethical Hacking with Guru99",
+		type: "blog"
+  	},
+  	...
+  ], 
+  "all_stories": "http://codeforamerica.org/api/organizations/Open_Oakland/stories", 
+  "rss": ""
+}
+```
 
-*For the story behind this API, [read this](https://hackpad.com/Civic.json-planning-meeting-EusFEMPgMio#:h=Chicago's-Open-Gov-Hack-Night-). For our design philosophy, [read this](https://hackpad.com/Civic.json-planning-meeting-EusFEMPgMio#:h=Civic-json-worker:-way-forward).*
+### History
+The need for a way to show off good civic tech projects was apparent. Several Brigades had all started working on ways to track their projects. They were working separately on the same idea at the same time. The CFAPI is a generalization of the great work done by:
 
-## How It Works
+<a href="http://opencityapps.org"><img src="http://opengovhacknight.org/images/sponsors/open-city-sm.jpg" alt="Open City"> Open City </a>
 
-Looking at [other civic tech listings](http://commons.codeforamerica.org/), projects like this that have [gone stale](http://digital.cityofchicago.org/index.php/open-data-applications/), the real sticking point seems to be keeping the list of projects - and their details - up to date.
+<a href="http://betanyc.org"><img src="http://betanyc.us/images/apple70Gray.png" alt="Beta NYC"> Beta NYC </a>
 
-The goal of this project is to minimize the work needed from civic hacking organizations to track their projects, and share project information with the world in a structured way.
+<a href="http://www.meetup.com/Code-for-Boston/"><img src="http://photos3.meetupstatic.com/photos/event/9/6/c/highres_218882412.jpeg" alt="Code for Boston"> Code for Boston </a>
 
-Below is the current **draft** workflow: please [contribute your thoughts on this by adding an issue!](https://github.com/codeforamerica/civic-json-worker/issues)
+*For the full story behind this API, [read this](https://hackpad.com/Civic.json-planning-meeting-EusFEMPgMio#:h=Chicago's-Open-Gov-Hack-Night-).
+
+This repository is forked from [Open City's Civic Json Worker](https://github.com/open-city/civic-json-worker)
 
 ### How to add your Brigade to the API
 
@@ -29,7 +93,7 @@ The new site will be powered by this [Brigade Information](https://docs.google.c
 * Website
 * Events Url - Point us to where ever you schedule your events. Only Meetup.com events are working right now.
 * RSS - If you have a blog, point us to it. It's pretty smart and can find the feed on its own. To show off your Google Group discussions, use a link like `https://groups.google.com/forum/feed/code-for-san-francisco/msgs/rss.xml?num=15`
-* Projects List Url - Can either be a GitHub organization url like `https://github.com/sfbrigade` or a link to an accessible csv of project urls described below.
+* Projects List Url - Can either be a GitHub organization url like `https://github.com/sfbrigade` or a link to a list of project urls, described below.
 
 
 ##### Projects List
@@ -41,103 +105,78 @@ This projects list you point us to will need the following columns:
 * type - Is this project an app, an open data policy, a webservice?
 * categories - Write your own separated by commas. "Education, digital literacy"
 
+An example:
+```
+name, description, link_url, code_url, type, categories
+South Bend Voices, "A redeploy of CityVoice for South Bend, IN.", http://www.southbendvoices.com/, https://github.com/codeforamerica/cityvoice, web service,	"community engagement, housing"
+```
+
 That projects list URL can be any flavor of csv. The easiest way is to make a Google Spreadsheet like [my example](https://docs.google.com/spreadsheet/ccc?key=0ArHmv-6U1drqdDBzNXpSZkVzRDJUQnpOS0RJM0FDWGc&usp=sharing) and then ```File > Publish it to the web```. Grab the published link and change ```?output=html to ?output=csv```. Put that in the Brigade Information sheet and you're done.
 
 The projects list URL can also be a JSON file, with a list of strings containing Github project URLs.
 
 Lastly, the projects list URL can be a Github organization URL, like http://github.com/codeforamerica.
 
-
-### Output Data
-
-#### API
-
-Code for America will maintain a restful API of all of the Brigades' (CfA's volunteer civic hacking groups) activities. There is a great discussion of what attributes should be included in the /projects endpoint here on the BetaNYC [civic.json thread](https://github.com/BetaNYC/civic.json/issues/6). 
-
-Current output is formatted like:
-
-```Javascript
-{
-    num_results: 493,
-    objects: [
-        {
-            categories: "community engagement, housing",
-            code_url: "https://github.com/codeforamerica/cityvoice",
-            description: "A redeployment of CityVoice in South Bend, Indiana.",
-            github_details: "{...}",
-            link_url: "http://www.southbendvoices.com/",
-            name: "South Bend Voices",
-            type: "service"
-        },
-        ...
-    ],
-    page: 1,
-    total_pages: 1
-}
-```
-
-This API is built with the [Flask-Restless](http://flask-restless.readthedocs.org/en/latest/) plugin. Refer to its documentation for specifics.
-
-#### TODOS:
-
-Check the [open GitHub Issues](https://github.com/codeforamerica/civic-json-worker/issues?state=open).
-
-`civic-json-worker` will also output data in the civic.json standard (see below) to a [public JSON File on S3](https://s3-us-west-2.amazonaws.com/project-list/projects.json) with CORS enabled, allowing it to be loaded with only 
-an Ajax call.
-
-This way, it can be used for any project listing site ([for a good example, see Chicago's](http://opengovhacknight.org/projects.html).)
-
-
-## Civic.json data standard
-[Civic.json](https://github.com/BetaNYC/civic.json) is proposed meta-data standard for describing civic tech projects. The goal is for this standard to be simple, and for the data fields that describe projects to be largely assembled programatically.
+### Civic.json data standard
+The `/projects` endpoint is structure is influenced by [Civic.json](https://github.com/BetaNYC/civic.json), a proposed meta-data standard for describing civic tech projects. The goal is for this standard to be simple, and for the data fields that describe projects to be largely assembled programatically.
 
 The standard is still very much in planning phases, and we [welcome discussion](https://github.com/BetaNYC/civic.json/issues).
 
-Once we settle on v1, `civic-json-worker` will output - and potentially store - project data in this format.
+### Installation
 
-## Installation
-
-Development is in very early stages, and specs are likely to change, so please contact Andrew and Eric in the "Contribute" section below to get involved.
+The CFAPI is built on [Flask](http://flask.pocoo.org/) and Python. The `app.py` file describes the models and routes. The `run_update.py` file runs once an hour and collects all the data about the different Brigades. Both `tests.py` and `run_update_test.py` are automatically run by [Travis-CI](https://travis-ci.org/codeforamerica/cfapi) whenever a new commit is made. The production service lives on Heroku. Please contact Andrew and Eric in the "Contribute" section below to get involved.
 
 Here's how to get set up for development:
 
-There are some basic requirements which can be gotten 
-in the standard Python fashion (assuming you are working in a [virtualenv](https://pypi.python.org/pypi/virtualenv)):
+1. Set up a [virtualenv](https://pypi.python.org/pypi/virtualenv)
 
-``` bash
+```
+pip install virtualenv
+virtualenv venv-cfapi
+source venv-cfapi/bin/activate
+```
+
+2. Install the required libraries 
+
+```
 $ pip install -r requirements.txt
 ```
 
-### Create and prepare a database
-For a new postgres db, run:
+3. Set up a new database
 
-    createdb civicjsonworker
+```
+createdb cfapi
+python -c 'from app import db; db.create_all()'
+```
 
-Run this Python command to create a fresh database schema:
+4. Set your environmental variables.
 
-    python -c 'from app import db; db.create_all()'
 
-Besides that, there are a few environmental variables that you'll need to set:
-
-* `DATABASE_URL=[db connection string]` — On Heroku with Postgres, this will be set for you. My local example is `postgres://hackyourcity@localhost/civicjsonworker` When testing locally, “sqlite:///data.db” is a great way to skip Postgres installation.
-* `FLASK_KEY=[whatever you want]` — This is a string that you'll check to make sure that only trusted people are deleting things
+* `DATABASE_URL=[db connection string]` — On Heroku with Postgres, this will be set for you. My local example is `postgres://hackyourcity@localhost/cfapi` When testing locally, “sqlite:///data.db” is a great way to skip Postgres installation.
 * `GITHUB_TOKEN=[Github API token]` — Read about setting that up here: http://developer.github.com/v3/oauth/
 * `MEETUP_KEY=[Meetup API Key]` — Read about setting that up here: https://secure.meetup.com/meetup_api/key/
 
-Probably easiest placed in the .bashrc (or the like) of 
-the user that the app is running as rather than manually set but you get the idea...
+Set these environment variables in your `.bash-profile`. Then run `source ~/.bash_profile`.
 
+5. Run the updater
 
-## Running the updater
+The `run_update.py` script will be run on Heroku once an hour and populate the database. To run locally, try:
 
-The ``run_update.py`` script will be run on Heroku once an hour and populate the database. To run locally, try:
-
-``` bash 
-$ python run_update.py
+``` 
+python run_update.py
 ```
-There is a line near the top of run_update.py that sets the `gdocs_url` variable. Change it to the testing one for a faster testing.
+There is a line near the top of run_update.py that sets the `gdocs_url` variable. Change it to the testing one for a faster testing run through.
 
-## Contribute
+6. Start the API
+
+```
+python app.py
+```
+
+7. Visit http://localhost:5000/api/organizations/Code_for_America to see your results.
+
+
+### Contribute
 
 Get in touch with Andrew Hyder ([ondrae](http://github.com/ondrae)) ([andrewh@codeforamerica.org](andrewh@codeforamerica.org)) from Code for America or Eric Van Zanten ([eric.vanzanten@gmail.com](eric.vanzanten@gmail.com)) from Open City.
 
