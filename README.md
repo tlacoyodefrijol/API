@@ -1,7 +1,7 @@
 # The Code for America API
 
 ### What the CFAPI is
-Code for America has developed this API to track all the activity across the civic technology movement. Our goal is to measure and motivate the movement by recognizing participation. The CFAPI describes an organizations projects, stories, and events. 
+Code for America has developed this API to track all the activity across the civic technology movement. Our goal is to measure and motivate the movement by recognizing participation. The CFAPI describes an organization's projects, stories, and events. 
 
 The tools that the Brigades and other groups use to do their fine deeds are all different. The CFAPI does the diffcult job of being able to track these activities no matter what tools an organization is using. The participants don't need to change their activities to be included.
 
@@ -14,61 +14,63 @@ See the full documentation at http://codeforamerica.org/api
 
 ```
 {
-  "type": "Brigade", 
-  "name": "Open Oakland", 
-  "website": "http://openoakland.org/", 
-  "city": "Oakland, CA", 
-  "latitude": 37.8044, 
-  "longitude": -122.2711, 
-  "api_url": "http://codeforamerica.org/api/organizations/Open_Oakland", 
-  "current_events": [ 
- 	{
-		api_url: "http://codeforamerica.org/api/events/2010",
-		created_at: "2014-02-26 21:05:21",
-		description: "<p>Join Code for San Francisco for our weekly hack night ...",
-		end_time: null,
-		event_url: "http://www.meetup.com/Code-for-San-Francisco-Civic-Hack-Night/events/174976312/",
-		id: 2010,
-		location: null,
-		name: "Weekly Civic Hack Night",
-		organization_name: "Code for San Francisco",
-		start_time: "2014-04-09 18:30:00 -0700"
-	},
-	...
-
-  ], 
-  "all_events": "http://codeforamerica.org/api/organizations/Open_Oakland/events", 
-  "events_url": "http://www.meetup.com/OpenOakland/", 
-  "current_projects": [ 
-  	{
-		api_url: "http://codeforamerica.org/api/projects/216",
-		categories: null,
-		code_url: "https://github.com/sfbrigade/open_ballot",
-		description: "An educational tool around ballot measures",
-		github_details: {},
-		id: 216,
-		link_url: null,
-		name: "open_ballot",
-		organization_name: "Code for San Francisco",
-		type: null
-	},
-	...
-  ], 
-  "all_projects": "http://codeforamerica.org/api/organizations/Open_Oakland/projects", 
-  "projects_list_url": "https://docs.google.com/spreadsheet/pub?key=0AgNZYWcpRBQ7dHRnTUJtd3QtYkR5bk5lUmpNMDlpSEE&single=true&gid=0&output=csv", 
-  "current_stories": [
-  	{
-  		api_url: "http://codeforamerica.org/api/stories/4",
-		id: 4,
-		link: "https://groups.google.com/d/msg/code-for-san-francisco/sqkerXsrntY/yMhnsPhN6LwJ",
-		organization_name: "Code for San Francisco",
-		title: "Ethical Hacking with Guru99",
-		type: "blog"
-  	},
-  	...
-  ], 
-  "all_stories": "http://codeforamerica.org/api/organizations/Open_Oakland/stories", 
-  "rss": ""
+	all_events: "http://codeforamerica.org/api/organizations/Code_for_San_Francisco/events",
+	all_projects: "http://codeforamerica.org/api/organizations/Code_for_San_Francisco/projects",
+	all_stories: "http://codeforamerica.org/api/organizations/Code_for_San_Francisco/stories",
+	api_url: "http://codeforamerica.org/api/organizations/Code_for_San_Francisco",
+	city: "San Francisco, CA",
+	current_events: [
+		{
+			api_url: "http://codeforamerica.org/api/events/2010",
+			created_at: "2014-02-26 21:05:21",
+			description: "<p>Join Code for San Francisco for our weekly hack night focused on open government and civic tech in San Francisco. </p> ...",
+			end_time: null,
+			event_url: "http://www.meetup.com/Code-for-San-Francisco-Civic-Hack-Night/events/174976312/",
+			id: 2010,
+			location: null,
+			name: "Weekly Civic Hack Night",
+			organization_name: "Code for San Francisco",
+			start_time: "2014-04-09 18:30:00 -0700"
+		},
+	    ...
+	],
+	current_projects: [
+		{
+			api_url: "http://codeforamerica.org/api/projects/216",
+			categories: null,
+			code_url: "https://github.com/sfbrigade/open_ballot",
+			description: "An educational tool around ballot measures",
+			github_details: {},
+			id: 216,
+			link_url: null,
+			name: "open_ballot",
+			organization_name: "Code for San Francisco",
+			type: null
+		},
+		...
+	],
+	current_stories: [
+		{
+			api_url: "http://codeforamerica.org/api/stories/4",
+			id: 4,
+			link: "https://groups.google.com/d/msg/code-for-san-francisco/sqkerXsrntY/yMhnsPhN6LwJ",
+			organization_name: "Code for San Francisco",
+			title: "Ethical Hacking with Guru99",
+			type: "blog"
+		},
+		...
+	],
+	events_url: "http://www.meetup.com/Code-for-San-Francisco-Civic-Hack-Night/",
+	last_updated: 1396969394,
+	latitude: 37.7749,
+	longitude: -122.4194,
+	name: "Code for San Francisco",
+	past_events: "http://codeforamerica.org/api/organizations/Code_for_San_Francisco/past_events",
+	projects_list_url: "https://github.com/sfbrigade",
+	rss: "https://groups.google.com/forum/feed/code-for-san-francisco/msgs/rss.xml?num=15",
+	type: "Brigade",
+	upcoming_events: "http://codeforamerica.org/api/organizations/Code_for_San_Francisco/upcoming_events",
+	website: "http://codeforsanfrancisco.org/"
 }
 ```
 
