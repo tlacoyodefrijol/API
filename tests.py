@@ -219,13 +219,16 @@ class ApiTest(unittest.TestCase):
         self.assertEqual(response.status_code,200)
         response = json.loads(response.data)
         scheme, netloc, path, _, _, _  = urlparse(response["all_events"])
-        self.assertTrue("_" in path)
+        self.assertTrue("-" in path)
+        self.assertFalse("_" in path)
         self.assertFalse(" " in path)
         scheme, netloc, path, _, _, _  = urlparse(response["all_stories"])
-        self.assertTrue("_" in path)
+        self.assertTrue("-" in path)
+        self.assertFalse("_" in path)
         self.assertFalse(" " in path)
         scheme, netloc, path, _, _, _  = urlparse(response["all_projects"])
-        self.assertTrue("_" in path)
+        self.assertTrue("-" in path)
+        self.assertFalse("_" in path)
         self.assertFalse(" " in path)
 
         response = self.app.get('/api/organizations/Code_for_America')
@@ -274,6 +277,16 @@ class ApiTest(unittest.TestCase):
         self.assertEqual(response.status_code,200)
         response = json.loads(response.data)
         self.assertEqual(response["objects"][0]["organization_name"], "Code for America")
+
+    def test_dashes_in_slugs(self):
+        organization = OrganizationFactory(name="Code for America")
+        event = EventFactory(organization_name="Code for America")
+        db.session.flush()
+
+        response = self.app.get('/api/organizations/Code-for-America')
+        self.assertEqual(response.status_code,200)
+        response = json.loads(response.data)
+        self.assertEqual(response["name"], "Code for America")
 
     def test_upcoming_events(self):
         '''
