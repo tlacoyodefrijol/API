@@ -231,6 +231,11 @@ class ApiTest(unittest.TestCase):
         self.assertFalse("_" in path)
         self.assertFalse(" " in path)
 
+        response = self.app.get('/api/organizations/Code-for-America')
+        self.assertEqual(response.status_code,200)
+        response = json.loads(response.data)
+        self.assertEqual(response["name"], "Code for America")
+
         response = self.app.get('/api/organizations/Code_for_America')
         self.assertEqual(response.status_code,200)
         response = json.loads(response.data)
