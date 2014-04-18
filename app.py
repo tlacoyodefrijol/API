@@ -417,16 +417,18 @@ def is_safe_name(name):
     return raw_name(safe_name(name)) == name
 
 def safe_name(name):
-    ''' Return URL-safe organization name with spaces replaced by underscores.
+    ''' Return URL-safe organization name with spaces replaced by dashes.
 
         Slashes will be removed, which is incompatible with raw_name().
     '''
-    return name.replace(' ', '_').replace('/', '')
+    return name.replace(' ', '-').replace('/', '')
 
 def raw_name(name):
-    ''' Return raw organization name with underscores replaced by spaces.
+    ''' Return raw organization name with dashes replaced by spaces.
+    
+        Also replace old-style underscores with spaces.
     '''
-    return name.replace('_', ' ')
+    return name.replace('_', ' ').replace('-', ' ')
 
 @app.route('/api/organizations')
 @app.route('/api/organizations/<name>')
