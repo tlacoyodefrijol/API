@@ -594,7 +594,7 @@ def get_stories(id=None):
 # Routes
 # -------------------
 
-@app.route('/.well-known/status')
+@app.route('/api/.well-known/status')
 def well_known_status():
     ''' Return status information for Engine Light.
 
