@@ -637,6 +637,8 @@ def well_known_status():
         elif recent_error:
             if recent_error.time.date() == date.today():
                 status = recent_error.error
+            else:
+                status = 'ok' # is this really okay?
 
         elif time_since_updated > 6 * 60 * 60:
             status = 'Oldest organization (%s) updated more than 6 hours ago' % org.name
