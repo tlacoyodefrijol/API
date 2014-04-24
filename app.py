@@ -5,7 +5,7 @@
 from __future__ import division
 
 from flask import Flask, make_response, request, current_app, jsonify, render_template
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from functools import update_wrapper
 import json, os, requests, time
 from flask.ext.heroku import Heroku
@@ -367,6 +367,15 @@ class Event(db.Model):
 
         return event_dict
 
+class Error(db.Model):
+    '''
+        Errors from run_update.py
+    '''
+    # Columns
+    id  = db.Column(db.Integer(), primary_key=True)
+    error = db.Column(db.Unicode())
+    time = db.Column(db.DateTime(False))
+
 # -------------------
 # API
 # -------------------
@@ -612,10 +621,11 @@ def well_known_status():
         project = db.session.query(Project).limit(1).first()
         rate_limit = requests.get('https://api.github.com/rate_limit', auth=github_auth)
         remaining_github = rate_limit.json()['resources']['core']['remaining']
-        
+        recent_error = db.session.query(Error).order_by(Error.time).limit(1).first()
+
         meetup_url = 'https://api.meetup.com/status?format=json&key='+meetup_key
         meetup_status = requests.get(meetup_url).json().get('status')
-        
+
         time_since_updated = time.time() - getattr(org, 'last_updated', -1)
 
         if not hasattr(project, 'name'):
@@ -624,15 +634,18 @@ def well_known_status():
         elif not hasattr(org, 'name'):
             status = 'Sample project is missing a name'
 
+        elif recent_error.time.date() == date.today():
+            status = recent_error.error
+
         elif time_since_updated > 6 * 60 * 60:
             status = 'Oldest organization (%s) updated more than 6 hours ago' % org.name
 
-        elif remaining_github < 10:
+        elif remaining_github < 1000:
             status = 'Only %d remaining Github requests' % remaining_github
-        
+
         elif meetup_status != 'ok':
             status = 'Meetup status is "%s"' % meetup_status
-        
+
         else:
             status = 'ok'
 
