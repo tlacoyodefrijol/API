@@ -85,6 +85,7 @@ class Organization(db.Model):
     latitude = db.Column(db.Float())
     longitude = db.Column(db.Float())
     last_updated = db.Column(db.Integer())
+    created_at = db.Column(db.Integer())
     keep = db.Column(db.Boolean())
 
     # Relationships
@@ -104,6 +105,7 @@ class Organization(db.Model):
         self.longitude = longitude
         self.keep = True
         self.last_updated = time.time()
+        self.created_at = time.time()
 
     def current_events(self):
         '''
