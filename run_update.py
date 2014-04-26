@@ -102,7 +102,7 @@ def get_organizations():
         Return a list of dictionaries, one for each row past the header.
     '''
     got = get(gdocs_url)
-    organizations = list(DictReader(StringIO(got.text.decode('utf8'))))
+    organizations = list(DictReader(StringIO(got.text.encode('utf8'))))
 
     return organizations
 
