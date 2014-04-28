@@ -1,7 +1,6 @@
 import unittest, requests, json, os
-from datetime import datetime
+from datetime import datetime, timedelta
 from urlparse import urlparse
-from freezegun import freeze_time
 
 from app import *
 from factories import OrganizationFactory, ProjectFactory, EventFactory, StoryFactory
@@ -24,20 +23,19 @@ class ApiTest(unittest.TestCase):
         The three soonest upcoming events should be returned.
         If there are no events in the future, no events will be returned
         '''
-        # Everyday is Christmas
-        with freeze_time("2012-12-25"):
-            organization = OrganizationFactory(name='Collective of Ericas')
-            db.session.flush()
+        # Assuming today is Christmas...
+        organization = OrganizationFactory(name='Collective of Ericas')
+        db.session.flush()
 
-            # Create multiple events, some in the future, one in the past
-            EventFactory(organization_name=organization.name, name="Christmas Eve", start_time_notz=datetime(2012, 12, 24))
-            EventFactory(organization_name=organization.name, name="New Years", start_time_notz=datetime(2013, 1, 1))
-            EventFactory(organization_name=organization.name, name="MLK Day", start_time_notz=datetime(2013, 1, 19))
-            EventFactory(organization_name=organization.name, name="Cesar Chavez Day", start_time_notz=datetime(2013, 03, 31))
-            db.session.flush()
+        # Create multiple events, some in the future, one in the past
+        EventFactory(organization_name=organization.name, name="Christmas Eve", start_time_notz=datetime.now() - timedelta(1))
+        EventFactory(organization_name=organization.name, name="New Years", start_time_notz=datetime.now() + timedelta(7))
+        EventFactory(organization_name=organization.name, name="MLK Day", start_time_notz=datetime.now() + timedelta(25))
+        EventFactory(organization_name=organization.name, name="Cesar Chavez Day", start_time_notz=datetime.now() + timedelta(37))
+        db.session.flush()
 
-            response = self.app.get('/api/organizations/Collective%20of%20Ericas')
-            response_json = json.loads(response.data)
+        response = self.app.get('/api/organizations/Collective%20of%20Ericas')
+        response_json = json.loads(response.data)
 
         self.assertEqual(len(response_json['current_events']), 2)
         self.assertEqual(response_json['current_events'][0]['name'], "New Years")
@@ -299,24 +297,23 @@ class ApiTest(unittest.TestCase):
         Make sure that they are ordered from most recent to
         furthest away in the future
         '''
-        # Everyday is Christmas
-        with freeze_time("2012-12-25"):
-            organization = OrganizationFactory(name="International Cat Association")
-            db.session.flush()
+        # Assuming today is Christmas...
+        organization = OrganizationFactory(name="International Cat Association")
+        db.session.flush()
 
-            # Create multiple events, some in the future, one in the past
-            EventFactory(organization_name=organization.name, name="Christmas Eve", start_time_notz=datetime(2012, 12, 24))
-            EventFactory(organization_name=organization.name, name="New Years", start_time_notz=datetime(2013, 1, 1))
-            EventFactory(organization_name=organization.name, name="MLK Day", start_time_notz=datetime(2013, 1, 19))
-            db.session.flush()
+        # Create multiple events, some in the future, one in the past
+        EventFactory(organization_name=organization.name, name="Christmas Eve", start_time_notz=datetime.now() - timedelta(1))
+        EventFactory(organization_name=organization.name, name="New Years", start_time_notz=datetime.now() + timedelta(7))
+        EventFactory(organization_name=organization.name, name="MLK Day", start_time_notz=datetime.now() + timedelta(25))
+        db.session.flush()
 
-            # Check that future events are returned in the correct order
-            response = self.app.get('/api/organizations/International Cat Association/upcoming_events')
-            self.assertEqual(response.status_code, 200)
-            response = json.loads(response.data)
-            self.assertEqual(response['total'], 2)
-            self.assertEqual(response['objects'][0]['name'], 'New Years')
-            self.assertEqual(response['objects'][1]['name'], 'MLK Day')
+        # Check that future events are returned in the correct order
+        response = self.app.get('/api/organizations/International Cat Association/upcoming_events')
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+        self.assertEqual(response['total'], 2)
+        self.assertEqual(response['objects'][0]['name'], 'New Years')
+        self.assertEqual(response['objects'][1]['name'], 'MLK Day')
 
     def test_past_events(self):
         '''
@@ -324,24 +321,23 @@ class ApiTest(unittest.TestCase):
         Make sure they are ordered from most recent to
         furthest in the past
         '''
-        # Everyday is Christmas
-        with freeze_time("2012-12-25"):
-            organization = OrganizationFactory(name="International Cat Association")
-            db.session.flush()
+        # Assuming today is Christmas...
+        organization = OrganizationFactory(name="International Cat Association")
+        db.session.flush()
 
-            # Create multiple events, one in the future, some in the past
-            EventFactory(organization_name=organization.name, name="Thanksgiving", start_time_notz=datetime(2012, 10, 8))
-            EventFactory(organization_name=organization.name, name="Christmas Eve", start_time_notz=datetime(2012, 12, 24))
-            EventFactory(organization_name=organization.name, name="New Years", start_time_notz=datetime(2013, 1, 1))
-            db.session.flush()
+        # Create multiple events, one in the future, some in the past
+        EventFactory(organization_name=organization.name, name="Thanksgiving", start_time_notz=datetime.now() - timedelta(30))
+        EventFactory(organization_name=organization.name, name="Christmas Eve", start_time_notz=datetime.now() - timedelta(1))
+        EventFactory(organization_name=organization.name, name="New Years", start_time_notz=datetime.now() + timedelta(7))
+        db.session.flush()
 
-            # Check that past events are returned in the correct order
-            response = self.app.get('/api/organizations/International Cat Association/past_events')
-            self.assertEqual(response.status_code, 200)
-            response = json.loads(response.data)
-            self.assertEqual(response['total'], 2)
-            self.assertEqual(response['objects'][0]['name'], 'Christmas Eve')
-            self.assertEqual(response['objects'][1]['name'], 'Thanksgiving')
+        # Check that past events are returned in the correct order
+        response = self.app.get('/api/organizations/International Cat Association/past_events')
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+        self.assertEqual(response['total'], 2)
+        self.assertEqual(response['objects'][0]['name'], 'Christmas Eve')
+        self.assertEqual(response['objects'][1]['name'], 'Thanksgiving')
 
 if __name__ == '__main__':
     unittest.main()
