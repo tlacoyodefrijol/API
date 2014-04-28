@@ -107,6 +107,8 @@ class ApiTest(unittest.TestCase):
         assert isinstance(response['objects'][0]['current_stories'], list)
         assert isinstance(response['objects'][0]['type'], unicode)
         assert isinstance(response['objects'][0]['website'], unicode)
+        assert isinstance(response['objects'][0]['last_updated'], float)
+        assert isinstance(response['objects'][0]['started_on'], unicode)
 
     def test_projects(self):
         ProjectFactory()
