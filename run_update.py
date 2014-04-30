@@ -584,8 +584,9 @@ def main(org_name=None):
         db.session.commit()
 
 parser = ArgumentParser(description='''Update database from CSV source URL.''')
-parser.add_argument('--org', dest='org', help='Single organization name to update.')
+parser.add_argument('--name', dest='name', help='Single organization name to update.')
 
 if __name__ == "__main__":
     args = parser.parse_args()
-    main(org_name=args.org.decode('utf8'))
+    org_name = args.name and args.name.decode('utf8') or ''
+    main(org_name=org_name)
