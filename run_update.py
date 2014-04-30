@@ -572,6 +572,10 @@ def main(org_name=None):
         # Commit and move on to the next organization.
         db.session.commit()
     
+    # Stop right here if an org name was specified.
+    if org_name:
+        return
+    
     # Delete any organization not found on this round.
     for bad_org in db.session.query(Organization):
         if bad_org.name in organization_names:
