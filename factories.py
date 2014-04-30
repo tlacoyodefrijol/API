@@ -1,3 +1,5 @@
+# -*- coding: utf8 -*-
+
 import factory
 from app import Organization, Project, Event, Story, db
 from factory.alchemy import SQLAlchemyModelFactory
@@ -9,7 +11,7 @@ class OrganizationFactory(SQLAlchemyModelFactory):
     FACTORY_FOR = Organization
     FACTORY_SESSION = db.session
 
-    name = factory.Sequence(lambda n: 'Civic Organization {0}'.format(n))
+    name = factory.Sequence(lambda n: u'Civiç Örganizatioñ {0}'.format(n))
     website = factory.Sequence(lambda n: 'http://www.civicorganization{0}.com'.format(n))
     events_url = factory.Sequence(lambda n: 'http://www.meetup.com.com/events/civicproject{0}'.format(n))
     rss = factory.Sequence(lambda n: 'http://www.civicorganization{0}.rss'.format(n))

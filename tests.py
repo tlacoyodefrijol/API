@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf8 -*-
+
 import unittest, requests, json, os
 from datetime import datetime, timedelta
 from urlparse import urlparse
@@ -209,6 +212,31 @@ class ApiTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         response = json.loads(response.data)
         assert isinstance(response, dict)
+
+    def test_utf8_characters(self):
+        organization = OrganizationFactory(name=u"Cöde for Ameriça")
+        db.session.add(organization)
+        db.session.commit()
+
+        response = self.app.get(u'/api/organizations/Cöde for Ameriça')
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+        assert isinstance(response['name'], unicode)
+
+        response = self.app.get(u'/api/organizations/Cöde-for-Ameriça')
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+        assert isinstance(response['name'], unicode)
+
+        response = self.app.get('/api/organizations/C%C3%B6de for Ameri%C3%A7a')
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+        assert isinstance(response['name'], unicode)
+
+        response = self.app.get('/api/organizations/C%C3%B6de-for-Ameri%C3%A7a')
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+        assert isinstance(response['name'], unicode)
 
     def test_underscores_and_spaces(self):
         organization = OrganizationFactory(name="Code for America")

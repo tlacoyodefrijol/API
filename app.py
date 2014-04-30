@@ -139,41 +139,41 @@ class Organization(db.Model):
         ''' API link to all an orgs events
         '''
         # Make a nice org name
-        organization_name = quote(safe_name(self.name))
+        organization_name = quote(safe_name(self.name).encode('utf8'))
         return '%s://%s/api/organizations/%s/events' % (request.scheme, request.host, organization_name)
 
     def upcoming_events(self):
         ''' API link to an orgs upcoming events
         '''
         # Make a nice org name
-        organization_name = quote(safe_name(self.name))
+        organization_name = quote(safe_name(self.name).encode('utf8'))
         return '%s://%s/api/organizations/%s/upcoming_events' % (request.scheme, request.host, organization_name)
 
     def past_events(self):
         ''' API link to an orgs past events
         '''
         # Make a nice org name
-        organization_name = quote(safe_name(self.name))
+        organization_name = quote(safe_name(self.name).encode('utf8'))
         return '%s://%s/api/organizations/%s/past_events' % (request.scheme, request.host, organization_name)
 
     def all_projects(self):
         ''' API link to all an orgs projects
         '''
         # Make a nice org name
-        organization_name = quote(safe_name(self.name))
+        organization_name = quote(safe_name(self.name).encode('utf8'))
         return '%s://%s/api/organizations/%s/projects' % (request.scheme, request.host, organization_name)
 
     def all_stories(self):
         ''' API link to all an orgs stories
         '''
         # Make a nice org name
-        organization_name = quote(safe_name(self.name))
+        organization_name = quote(safe_name(self.name).encode('utf8'))
         return '%s://%s/api/organizations/%s/stories' % (request.scheme, request.host, organization_name)
 
     def api_id(self):
         ''' Return organization name made safe for use in a URL.
         '''
-        return quote(safe_name(self.name))
+        return quote(safe_name(self.name).encode('utf8'))
 
     def api_url(self):
         ''' API link to itself
