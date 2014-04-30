@@ -8,6 +8,7 @@ from StringIO import StringIO
 from requests import get
 from datetime import datetime
 from dateutil.tz import tzoffset
+from unidecode import unidecode
 import requests
 from feeds import extract_feed_links, get_first_working_feed_link
 import feedparser
@@ -102,7 +103,16 @@ def get_organizations():
         Return a list of dictionaries, one for each row past the header.
     '''
     got = get(gdocs_url)
-    organizations = list(DictReader(StringIO(got.text.encode('utf8'))))
+    
+    #
+    # Requests response.text is a lying liar, with its UTF8 bytes as unicode()?
+    # Use response.content to plain bytes, then decode everything.
+    #
+    organizations = list(DictReader(StringIO(got.content)))
+    
+    for (index, org) in enumerate(organizations):
+        organizations[index] = dict([(k.decode('utf8'), v.decode('utf8'))
+                                     for (k, v) in org.items()])
 
     return organizations
 
@@ -521,26 +531,26 @@ def main():
         organization_names.add(organization.name)
 
         if organization.rss or organization.website:
-            logging.info("Gathering all of %s's stories." % organization.name)
+            logging.info("Gathering all of %s's stories." % unidecode(organization.name))
             stories = get_stories(organization)
             if stories:
                 for story_info in stories:
                     save_story_info(db.session, story_info)
 
         if organization.projects_list_url:
-            logging.info("Gathering all of %s's projects." % organization.name)
+            logging.info("Gathering all of %s's projects." % unidecode(organization.name))
             projects = get_projects(organization)
             for proj_info in projects:
                 save_project_info(db.session, proj_info)
 
         if organization.events_url:
-            logging.info("Gathering all of %s's events." % organization.name)
+            logging.info("Gathering all of %s's events." % unidecode(organization.name))
             identifier = get_event_group_identifier(organization.events_url)
             if identifier:
                 for event in get_meetup_events(organization, identifier):
                     save_event_info(db.session, event)
             else:
-                logging.error("%s does not have a valid events url" % organization.name)
+                logging.error("%s does not have a valid events url" % unidecode(organization.name))
 
         # Remove everything marked for deletion.
         db.session.execute(db.delete(Event).where(Event.keep == False))
