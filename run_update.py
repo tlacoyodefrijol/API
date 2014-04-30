@@ -16,6 +16,7 @@ from app import db, app, Project, Organization, Story, Event, Error, is_safe_nam
 from urllib2 import HTTPError, URLError
 from urlparse import urlparse
 from random import shuffle
+from argparse import ArgumentParser
 from time import time
 from re import match
 
@@ -509,13 +510,18 @@ def get_event_group_identifier(events_url):
     else:
         return None
 
-def main():
+def main(org_name=None):
+    ''' Run update over all organizations. Optionally, update just one.
+    '''
     # Keep a set of fresh organization names.
     organization_names = set()
     
     # Retrieve all organizations and shuffle the list in place.
     orgs_info = get_organizations()
     shuffle(orgs_info)
+    
+    if org_name:
+        orgs_info = [org for org in orgs_info if org['name'] == org_name]
     
     # Iterate over organizations and projects, saving them to db.session.
     for org_info in orgs_info:
@@ -577,5 +583,9 @@ def main():
         db.session.execute(db.delete(Organization).where(Organization.name == bad_org.name))
         db.session.commit()
 
+parser = ArgumentParser(description='''Update database from CSV source URL.''')
+parser.add_argument('--org', dest='org', help='Single organization name to update.')
+
 if __name__ == "__main__":
-    main()
+    args = parser.parse_args()
+    main(org_name=args.org.decode('utf8'))
