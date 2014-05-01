@@ -3,7 +3,7 @@
 ### What the CFAPI is
 Code for America has developed this API to track all the activity across the civic technology movement. Our goal is to measure and motivate the movement by recognizing participation. The CFAPI describes an organization's projects, stories, and events. 
 
-The tools that the Brigades and other groups use to do their fine deeds are all different. The CFAPI does the diffcult job of being able to track these activities no matter what tools an organization is using. The participants don't need to change their activities to be included.
+The tools that the Brigades and other groups use to do their fine deeds are all different. The CFAPI does the difficult job of being able to track these activities no matter what tools an organization is using. The participants don't need to change their activities to be included.
 
 ### Projects powered by the CFAPI
 The Code for America Brigade website
