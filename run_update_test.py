@@ -474,6 +474,38 @@ class RunUpdateTestCase(unittest.TestCase):
         self.assertEqual(stories[0].title, "Four Great Years")
         self.assertEqual(stories[1].title, "Open, transparent Chattanooga")
 
+    def test_github_throttling(self):
+        '''
+        Test that when GitHub throttles us, we skip updating projects and record an error.
+        '''
+
+        def response_content(url, request):
+            if url.netloc == 'docs.google.com':
+                return response(200, '''name,projects_list_url\nCode for San Francisco,http://github.com/codeforsanfrancisco''')
+            if url.netloc == 'api.github.com' and url.path == '/users/codeforsanfrancisco/repos':
+                return response(200, '''[ { "id": 10515516, "name": "cityvoice", "full_name": "codeforamerica/cityvoice", "owner": { "login": "codeforamerica", "id": 337792, "avatar_url": "https://gravatar.com/avatar/ec81184c572bc827b72ebb489d49f821?d=https%3A%2F%2Fidenticons.github.com%2F190ee0a9502204c8340cee81293edbbe.png&r=x", "gravatar_id": "ec81184c572bc827b72ebb489d49f821", "url": "https://api.github.com/users/codeforamerica", "html_url": "https://github.com/codeforamerica", "followers_url": "https://api.github.com/users/codeforamerica/followers", "following_url": "https://api.github.com/users/codeforamerica/following{/other_user}", "gists_url": "https://api.github.com/users/codeforamerica/gists{/gist_id}", "starred_url": "https://api.github.com/users/codeforamerica/starred{/owner}{/repo}", "subscriptions_url": "https://api.github.com/users/codeforamerica/subscriptions", "organizations_url": "https://api.github.com/users/codeforamerica/orgs", "repos_url": "https://api.github.com/users/codeforamerica/repos", "events_url": "https://api.github.com/users/codeforamerica/events{/privacy}", "received_events_url": "https://api.github.com/users/codeforamerica/received_events", "type": "Organization", "site_admin": false }, "private": false, "html_url": "https://github.com/codeforamerica/cityvoice", "description": "A place-based call-in system for gathering and sharing community feedback", "fork": false, "url": "https://api.github.com/repos/codeforamerica/cityvoice", "forks_url": "https://api.github.com/repos/codeforamerica/cityvoice/forks", "keys_url": "https://api.github.com/repos/codeforamerica/cityvoice/keys{/key_id}", "collaborators_url": "https://api.github.com/repos/codeforamerica/cityvoice/collaborators{/collaborator}", "teams_url": "https://api.github.com/repos/codeforamerica/cityvoice/teams", "hooks_url": "https://api.github.com/repos/codeforamerica/cityvoice/hooks", "issue_events_url": "https://api.github.com/repos/codeforamerica/cityvoice/issues/events{/number}", "events_url": "https://api.github.com/repos/codeforamerica/cityvoice/events", "assignees_url": "https://api.github.com/repos/codeforamerica/cityvoice/assignees{/user}", "branches_url": "https://api.github.com/repos/codeforamerica/cityvoice/branches{/branch}", "tags_url": "https://api.github.com/repos/codeforamerica/cityvoice/tags", "blobs_url": "https://api.github.com/repos/codeforamerica/cityvoice/git/blobs{/sha}", "git_tags_url": "https://api.github.com/repos/codeforamerica/cityvoice/git/tags{/sha}", "git_refs_url": "https://api.github.com/repos/codeforamerica/cityvoice/git/refs{/sha}", "trees_url": "https://api.github.com/repos/codeforamerica/cityvoice/git/trees{/sha}", "statuses_url": "https://api.github.com/repos/codeforamerica/cityvoice/statuses/{sha}", "languages_url": "https://api.github.com/repos/codeforamerica/cityvoice/languages", "stargazers_url": "https://api.github.com/repos/codeforamerica/cityvoice/stargazers", "contributors_url": "https://api.github.com/repos/codeforamerica/cityvoice/contributors", "subscribers_url": "https://api.github.com/repos/codeforamerica/cityvoice/subscribers", "subscription_url": "https://api.github.com/repos/codeforamerica/cityvoice/subscription", "commits_url": "https://api.github.com/repos/codeforamerica/cityvoice/commits{/sha}", "git_commits_url": "https://api.github.com/repos/codeforamerica/cityvoice/git/commits{/sha}", "comments_url": "https://api.github.com/repos/codeforamerica/cityvoice/comments{/number}", "issue_comment_url": "https://api.github.com/repos/codeforamerica/cityvoice/issues/comments/{number}", "contents_url": "https://api.github.com/repos/codeforamerica/cityvoice/contents/{+path}", "compare_url": "https://api.github.com/repos/codeforamerica/cityvoice/compare/{base}...{head}", "merges_url": "https://api.github.com/repos/codeforamerica/cityvoice/merges", "archive_url": "https://api.github.com/repos/codeforamerica/cityvoice/{archive_format}{/ref}", "downloads_url": "https://api.github.com/repos/codeforamerica/cityvoice/downloads", "issues_url": "https://api.github.com/repos/codeforamerica/cityvoice/issues{/number}", "pulls_url": "https://api.github.com/repos/codeforamerica/cityvoice/pulls{/number}", "milestones_url": "https://api.github.com/repos/codeforamerica/cityvoice/milestones{/number}", "notifications_url": "https://api.github.com/repos/codeforamerica/cityvoice/notifications{?since,all,participating}", "labels_url": "https://api.github.com/repos/codeforamerica/cityvoice/labels{/name}", "releases_url": "https://api.github.com/repos/codeforamerica/cityvoice/releases{/id}", "created_at": "2013-06-06T00:12:30Z", "updated_at": "2014-03-03T02:08:25Z", "pushed_at": "2014-03-03T02:08:23Z", "git_url": "git://github.com/codeforamerica/cityvoice.git", "ssh_url": "git@github.com:codeforamerica/cityvoice.git", "clone_url": "https://github.com/codeforamerica/cityvoice.git", "svn_url": "https://github.com/codeforamerica/cityvoice", "homepage": "http://www.cityvoiceapp.com/", "size": 6316, "stargazers_count": 12, "watchers_count": 12, "language": "Ruby", "has_issues": true, "has_downloads": true, "has_wiki": true, "forks_count": 15, "mirror_url": null, "open_issues_count": 40, "forks": 15, "open_issues": 40, "watchers": 12, "default_branch": "master", "master_branch": "master" } ]''', headers=dict(Link='<https://api.github.com/user/337792/repos?page=2>; rel="next", <https://api.github.com/user/337792/repos?page=2>; rel="last"'))
+            if url.netloc == 'api.github.com' and url.path == '/user/337792/repos':
+                return response(200, '''[{"id": 12120917, "name": "beyondtransparency", "description": "Code for America's new book - Beyond Transparency :closed_book:", "homepage": "http://beyondtransparency.org", "html_url": "https://github.com/codeforamerica/beyondtransparency"}]''')
+            if url.netloc == 'api.github.com':
+                return response(403, "", {"x-ratelimit-remaining" : 0})
+
+        with HTTMock(response_content):
+            import run_update
+            run_update.main()
+
+        from app import Project
+        projects = self.db.session.query(Project).all()
+        for project in projects:
+            self.assertIsNone(project.github_details)
+
+        from app import Organization
+        org_count = self.db.session.query(Organization).count()
+        self.assertEqual(org_count, 1)
+
+        from app import Error
+        error = self.db.session.query(Error).first()
+        self.assertEqual(error.error, "IOError: We done got throttled by GitHub")
+
 
 if __name__ == '__main__':
     unittest.main()
