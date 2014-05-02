@@ -524,7 +524,18 @@ def main(org_name=None):
 
     # Iterate over organizations and projects, saving them to db.session.
     for org_info in orgs_info:
-    
+
+      if not is_safe_name(org_info['name']):
+          error_dict = {
+            "error" : 'ValueError: Bad organization name: "%s"' % org_info['name'],
+            "time" : datetime.now()
+          }
+          new_error = Error(**error_dict)
+          db.session.add(new_error)
+          db.session.commit()
+          bad_characters_in_name = True
+          continue
+
       try:
         # Mark everything in this organization for deletion at first.
         db.session.execute(db.update(Event, values={'keep': False}).where(Event.organization_name == org_info['name']))
@@ -536,26 +547,26 @@ def main(org_name=None):
         organization_names.add(organization.name)
 
         if organization.rss or organization.website:
-            logging.info("Gathering all of %s's stories." % unidecode(organization.name))
+            logging.info("Gathering all of %s's stories." % organization.name)
             stories = get_stories(organization)
             if stories:
                 for story_info in stories:
                     save_story_info(db.session, story_info)
 
         if organization.projects_list_url:
-            logging.info("Gathering all of %s's projects." % unidecode(organization.name))
+            logging.info("Gathering all of %s's projects." % organization.name)
             projects = get_projects(organization)
             for proj_info in projects:
                 save_project_info(db.session, proj_info)
 
         if organization.events_url:
-            logging.info("Gathering all of %s's events." % unidecode(organization.name))
+            logging.info("Gathering all of %s's events." % organization.name)
             identifier = get_event_group_identifier(organization.events_url)
             if identifier:
                 for event in get_meetup_events(organization, identifier):
                     save_event_info(db.session, event)
             else:
-                logging.error("%s does not have a valid events url" % unidecode(organization.name))
+                logging.error("%s does not have a valid events url" % organization.name)
 
         # Remove everything marked for deletion.
         db.session.execute(db.delete(Event).where(Event.keep == False))

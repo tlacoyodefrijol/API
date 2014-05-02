@@ -325,15 +325,14 @@ class RunUpdateTestCase(unittest.TestCase):
                                 'avatar_url', 'location', 'login', 'contributions'):
                         assert key in person
 
-    def test_main_with_bad_organization_name(self):
-        ''' When an organization has a bad name, ...
+    def test_main_with_weird_organization_name(self):
+        ''' When an organization has a weird name, ...
         '''
         def response_content(url, request):
             import run_update
 
             if url.geturl() == run_update.gdocs_url:
-                return response(200, '''name,website,events_url,rss,projects_list_url\nCode_for-America,http://codeforamerica.org,http://www.meetup.com/events/foo-%%%,http://www.codeforamerica.org/blog/feed/,http://example.com/cfa-projects.csv\nCode/for/America,http://codeforamerica.org,http://www.meetup.com/events/foo-%%%,http://www.codeforamerica.org/blog/feed/,http://example.com/cfa-projects.csv''')
-
+                return response(200, '''name,website,events_url,rss,projects_list_url\nCode_for-America,http://codeforamerica.org,http://www.meetup.com/events/foo-%%%,,http://example.com/cfa-projects.csv''')
             else:
                 raise Exception('Asked for unknown URL ' + url.geturl())
 
@@ -344,13 +343,40 @@ class RunUpdateTestCase(unittest.TestCase):
 
         with HTTMock(response_content):
             import run_update
-            self.assertRaises(ValueError, run_update.main)
-        
+            run_update.main()
+            from app import Error
+            errors = self.db.session.query(Error).all()
+            for error in errors:
+                self.assertTrue("ValueError" in error.error)
+            self.assertEqual(self.db.session.query(Error).count(),1)
+
+
         from app import Organization
 
         # Make sure no organizations exist
         orgs_count = self.db.session.query(Organization).count()
         self.assertEqual(orgs_count, 0)
+
+    def test_main_with_bad_organization_name(self):
+      ''' When an org has a invalid name, test that it gets skipped and an error is added to the db
+      '''
+
+      def response_content(url, request):
+          return response(200, '''name,website,events_url,rss,projects_list_url\nCode#America,http://codeforamerica.org,,,\nCode?America,http://codeforamerica.org,,,\nCode/America,http://codeforamerica.org,,,\nCode for America,http://codeforamerica.org,,,''')
+
+      with HTTMock(response_content):
+          import run_update
+          run_update.main()
+          from app import Error
+          errors = self.db.session.query(Error).all()
+          for error in errors:
+              self.assertTrue("ValueError" in error.error)
+          self.assertEqual(self.db.session.query(Error).count(),3)
+
+      # Make sure one good organization exists
+      from app import Organization
+      orgs_count = self.db.session.query(Organization).count()
+      self.assertEqual(orgs_count, 1)
 
     def test_main_with_bad_events_url(self):
         ''' When an organization has a badly formed events url is passed, no events are saved
