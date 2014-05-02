@@ -5,7 +5,7 @@ import unittest, requests, json, os
 from datetime import datetime, timedelta
 from urlparse import urlparse
 
-from app import *
+from app import app, db
 from factories import OrganizationFactory, ProjectFactory, EventFactory, StoryFactory
 
 class ApiTest(unittest.TestCase):
