@@ -506,6 +506,31 @@ class RunUpdateTestCase(unittest.TestCase):
         error = self.db.session.query(Error).first()
         self.assertEqual(error.error, "IOError: We done got throttled by GitHub")
 
+    def test_csv_sniffer(self):
+        '''
+        Testing weird csv dialects we've encountered
+        '''
+        from factories import OrganizationFactory
+        philly = OrganizationFactory(name='Code for Philly')
+        gdocs = OrganizationFactory(projects_list_url="http://www.gdocs.com")
+
+        def response_content(url, request):
+            if url.netloc == 'www.civicorganization1.com':
+                return response(200, '''"name","description","link_url","code_url","type","categories"\r\n"OpenPhillyGlobe","\\"Google Earth for Philadelphia\\" with open source and open transit data.","http://cesium.agi.com/OpenPhillyGlobe/","https://github.com/codeforamerica/CityVoice","",""''')
+            if url.netloc == 'www.gdocs.com':
+                return response(200, '''name,description,link_url,code_url,type,categories\nHack Task Aggregator,"Web application to aggregate tasks across projects that are identified for ""hacking"".",http://open-austin.github.io/hack-task-aggregator/public/index.html,https://github.com/codeforamerica/cityvoice,web service,"project management, civic hacking"''')
+
+        with HTTMock(response_content):
+            import run_update
+            projects = run_update.get_projects(philly)
+            self.assertEqual(projects[0]['name'], "OpenPhillyGlobe")
+            self.assertEqual(projects[0]['description'], '"Google Earth for Philadelphia" with open source and open transit data.')
+
+            projects = run_update.get_projects(gdocs)
+            self.assertEqual(projects[0]['name'], "Hack Task Aggregator")
+            self.assertEqual(projects[0]['description'], 'Web application to aggregate tasks across projects that are identified for "hacking".')
+
+
 
 if __name__ == '__main__':
     unittest.main()
