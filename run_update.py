@@ -9,7 +9,6 @@ from requests import get
 from datetime import datetime
 from dateutil.tz import tzoffset
 from unidecode import unidecode
-import requests
 from feeds import extract_feed_links, get_first_working_feed_link
 import feedparser
 from app import db, app, Project, Organization, Story, Event, Error, is_safe_name

@@ -7,7 +7,6 @@ import tempfile
 import datetime
 from httmock import response, HTTMock
 from mock import Mock
-import requests
 from re import match
 
 class FakeResponse:
