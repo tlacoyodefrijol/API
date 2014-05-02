@@ -9,7 +9,6 @@ from requests import get
 from datetime import datetime
 from dateutil.tz import tzoffset
 from unidecode import unidecode
-import requests
 from feeds import extract_feed_links, get_first_working_feed_link
 import feedparser
 from app import db, app, Project, Organization, Story, Event, Error, is_safe_name
@@ -515,72 +514,83 @@ def main(org_name=None):
     '''
     # Keep a set of fresh organization names.
     organization_names = set()
-    
+
     # Retrieve all organizations and shuffle the list in place.
     orgs_info = get_organizations()
     shuffle(orgs_info)
-    
+
     if org_name:
         orgs_info = [org for org in orgs_info if org['name'] == org_name]
-    
+
     # Iterate over organizations and projects, saving them to db.session.
     for org_info in orgs_info:
-    
+
+      if not is_safe_name(org_info['name']):
+          error_dict = {
+            "error" : 'ValueError: Bad organization name: "%s"' % org_info['name'],
+            "time" : datetime.now()
+          }
+          new_error = Error(**error_dict)
+          db.session.add(new_error)
+          db.session.commit()
+          bad_characters_in_name = True
+          continue
+
       try:
         # Mark everything in this organization for deletion at first.
         db.session.execute(db.update(Event, values={'keep': False}).where(Event.organization_name == org_info['name']))
         db.session.execute(db.update(Story, values={'keep': False}).where(Story.organization_name == org_info['name']))
         db.session.execute(db.update(Project, values={'keep': False}).where(Project.organization_name == org_info['name']))
         db.session.execute(db.update(Organization, values={'keep': False}).where(Organization.name == org_info['name']))
-        
+
         organization = save_organization_info(db.session, org_info)
         organization_names.add(organization.name)
 
         if organization.rss or organization.website:
-            logging.info("Gathering all of %s's stories." % unidecode(organization.name))
+            logging.info("Gathering all of %s's stories." % organization.name)
             stories = get_stories(organization)
             if stories:
                 for story_info in stories:
                     save_story_info(db.session, story_info)
 
         if organization.projects_list_url:
-            logging.info("Gathering all of %s's projects." % unidecode(organization.name))
+            logging.info("Gathering all of %s's projects." % organization.name)
             projects = get_projects(organization)
             for proj_info in projects:
                 save_project_info(db.session, proj_info)
 
         if organization.events_url:
-            logging.info("Gathering all of %s's events." % unidecode(organization.name))
+            logging.info("Gathering all of %s's events." % organization.name)
             identifier = get_event_group_identifier(organization.events_url)
             if identifier:
                 for event in get_meetup_events(organization, identifier):
                     save_event_info(db.session, event)
             else:
-                logging.error("%s does not have a valid events url" % unidecode(organization.name))
+                logging.error("%s does not have a valid events url" % organization.name)
 
         # Remove everything marked for deletion.
         db.session.execute(db.delete(Event).where(Event.keep == False))
         db.session.execute(db.delete(Story).where(Story.keep == False))
         db.session.execute(db.delete(Project).where(Project.keep == False))
         db.session.execute(db.delete(Organization).where(Organization.keep == False))
-        
+
       except:
         # Raise the error, get out of main(), and don't commit the transaction.
         raise
-      
+
       else:
         # Commit and move on to the next organization.
         db.session.commit()
-    
+
     # Stop right here if an org name was specified.
     if org_name:
         return
-    
+
     # Delete any organization not found on this round.
     for bad_org in db.session.query(Organization):
         if bad_org.name in organization_names:
             continue
-    
+
         db.session.execute(db.delete(Event).where(Event.organization_name == bad_org.name))
         db.session.execute(db.delete(Story).where(Story.organization_name == bad_org.name))
         db.session.execute(db.delete(Project).where(Project.organization_name == bad_org.name))
