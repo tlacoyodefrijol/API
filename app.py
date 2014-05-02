@@ -436,7 +436,7 @@ def safe_name(name):
 
 def raw_name(name):
     ''' Return raw organization name with dashes replaced by spaces.
-    
+
         Also replace old-style underscores with spaces.
     '''
     return name.replace('_', ' ').replace('-', ' ')
