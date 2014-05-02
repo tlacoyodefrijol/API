@@ -185,16 +185,25 @@ def get_projects(organization):
 
     except ValueError:
         # If projects_list_url is a type of csv
-        data = response.text.splitlines()
-        dialect = Sniffer().sniff(data[0])
-
+        data = response.content.splitlines()
+        dialect = Sniffer().sniff(response.content)
         #
         # Google Docs CSV output uses double quotes instead of an escape char,
         # but there's not typically a way to know that just from the dialect
         # sniffer. If we see a comma delimiter and no escapechar, then set
         # doublequote to True so that GDocs output doesn't barf.
         #
-        if dialect.delimiter == ',' and dialect.doublequote is False and dialect.escapechar is None:
+        # Code for Philly's CSV is confusing the sniffer. I suspect its the
+        # fields with quoted empty strings.
+        # "OpenPhillyGlobe","\"Google Earth for Philadelphia\" with open source
+        # and open transit data." ","http://cesium.agi.com/OpenPhillyGlobe/",
+        # "https://github.com/AnalyticalGraphicsInc/OpenPhillyGlobe","",""
+        #
+        if '\\' in response.content:
+            dialect.escapechar = '\\'
+
+        # Check for quoted empty strings vs doublequotes
+        if ',""' not in response.content and '""' in response.content:
             dialect.doublequote = True
 
         projects = list(DictReader(data, dialect=dialect))
