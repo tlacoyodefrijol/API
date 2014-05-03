@@ -122,6 +122,13 @@ class Organization(db.Model):
         '''
         all_projects = Project.query.filter_by(organization_name=self.name).all()
         all_projects_json = [project.asdict() for project in all_projects]
+
+        # If its a non GitHub project, don't show it as a most recent project.
+        # We don't have a good way to test dates of updates to non GitHub projects yet.
+        for project in all_projects_json:
+            if not project['github_details']:
+                all_projects_json.remove(project)
+
         all_projects_json.sort(key=lambda k: k['github_details']['updated_at'], reverse=True)
         current_projects = all_projects_json[0:3]
         return current_projects
