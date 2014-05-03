@@ -103,13 +103,13 @@ def get_organizations():
         Return a list of dictionaries, one for each row past the header.
     '''
     got = get(gdocs_url)
-    
+
     #
     # Requests response.text is a lying liar, with its UTF8 bytes as unicode()?
     # Use response.content to plain bytes, then decode everything.
     #
     organizations = list(DictReader(StringIO(got.content)))
-    
+
     for (index, org) in enumerate(organizations):
         organizations[index] = dict([(k.decode('utf8'), v.decode('utf8'))
                                      for (k, v) in org.items()])
@@ -139,7 +139,7 @@ def get_stories(organization):
 
     logging.info('Asking cyberspace for ' + url)
     d = feedparser.parse(get(url).text)
-    
+
     #
     # Return dictionaries for the two most recent entries.
     #
@@ -185,7 +185,7 @@ def get_projects(organization):
         # If projects_list_url is a type of csv
         data = response.text.splitlines()
         dialect = Sniffer().sniff(data[0])
-        
+
         #
         # Google Docs CSV output uses double quotes instead of an escape char,
         # but there's not typically a way to know that just from the dialect
@@ -194,7 +194,7 @@ def get_projects(organization):
         #
         if dialect.delimiter == ',' and dialect.doublequote is False and dialect.escapechar is None:
             dialect.doublequote = True
-        
+
         projects = list(DictReader(data, dialect=dialect))
         for project in projects:
             project['organization_name'] = organization.name
@@ -481,13 +481,13 @@ def save_story_info(session, story_dict):
              Story.link == story_dict['link']
 
     existing_story = session.query(Story).filter(*filter).first()
-    
+
     # If this is a new story, save and return it.
     if not existing_story:
         new_story = Story(**story_dict)
         session.add(new_story)
         return new_story
-    
+
     # Mark the existing story for safekeeping.
     existing_story.keep = True
 
