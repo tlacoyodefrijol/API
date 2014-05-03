@@ -39,6 +39,8 @@ else:
 
 meetup_key = os.environ['MEETUP_KEY']
 
+github_throttling = False
+
 def get_github_api(url):
     '''
         Make authenticated GitHub requests.
@@ -103,13 +105,13 @@ def get_organizations():
         Return a list of dictionaries, one for each row past the header.
     '''
     got = get(gdocs_url)
-    
+
     #
     # Requests response.text is a lying liar, with its UTF8 bytes as unicode()?
     # Use response.content to plain bytes, then decode everything.
     #
     organizations = list(DictReader(StringIO(got.content)))
-    
+
     for (index, org) in enumerate(organizations):
         organizations[index] = dict([(k.decode('utf8'), v.decode('utf8'))
                                      for (k, v) in org.items()])
@@ -139,7 +141,7 @@ def get_stories(organization):
 
     logging.info('Asking cyberspace for ' + url)
     d = feedparser.parse(get(url).text)
-    
+
     #
     # Return dictionaries for the two most recent entries.
     #
@@ -185,7 +187,7 @@ def get_projects(organization):
         # If projects_list_url is a type of csv
         data = response.text.splitlines()
         dialect = Sniffer().sniff(data[0])
-        
+
         #
         # Google Docs CSV output uses double quotes instead of an escape char,
         # but there's not typically a way to know that just from the dialect
@@ -194,7 +196,7 @@ def get_projects(organization):
         #
         if dialect.delimiter == ',' and dialect.doublequote is False and dialect.escapechar is None:
             dialect.doublequote = True
-        
+
         projects = list(DictReader(data, dialect=dialect))
         for project in projects:
             project['organization_name'] = organization.name
@@ -243,14 +245,30 @@ def update_project_info(project):
     if host == 'github.com':
         repo_url = 'https://api.github.com/repos' + path
 
+
+        # If we've hit the GitHub rate limit, skip updating projects.
+        global github_throttling
+        if github_throttling:
+            return project
+
         got = get_github_api(repo_url)
         if got.status_code in range(400, 499):
             if got.status_code == 404:
                 logging.error(repo_url + ' doesn\'t exist.')
                 return project
-            if got.status_code == 403:
-                logging.error("GitHub Rate Limit Remaining: " + got.headers["x-ratelimit-remaining"])
-            raise IOError('We done got throttled')
+            elif got.status_code == 403:
+                logging.error("GitHub Rate Limit Remaining: " + str(got.headers["x-ratelimit-remaining"]))
+                error_dict = {
+                  "error" : 'IOError: We done got throttled by GitHub',
+                  "time" : datetime.now()
+                }
+                new_error = Error(**error_dict)
+                db.session.add(new_error)
+                db.session.commit()
+                github_throttling = True
+                return project
+            else:
+              raise IOError
 
         all_github_attributes = got.json()
         github_details = {}
@@ -322,17 +340,6 @@ def update_project_info(project):
             for issue in got.json():
                 project_need = dict(title=issue['title'], issue_url=issue['html_url'])
                 project['github_details']['project_needs'].append(project_need)
-
-def reformat_project_info_for_chicago(all_projects):
-    ''' Return a clone of the project list, formatted for use by opengovhacknight.org.
-
-        The representation here is specifically expected to be used on this page:
-        http://opengovhacknight.org/projects.html
-
-        See discussion at
-        https://github.com/codeforamerica/civic-json-worker/issues/18
-    '''
-    return [project['github_details'] for project in all_projects]
 
 def count_people_totals(all_projects):
     ''' Create a list of people details based on project details.
@@ -481,13 +488,13 @@ def save_story_info(session, story_dict):
              Story.link == story_dict['link']
 
     existing_story = session.query(Story).filter(*filter).first()
-    
+
     # If this is a new story, save and return it.
     if not existing_story:
         new_story = Story(**story_dict)
         session.add(new_story)
         return new_story
-    
+
     # Mark the existing story for safekeeping.
     existing_story.keep = True
 
