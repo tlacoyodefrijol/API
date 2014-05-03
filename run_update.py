@@ -39,6 +39,8 @@ else:
 
 meetup_key = os.environ['MEETUP_KEY']
 
+github_throttling = False
+
 def get_github_api(url):
     '''
         Make authenticated GitHub requests.
@@ -243,14 +245,30 @@ def update_project_info(project):
     if host == 'github.com':
         repo_url = 'https://api.github.com/repos' + path
 
+
+        # If we've hit the GitHub rate limit, skip updating projects.
+        global github_throttling
+        if github_throttling:
+            return project
+
         got = get_github_api(repo_url)
         if got.status_code in range(400, 499):
             if got.status_code == 404:
                 logging.error(repo_url + ' doesn\'t exist.')
                 return project
-            if got.status_code == 403:
-                logging.error("GitHub Rate Limit Remaining: " + got.headers["x-ratelimit-remaining"])
-            raise IOError('We done got throttled')
+            elif got.status_code == 403:
+                logging.error("GitHub Rate Limit Remaining: " + str(got.headers["x-ratelimit-remaining"]))
+                error_dict = {
+                  "error" : 'IOError: We done got throttled by GitHub',
+                  "time" : datetime.now()
+                }
+                new_error = Error(**error_dict)
+                db.session.add(new_error)
+                db.session.commit()
+                github_throttling = True
+                return project
+            else:
+              raise IOError
 
         all_github_attributes = got.json()
         github_details = {}
