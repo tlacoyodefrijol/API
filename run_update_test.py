@@ -429,10 +429,11 @@ class RunUpdateTestCase(unittest.TestCase):
 
         def response_content(url, request):
             if url.netloc == 'www.civicorganization1.com':
-                return response(200, '''"name","description","link_url","code_url","type","categories"\r\n"OpenPhillyGlobe","\\"Google Earth for Philadelphia\\" with open source and open transit data.","http://cesium.agi.com/OpenPhillyGlobe/","https://github.com/codeforamerica/CityVoice","",""''')
+                return response(200, '''"name","description","link_url","code_url","type","categories"\r\n"OpenPhillyGlobe","\\"Google Earth for Philadelphia\\" with open source and open transit data.","http://cesium.agi.com/OpenPhillyGlobe/","","",""''')
             if url.netloc == 'www.gdocs.com':
-                return response(200, '''name,description,link_url,code_url,type,categories\nHack Task Aggregator,"Web application to aggregate tasks across projects that are identified for ""hacking"".",http://open-austin.github.io/hack-task-aggregator/public/index.html,https://github.com/codeforamerica/cityvoice,web service,"project management, civic hacking"''')
+                return response(200, '''name,description,link_url,code_url,type,categories\nHack Task Aggregator,"Web application to aggregate tasks across projects that are identified for ""hacking"".",http://open-austin.github.io/hack-task-aggregator/public/index.html,,web service,"project management, civic hacking"''')
 
+        
         with HTTMock(response_content):
             import run_update
             projects = run_update.get_projects(philly)
