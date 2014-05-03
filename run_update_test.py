@@ -271,60 +271,6 @@ class RunUpdateTestCase(unittest.TestCase):
             import run_update
             self.assertRaises(IOError, run_update.main)
 
-    def test_json_files(self):
-        ''' Check the structure of proposed Civic JSON data structures.
-
-            See discussion at
-            https://github.com/codeforamerica/civic-json-worker/issues/18
-        '''
-        projects_detail = []
-
-        with HTTMock(self.response_content):
-            import run_update as ru
-
-            # Iterate over organizations and projects, saving them to db.session.
-            for org_info in ru.get_organizations():
-                organization = ru.save_organization_info(self.db.session, org_info)
-
-                projects = ru.get_projects(organization)
-                project_details = ru.reformat_project_info_for_chicago(projects)
-                projects_detail.append(project_details)
-
-            for project_details in projects_detail:
-                #
-                # Verify correct output format for project_details.json.
-                #
-                for project in project_details:
-                    for key in ('contributors', 'contributors_url', 'created_at',
-                                'description', 'forks_count', 'homepage', 'html_url',
-                                'id', 'language', 'name', 'open_issues', 'owner',
-                                'participation', 'project_needs', 'pushed_at',
-                                'updated_at', 'watchers_count'):
-                        assert key in project
-
-                    # project owner dict
-                    for key in ('avatar_url', 'html_url', 'login', 'type'):
-                        assert key in project['owner']
-
-                    # project contributor list
-                    for contributor in project['contributors']:
-                        for key in ('avatar_url', 'contributions', 'html_url',
-                                    'login', 'owner', 'url'):
-                            assert key in contributor
-
-                    # project participation history
-                    assert type(project['participation']) is list
-
-                #
-                # Verify correct output format for people.json.
-                #
-                people = ru.count_people_totals(project_details)
-
-                for person in people:
-                    for key in ('company', 'repositories', 'html_url', 'blog',
-                                'avatar_url', 'location', 'login', 'contributions'):
-                        assert key in person
-
     def test_main_with_weird_organization_name(self):
         ''' When an organization has a weird name, ...
         '''

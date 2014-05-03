@@ -323,17 +323,6 @@ def update_project_info(project):
                 project_need = dict(title=issue['title'], issue_url=issue['html_url'])
                 project['github_details']['project_needs'].append(project_need)
 
-def reformat_project_info_for_chicago(all_projects):
-    ''' Return a clone of the project list, formatted for use by opengovhacknight.org.
-
-        The representation here is specifically expected to be used on this page:
-        http://opengovhacknight.org/projects.html
-
-        See discussion at
-        https://github.com/codeforamerica/civic-json-worker/issues/18
-    '''
-    return [project['github_details'] for project in all_projects]
-
 def count_people_totals(all_projects):
     ''' Create a list of people details based on project details.
 
