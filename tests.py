@@ -20,6 +20,26 @@ class ApiTest(unittest.TestCase):
         db.drop_all()
 
     # Test API -----------------------
+    def test_current_projects(self):
+        '''
+        Show three most recently updated github projects
+        '''
+        organization = OrganizationFactory(name='Code for San Francisco')
+        db.session.flush()
+
+        ProjectFactory(organization_name=organization.name, name="Project 1", github_details={"updated_at":"2014-12-31T00:00:00Z"})
+        ProjectFactory(organization_name=organization.name, name="Project 2", github_details={"updated_at":"2014-11-31T00:00:00Z"})
+        ProjectFactory(organization_name=organization.name, name="Non Github Project", github_details=None)
+        ProjectFactory(organization_name=organization.name, name="Project 3", github_details={"updated_at":"2014-09-31T00:00:00Z"})
+        db.session.flush()
+
+        response = self.app.get('/api/organizations/Code for San Francisco')
+        response = json.loads(response.data)
+
+        self.assertEqual(len(response['current_projects']), 3)
+        self.assertEqual(response['current_projects'][0]['name'], "Project 1")
+        self.assertEqual(response['current_projects'][1]['name'], "Project 2")
+        self.assertEqual(response['current_projects'][2]['name'], "Project 3")
 
     def test_current_events(self):
         '''
