@@ -468,7 +468,7 @@ def get_organizations(name=None):
 def get_organizations_geojson():
     ''' GeoJSON response option for organizations.
     '''
-    geojson = dict(type='GeometryCollection', features=[])
+    geojson = dict(type='FeatureCollection', features=[])
 
     for org in db.session.query(Organization):
         # The unique identifier of an organization.
