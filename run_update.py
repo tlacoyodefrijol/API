@@ -549,7 +549,6 @@ def main(org_name=None):
           new_error = Error(**error_dict)
           db.session.add(new_error)
           db.session.commit()
-          bad_characters_in_name = True
           continue
 
       try:
