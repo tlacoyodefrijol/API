@@ -207,6 +207,13 @@ def get_projects(organization):
             dialect.doublequote = True
 
         projects = list(DictReader(data, dialect=dialect))
+
+        # Decode everything to unicode objects.
+        for (index, proj) in enumerate(projects):
+            projects[index] = dict([(k.decode('utf8'), v.decode('utf8'))
+                                         for (k, v) in proj.items()])
+
+        # Add organization names along the way.
         for project in projects:
             project['organization_name'] = organization.name
 
