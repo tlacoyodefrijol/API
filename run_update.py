@@ -401,16 +401,6 @@ def save_organization_info(session, org_dict):
 
         Return an app.Organization instance.
     '''
-    if not is_safe_name(org_dict['name']):
-        error_dict = {
-          "error" : 'ValueError: Bad organization name: "%(name)s"' % org_dict,
-          "time" : datetime.now()
-        }
-        new_error = Error(**error_dict)
-        session.add(new_error)
-        session.commit()
-        raise ValueError('Bad organization name: "%(name)s"' % org_dict)
-
     # Select an existing organization by name.
     filter = Organization.name == org_dict['name']
     existing_org = session.query(Organization).filter(filter).first()
