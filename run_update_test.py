@@ -7,6 +7,7 @@ import tempfile
 import datetime
 from httmock import response, HTTMock
 from mock import Mock
+from time import time
 from re import match
 
 class FakeResponse:
@@ -135,6 +136,40 @@ class RunUpdateTestCase(unittest.TestCase):
         project = self.db.session.query(Project).filter(filter).first()
         self.assertIsNotNone(project)
         self.assertEqual(project.name,'cityvoice')
+
+    def test_import_with_times(self):
+        ''' 
+        '''
+        def response_content(url, request):
+            import run_update
+
+            if url.geturl() == run_update.gdocs_url:
+                return response(200, '''name,website,events_url,rss,projects_list_url\nCfA,,,,''')
+
+            else:
+                raise Exception('Asked for unknown URL ' + url.geturl())
+
+        from app import Organization
+
+        with HTTMock(response_content):
+            import run_update
+            run_update.main()
+        
+        # Show that CfA has been recently updated.
+        org = self.db.session.query(Organization).first()
+        self.assertTrue(org.last_updated >= time() - 1)
+        
+        # Set last_updated to a time in the too-recent past.
+        self.db.session.execute(self.db.update(Organization, values={'last_updated': time() - 2}))
+        self.db.session.commit()
+
+        with HTTMock(response_content):
+            import run_update
+            run_update.main()
+        
+        # Show that CfA has *not* been recently updated.
+        org = self.db.session.query(Organization).first()
+        self.assertFalse(org.last_updated >= time() - 1)
 
     def test_main_with_good_new_data(self):
         ''' When current organization data is not the same set as existing, saved organization data,

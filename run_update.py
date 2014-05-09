@@ -25,6 +25,9 @@ logger = logging.getLogger(__name__)
 requests_log = logging.getLogger("requests")
 requests_log.setLevel(logging.WARNING)
 
+# Minimum age to trigger organization update, in seconds.
+minimum_age = 5
+
 # Production
 gdocs_url = 'https://docs.google.com/a/codeforamerica.org/spreadsheet/ccc?key=0ArHmv-6U1drqdGNCLWV5Q0d5YmllUzE5WGlUY3hhT2c&output=csv'
 
@@ -528,6 +531,9 @@ def get_event_group_identifier(events_url):
 def main(org_name=None):
     ''' Run update over all organizations. Optionally, update just one.
     '''
+    #
+    maximum_updated = time() - minimum_age
+    
     # Keep a set of fresh organization names.
     organization_names = set()
 
@@ -552,6 +558,15 @@ def main(org_name=None):
           continue
 
       try:
+        filter = Organization.name == org_info['name']
+        existing_org = db.session.query(Organization).filter(filter).first()
+        organization_names.add(org_info['name'])
+        
+        if existing_org and not org_name:
+            if existing_org.last_updated > maximum_updated:
+                # Skip this organization, it's been updated too recently.
+                continue
+      
         # Mark everything in this organization for deletion at first.
         db.session.execute(db.update(Event, values={'keep': False}).where(Event.organization_name == org_info['name']))
         db.session.execute(db.update(Story, values={'keep': False}).where(Story.organization_name == org_info['name']))
