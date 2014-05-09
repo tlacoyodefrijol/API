@@ -584,10 +584,10 @@ def main(org_name=None):
                 logging.error("%s does not have a valid events url" % organization.name)
 
         # Remove everything marked for deletion.
-        db.session.execute(db.delete(Event).where(Event.keep == False))
-        db.session.execute(db.delete(Story).where(Story.keep == False))
-        db.session.execute(db.delete(Project).where(Project.keep == False))
-        db.session.execute(db.delete(Organization).where(Organization.keep == False))
+        db.session.query(Event).filter(not Event.keep).delete()
+        db.session.query(Story).filter(not Story.keep).delete()
+        db.session.query(Project).filter(not Project.keep).delete()
+        db.session.query(Organization).filter(not Organization.keep).delete()
 
       except:
         # Raise the error, get out of main(), and don't commit the transaction.
