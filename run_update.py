@@ -561,6 +561,7 @@ def main(org_name=None, minimum_age=3*3600):
         if existing_org and not org_name:
             if existing_org.last_updated > maximum_updated:
                 # Skip this organization, it's been updated too recently.
+                logging.info("Skipping update for {0}".format(org_info['name'].encode('utf8')))
                 continue
       
         # Mark everything in this organization for deletion at first.
