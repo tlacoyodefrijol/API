@@ -25,9 +25,6 @@ logger = logging.getLogger(__name__)
 requests_log = logging.getLogger("requests")
 requests_log.setLevel(logging.WARNING)
 
-# Minimum age to trigger organization update, in seconds.
-minimum_age = 5
-
 # Production
 gdocs_url = 'https://docs.google.com/a/codeforamerica.org/spreadsheet/ccc?key=0ArHmv-6U1drqdGNCLWV5Q0d5YmllUzE5WGlUY3hhT2c&output=csv'
 
@@ -528,10 +525,12 @@ def get_event_group_identifier(events_url):
     else:
         return None
 
-def main(org_name=None):
+def main(org_name=None, minimum_age=3*3600):
     ''' Run update over all organizations. Optionally, update just one.
+    
+        Also optionally, reset minimum age to trigger org update, in seconds.
     '''
-    #
+    # Set a single cutoff timestamp for orgs we'll look at.
     maximum_updated = time() - minimum_age
     
     # Keep a set of fresh organization names.

@@ -138,7 +138,7 @@ class RunUpdateTestCase(unittest.TestCase):
         self.assertEqual(project.name,'cityvoice')
 
     def test_import_with_times(self):
-        ''' 
+        ''' Test passage of time on organization updates.
         '''
         def response_content(url, request):
             import run_update
@@ -153,23 +153,48 @@ class RunUpdateTestCase(unittest.TestCase):
 
         with HTTMock(response_content):
             import run_update
-            run_update.main()
+            run_update.main(minimum_age=10)
         
         # Show that CfA has been recently updated.
         org = self.db.session.query(Organization).first()
         self.assertTrue(org.last_updated >= time() - 1)
         
         # Set last_updated to a time in the too-recent past.
-        self.db.session.execute(self.db.update(Organization, values={'last_updated': time() - 2}))
+        self.db.session.execute(self.db.update(Organization, values={'last_updated': time() - 5}))
         self.db.session.commit()
 
         with HTTMock(response_content):
             import run_update
-            run_update.main()
+            run_update.main(minimum_age=10)
         
         # Show that CfA has *not* been recently updated.
         org = self.db.session.query(Organization).first()
         self.assertFalse(org.last_updated >= time() - 1)
+        
+        # Set last_updated to a time in the distant past.
+        self.db.session.execute(self.db.update(Organization, values={'last_updated': time() - 99}))
+        self.db.session.commit()
+
+        with HTTMock(response_content):
+            import run_update
+            run_update.main(minimum_age=10)
+        
+        # Show that CfA has been recently updated.
+        org = self.db.session.query(Organization).first()
+        self.assertTrue(org.last_updated >= time() - 1)
+        
+        # Set last_updated to a time in the too-recent past...
+        self.db.session.execute(self.db.update(Organization, values={'last_updated': time() - 5}))
+        self.db.session.commit()
+
+        # ...but also ask for the org by name.
+        with HTTMock(response_content):
+            import run_update
+            run_update.main(org_name='CfA')
+        
+        # Show that CfA has been recently updated.
+        org = self.db.session.query(Organization).first()
+        self.assertTrue(org.last_updated >= time() - 1)
 
     def test_main_with_good_new_data(self):
         ''' When current organization data is not the same set as existing, saved organization data,
