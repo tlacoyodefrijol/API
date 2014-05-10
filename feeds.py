@@ -48,10 +48,11 @@ def extract_feed_links(html, feed_links_attributes=FEED_LINKS_ATTRIBUTES):
     head = soup.find('head')
     links = []
     for attrs in feed_links_attributes:
-        for link in head.findAll('link', dict(attrs)):
-            href = dict(link.attrs).get('href', '')
-            if href:
-                yield unicode(href)
+        if head:
+            for link in head.findAll('link', dict(attrs)):
+                href = dict(link.attrs).get('href', '')
+                if href:
+                    yield unicode(href)
 
 
 def get_first_working_feed_link(url):
