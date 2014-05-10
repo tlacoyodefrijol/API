@@ -207,6 +207,13 @@ def get_projects(organization):
             dialect.doublequote = True
 
         projects = list(DictReader(data, dialect=dialect))
+
+        # Decode everything to unicode objects.
+        for (index, proj) in enumerate(projects):
+            projects[index] = dict([(k.decode('utf8'), v.decode('utf8'))
+                                         for (k, v) in proj.items()])
+
+        # Add organization names along the way.
         for project in projects:
             project['organization_name'] = organization.name
 
@@ -401,16 +408,6 @@ def save_organization_info(session, org_dict):
 
         Return an app.Organization instance.
     '''
-    if not is_safe_name(org_dict['name']):
-        error_dict = {
-          "error" : 'ValueError: Bad organization name: "%(name)s"' % org_dict,
-          "time" : datetime.now()
-        }
-        new_error = Error(**error_dict)
-        session.add(new_error)
-        session.commit()
-        raise ValueError('Bad organization name: "%(name)s"' % org_dict)
-
     # Select an existing organization by name.
     filter = Organization.name == org_dict['name']
     existing_org = session.query(Organization).filter(filter).first()
@@ -525,9 +522,14 @@ def get_event_group_identifier(events_url):
     else:
         return None
 
-def main(org_name=None):
+def main(org_name=None, minimum_age=3*3600):
     ''' Run update over all organizations. Optionally, update just one.
+    
+        Also optionally, reset minimum age to trigger org update, in seconds.
     '''
+    # Set a single cutoff timestamp for orgs we'll look at.
+    maximum_updated = time() - minimum_age
+    
     # Keep a set of fresh organization names.
     organization_names = set()
 
@@ -549,10 +551,19 @@ def main(org_name=None):
           new_error = Error(**error_dict)
           db.session.add(new_error)
           db.session.commit()
-          bad_characters_in_name = True
           continue
 
       try:
+        filter = Organization.name == org_info['name']
+        existing_org = db.session.query(Organization).filter(filter).first()
+        organization_names.add(org_info['name'])
+        
+        if existing_org and not org_name:
+            if existing_org.last_updated > maximum_updated:
+                # Skip this organization, it's been updated too recently.
+                logging.info("Skipping update for {0}".format(org_info['name'].encode('utf8')))
+                continue
+      
         # Mark everything in this organization for deletion at first.
         db.session.execute(db.update(Event, values={'keep': False}).where(Event.organization_name == org_info['name']))
         db.session.execute(db.update(Story, values={'keep': False}).where(Story.organization_name == org_info['name']))
@@ -585,10 +596,10 @@ def main(org_name=None):
                 logging.error("%s does not have a valid events url" % organization.name)
 
         # Remove everything marked for deletion.
-        db.session.execute(db.delete(Event).where(Event.keep == False))
-        db.session.execute(db.delete(Story).where(Story.keep == False))
-        db.session.execute(db.delete(Project).where(Project.keep == False))
-        db.session.execute(db.delete(Organization).where(Organization.keep == False))
+        db.session.query(Event).filter(not Event.keep).delete()
+        db.session.query(Story).filter(not Story.keep).delete()
+        db.session.query(Project).filter(not Project.keep).delete()
+        db.session.query(Organization).filter(not Organization.keep).delete()
 
       except:
         # Raise the error, get out of main(), and don't commit the transaction.
