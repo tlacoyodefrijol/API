@@ -128,6 +128,14 @@ The standard is still very much in planning phases, and we [welcome discussion](
 
 The CFAPI is built on [Flask](http://flask.pocoo.org/) and Python. The `app.py` file describes the models and routes. The `run_update.py` file runs once an hour and collects all the data about the different Brigades. Both `tests.py` and `run_update_test.py` are automatically run by [Travis-CI](https://travis-ci.org/codeforamerica/cfapi) whenever a new commit is made. The production service lives on Heroku. Please contact Andrew and Eric in the "Contribute" section below to get involved.
 
+* Prerequirements - Set your environmental variables.
+
+* `DATABASE_URL=[db connection string]` — On Heroku with Postgres, this will be set for you. My local example is `postgres://hackyourcity@localhost/cfapi` When testing locally, “sqlite:///data.db” is a great way to skip Postgres installation.
+* `GITHUB_TOKEN=[Github API token]` — Read about setting that up here: http://developer.github.com/v3/oauth/
+* `MEETUP_KEY=[Meetup API Key]` — Read about setting that up here: https://secure.meetup.com/meetup_api/key/
+
+Set these environment variables in your `.bash_profile`. Then run `source ~/.bash_profile`.
+
 Here's how to get set up for development:
 
 * Set up a [virtualenv](https://pypi.python.org/pypi/virtualenv)
@@ -150,15 +158,6 @@ $ pip install -r requirements.txt
 createdb cfapi
 python -c 'from app import db; db.create_all()'
 ```
-
-* Set your environmental variables.
-
-
-* `DATABASE_URL=[db connection string]` — On Heroku with Postgres, this will be set for you. My local example is `postgres://hackyourcity@localhost/cfapi` When testing locally, “sqlite:///data.db” is a great way to skip Postgres installation.
-* `GITHUB_TOKEN=[Github API token]` — Read about setting that up here: http://developer.github.com/v3/oauth/
-* `MEETUP_KEY=[Meetup API Key]` — Read about setting that up here: https://secure.meetup.com/meetup_api/key/
-
-Set these environment variables in your `.bash-profile`. Then run `source ~/.bash_profile`.
 
 * Run the updater
 
