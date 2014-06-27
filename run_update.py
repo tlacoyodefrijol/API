@@ -26,10 +26,10 @@ requests_log = logging.getLogger("requests")
 requests_log.setLevel(logging.WARNING)
 
 # Production
-gdocs_url = 'https://docs.google.com/a/codeforamerica.org/spreadsheet/ccc?key=0ArHmv-6U1drqdGNCLWV5Q0d5YmllUzE5WGlUY3hhT2c&output=csv'
+# gdocs_url = 'https://docs.google.com/a/codeforamerica.org/spreadsheet/ccc?key=0ArHmv-6U1drqdGNCLWV5Q0d5YmllUzE5WGlUY3hhT2c&output=csv'
 
 # Testing
-# gdocs_url = "https://docs.google.com/spreadsheet/pub?key=0ArHmv-6U1drqdEVkTUtZNVlYRE5ndERLLTFDb2RqQlE&output=csv"
+gdocs_url = "https://docs.google.com/spreadsheet/pub?key=0ArHmv-6U1drqdEVkTUtZNVlYRE5ndERLLTFDb2RqQlE&output=csv"
 
 
 if 'GITHUB_TOKEN' in os.environ:
@@ -221,6 +221,10 @@ def get_projects(organization):
             project['organization_name'] = organization.name
 
     else:
+        # Fail silently when the github url is no valid
+        if type(data) != list and data['message'] == u'Not Found':
+            return []
+
         # If projects_list_url is a json file
         if len(data) and type(data[0]) in (str, unicode):
             # Likely that the JSON data is a simple list of strings
