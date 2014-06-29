@@ -11,7 +11,7 @@ from dateutil.tz import tzoffset
 from unidecode import unidecode
 from feeds import extract_feed_links, get_first_working_feed_link
 import feedparser
-from app import db, app, Project, Organization, Story, Event, Error, is_safe_name
+from app import db, app, Project, Organization, Story, Event, Error, Issue, is_safe_name
 from urllib2 import HTTPError, URLError
 from urlparse import urlparse
 from random import shuffle
@@ -356,13 +356,14 @@ def update_project_info(project):
         #
         project['github_details']['project_needs'] = []
         url = all_github_attributes['issues_url'].replace('{/number}', '')
-        got = get(url, auth=github_auth, params=dict(labels='project-needs'))
+        got = get(url, auth=github_auth)
 
         # Check if GitHub Issues are disabled
         if all_github_attributes['has_issues']:
             for issue in got.json():
-                project_need = dict(title=issue['title'], issue_url=issue['html_url'])
-                project['github_details']['project_needs'].append(project_need)
+                issue_dict = dict(title=issue['title'], html_url=issue['html_url'],
+                                 labels=issue['labels'], body=issue['body'])
+                save_issue_info(db.session, issue_dict)
 
 def count_people_totals(all_projects):
     ''' Create a list of people details based on project details.
@@ -465,6 +466,33 @@ def save_project_info(session, proj_dict):
     session.flush()
 
     return existing_project
+
+def save_issue_info(session, issue_dict):
+    '''
+        Save a dictionary of issue ingo to the datastore session.
+        Return an app.Issue instance
+    '''
+    # Select the current issue, filtering on title AND html_url.
+    filter = Issue.title == issue_dict['title'], Issue.html_url == issue_dict['html_url']
+    existing_issue = session.query(Issue).filter(*filter).first()
+
+    # If this is a new issue, save and return it.
+    if not existing_issue:
+        new_issue = Issue(**issue_dict)
+        session.add(new_issue)
+        return new_issue
+
+    # Mark the existing issue for safekeeping.
+    existing_issue.keep = True
+
+    # Update existing issue details
+    for (field, value) in issue_dict.items():
+        setattr(existing_issue, field, value)
+
+    # Flush existing object, to prevent a sqlalchemy.orm.exc.StaleDataError.
+    session.flush()
+
+    return existing_issue
 
 def save_event_info(session, event_dict):
     '''

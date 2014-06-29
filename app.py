@@ -267,6 +267,9 @@ class Project(db.Model):
     organization = db.relationship('Organization')
     organization_name = db.Column(db.Unicode(), db.ForeignKey('organization.name'))
 
+    # TODO: Add project relationship? Waiting on Andrew
+    # issues = db.relationship('Issue')
+
     def __init__(self, name, code_url=None, link_url=None,
                  description=None, type=None, categories=None,
                  github_details=None, organization_name=None, keep=None):
@@ -299,6 +302,30 @@ class Project(db.Model):
             project_dict['organization'] = self.organization.asdict()
 
         return project_dict
+
+class Issue(db.Model):
+    '''
+        Issues of Civic Tech Projects on Github
+    '''
+    # Columns
+    id = db.Column(db.Integer(), primary_key=True)
+    title = db.Column(db.Unicode())
+    html_url = db.Column(db.Unicode())
+    labels = db.Column(JsonType())
+    body = db.Column(db.Unicode())
+    keep = db.Column(db.Boolean())
+
+    # TODO: Add project relationship? Waiting on Andrew
+    # Relationships
+    # project = db.relationship('Project')
+    # project_id = db.Column(db.Unicode(), db.ForeignKey('project.id'))
+
+    def __init__(self, title, html_url=None, labels=None, body=None):
+        self.title = title
+        self.html_url = html_url
+        self.labels = labels
+        self.body = body
+        self.keep = True
 
 class Event(db.Model):
     '''
