@@ -351,22 +351,40 @@ def update_project_info(project):
         except:
             project['github_details']['participation'] = [0] * 50
 
-        #
-        # Populate Issues (remove "{/number}")
-        #
-        url = all_github_attributes['issues_url'].replace('{/number}', '')
-        got = get(url, auth=github_auth)
+def get_issues():
+    '''
+        Get github issues associated to each Projects.
+    '''
+    issues = []
 
+    # Flush the current db session to save projects added in current run
+    db.session.flush()
+
+    # Get all projects not currently marked for deletion
+    projects = db.session.query(Project).all()
+
+    # Populate issues for each project
+    for project in projects:
         # Mark this projects issues for deletion
-        db.session.execute(db.update(Issue, values={'keep': False}).where(Issue.project_name == project['name']))
+        db.session.execute(db.update(Issue, values={'keep': False}).where(Issue.project_id == project.id))
 
-        # Check if GitHub Issues are disabled
-        if all_github_attributes['has_issues']:
-            for issue in got.json():
+        # Get github issues api url
+        _, host, path, _, _, _ = urlparse(project.code_url)
+        issues_url = 'https://api.github.com/repos' + path + '/issues'
+
+        # Ping github's api for project issues
+        got = get(issues_url, auth=github_auth)
+
+        # Save each issue in response
+        for issue in got.json():
+            # Type check the issue, we are expecting a dictionary
+            if type(issue) == type({}):
                 issue_dict = dict(title=issue['title'], html_url=issue['html_url'],
-                                 labels=issue['labels'], body=issue['body'], project_name=project['name'])
-                save_issue_info(db.session, issue_dict)
-
+                             labels=issue['labels'], body=issue['body'], project_id=project.id)
+                issues.append(issue_dict)
+            else:
+                logging.error('Issue for project %s is not a dictionary', project.name)
+    return issues
 
 def count_people_totals(all_projects):
     ''' Create a list of people details based on project details.
@@ -476,7 +494,7 @@ def save_issue_info(session, issue_dict):
         Return an app.Issue instance
     '''
     # Select the current issue, filtering on title AND project_name.
-    filter = Issue.title == issue_dict['title'], Issue.project_name == issue_dict['project_name']
+    filter = Issue.title == issue_dict['title'], Issue.project_id == issue_dict['project_id']
     existing_issue = session.query(Issue).filter(*filter).first()
 
     # If this is a new issue, save and return it.
@@ -632,6 +650,12 @@ def main(org_name=None, minimum_age=3*3600):
                     save_event_info(db.session, event)
             else:
                 logging.error("%s does not have a valid events url" % organization.name)
+
+        # Get issues for all of the projects
+        logging.info("Gathering all of %s's project's issues." % organization.name)
+        issues = get_issues()
+        for issue_info in issues:
+            save_issue_info(db.session, issue_info)
 
         # Remove everything marked for deletion.
         db.session.query(Event).filter(not Event.keep).delete()

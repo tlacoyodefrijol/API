@@ -266,9 +266,7 @@ class Project(db.Model):
     # Relationships
     organization = db.relationship('Organization')
     organization_name = db.Column(db.Unicode(), db.ForeignKey('organization.name'))
-
-    # TODO: Add project relationship? Waiting on Andrew
-    # issues = db.relationship('Issue')
+    issues = db.relationship('Issue')
 
     def __init__(self, name, code_url=None, link_url=None,
                  description=None, type=None, categories=None,
@@ -301,7 +299,7 @@ class Project(db.Model):
         if include_organization:
             project_dict['organization'] = self.organization.asdict()
 
-        project_dict['issues'] = [o.asdict() for o in db.session.query(Issue).filter(Issue.project_name == project_dict['name']).all()]
+        project_dict['issues'] = [o.asdict() for o in db.session.query(Issue).filter(Issue.project_id == project_dict['id']).all()]
 
         return project_dict
 
@@ -317,17 +315,16 @@ class Issue(db.Model):
     body = db.Column(db.Unicode())
     keep = db.Column(db.Boolean())
 
-    # TODO: Add project relationship? Waiting on Andrew
     # Relationships
-    # project = db.relationship('Project')
-    project_name = db.Column(db.Unicode())
+    project = db.relationship('Project')
+    project_id = db.Column(db.Integer(), db.ForeignKey('project.id'))
 
-    def __init__(self, title, project_name, html_url=None, labels=None, body=None):
+    def __init__(self, title, project_id, html_url=None, labels=None, body=None):
         self.title = title
         self.html_url = html_url
         self.labels = labels
         self.body = body
-        self.project_name = project_name
+        self.project_id = project_id
         self.keep = True
 
     def api_url(self):
@@ -341,10 +338,9 @@ class Issue(db.Model):
         '''
         issue_dict = db.Model.asdict(self)
 
-        # TODO: Optional code for including project should be uncommented later
         # TODO: Also paged_results assumes asdict takes this argument, should be checked and fixed later
         if inclued_project:
-            issue_dict['project'] = db.session.query(Project).filter(Project.name == self.project_name).first().asdict()
+            issue_dict['project'] = db.session.query(Project).filter(Project.id == self.project_id).first().asdict()
 
         del issue_dict['keep']
         issue_dict['api_url'] = self.api_url()
@@ -627,8 +623,8 @@ def get_projects(id=None):
     response = paged_results(query, int(request.args.get('page', 1)), 10)
     return jsonify(response)
 
-@app.route('/api/issues')
-@app.route('/api/issues/<int:id>')
+@app.route('/api/issues/')
+@app.route('/api/issues/<int:id>/')
 def get_issues(id=None):
     '''Regular response option for issues.
     '''
