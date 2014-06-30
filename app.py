@@ -327,6 +327,27 @@ class Issue(db.Model):
         self.body = body
         self.keep = True
 
+    def api_url(self):
+        ''' API link to itself
+        '''
+        return '%s://%s/api/issues/%s' % (request.scheme, request.host, str(self.id))
+
+    def asdict(self, inclued_project=False):
+        '''
+            Return issue as a dictionary with some properties tweaked
+        '''
+        issue_dict = db.Model.asdict(self)
+
+        # TODO: Optional code for including project should be uncommented later
+        # TODO: Also paged_results assumes asdict takes this argument, should be checked and fixed later
+        # if inclued_project:
+        #     issue_dict['project'] = self.project.asdict()
+
+        del issue_dict['keep']
+        issue_dict['api_url'] = self.api_url()
+
+        return issue_dict
+
 class Event(db.Model):
     '''
         Organizations events from Meetup
@@ -600,6 +621,22 @@ def get_projects(id=None):
 
     # Get a bunch of projects.
     query = db.session.query(Project)
+    response = paged_results(query, int(request.args.get('page', 1)), 10)
+    return jsonify(response)
+
+@app.route('/api/issues')
+@app.route('/api/issues/<int:id>')
+def get_issues(id=None):
+    '''Regular response option for issues.
+    '''
+    if id:
+        # Get one issue
+        filter = Issue.id == id
+        issue = db.session.query(Issue).filter(filter).first()
+        return jsonify(issue.asdict())
+
+    # Get a bunch of issues
+    query = db.session.query(Issue)
     response = paged_results(query, int(request.args.get('page', 1)), 10)
     return jsonify(response)
 
