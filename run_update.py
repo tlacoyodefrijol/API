@@ -352,9 +352,8 @@ def update_project_info(project):
             project['github_details']['participation'] = [0] * 50
 
         #
-        # Populate project needs from github_details[issues_url] (remove "{/number}")
+        # Populate Issues (remove "{/number}")
         #
-        project['github_details']['project_needs'] = []
         url = all_github_attributes['issues_url'].replace('{/number}', '')
         got = get(url, auth=github_auth)
 
@@ -362,8 +361,9 @@ def update_project_info(project):
         if all_github_attributes['has_issues']:
             for issue in got.json():
                 issue_dict = dict(title=issue['title'], html_url=issue['html_url'],
-                                 labels=issue['labels'], body=issue['body'])
+                                 labels=issue['labels'], body=issue['body'], project_name=project['name'])
                 save_issue_info(db.session, issue_dict)
+
 
 def count_people_totals(all_projects):
     ''' Create a list of people details based on project details.
