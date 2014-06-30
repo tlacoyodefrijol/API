@@ -29,6 +29,7 @@
     <li><a href="#api-projects">Projects</a></li>
     <li><a href="#api-events">Events</a></li>
     <li><a href="#api-stories">Stories</a></li>
+    <li><a href="#api-issues">Issues</a></li>
     </ul>
 
     <h3>
@@ -577,5 +578,124 @@
 }</pre>
         </div>
     </div>
+
+    <h3>
+        Issues
+        <a id="api-issues" href="#api-issues">¶</a>
+    </h3>
+    <div class="clearfix">
+        <div class="half column">
+            <p>
+                Retrieve a list of project issues.
+            </p>
+            <h4>Endpoints</h4>
+            <p>
+                /api/issues <br>
+                /api/issues/{issue id}
+            </p>
+            <h4>Response Properties</h4>
+            <dl>
+                <dt>pages</dt>
+                <dd>Dictionary of pagination links, optionally including <i>first</i>, <i>prev</i>, <i>next</i>, and <i>last</i>.</dd>
+                <dt>objects</dt>
+                <dd>List of <a href="#issue-properties">individual issues</a>.</dd>
+            </dl>
+        </div>
+        <div class="half column">
+            <h4>Sample Request</h4>
+            <p><code><a href="{{ api_base }}/api/issues">{{ api_base }}/api/issues</a></code></p>
+            <h4>Sample Response</h4>
+            <pre>{
+  "pages": {
+    "next": …,
+    "last": …
+  },
+  "objects": [
+  {
+    "id": 1,
+    "title": "Write some tests",
+    "api_url": "http://localhost:5000/api/issues/2",
+    "body": "Start writing tests. ",
+    "html_url": "https://github.com/sfbrigade/ballot_initiatives/issues/7",
+    "labels": [ 
+      {
+        "color": "84b6eb",
+        "name": "enhancement",
+        "url": "https://api.github.com/repos/sfbrigade/ballot_initiatives/labels/enhancement"
+      }
+    ],
+    "project": { … },
+    "project_name": "ballot_initiatives",
+  },
+  {
+    "id": 2,
+    "title": "Import SFGOV data set",
+    …  
+  },
+  …
+  ]
+}</pre>
+        </div>
+    </div>
+
+    <h3>
+        One Issue
+        <a id="api-one-issue" href="#api-one-issue">¶</a>
+    </h3>
+    <div class="clearfix">
+        <div class="half column">
+            <p>
+                Retrieve a single issue.
+            </p>
+            <h4>Endpoint</h4>
+            <p>
+                /api/issues/{issue id}
+            </p>
+            <h4>
+                Issue Properties
+                <a id="issue-properties" href="#issue-properties">¶</a>
+            </h4>
+            <dl>
+                <dt>id</dt>
+                <dd>Numeric ID.</dd>
+                <dt>title</dt>
+                <dd>Title.</dd>
+                <dt>body</dt>
+                <dd>Body.</dd>
+                <dt>api_url</dt>
+                <dd>API URL.</dd>
+                <dt>html_url</dt>
+                <dd>Github URL.</dd>
+                <dt>labels</dt>
+                <dd>Array of issue labels dictionaries</dd>
+                <dt>project_name</dt>
+                <dd>Name of project</dd>
+                <dt>project</dt>
+                <dd>Dictionary of <a href="#project-properties">project details</a>.</dd>
+            </dl>
+        </div>
+        <div class="half column">
+            <h4>Sample Request</h4>
+            <p><code><a href="{{ api_base }}/api/issues/1">{{ api_base }}/api/issues/1</a></code></p>
+            <h4>Sample Response</h4>
+            <pre>{
+  "id": 1,
+  "title": "Write some tests",
+  "api_url": "http://localhost:5000/api/issues/2",
+  "body": "Start writing tests. ",
+  "html_url": "https://github.com/sfbrigade/ballot_initiatives/issues/7",
+  "labels": [ 
+      {
+          "color": "84b6eb",
+          "name": "enhancement",
+          "url": "https://api.github.com/repos/sfbrigade/ballot_initiatives/labels/enhancement"
+      }
+  ],
+  "project": { … },
+  "project_name": "ballot_initiatives",
+}</pre>
+        </div>
+    </div>
+
 </body>
 </html>
