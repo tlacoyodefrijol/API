@@ -375,15 +375,16 @@ def get_issues():
         # Ping github's api for project issues
         got = get(issues_url, auth=github_auth)
 
-        # Save each issue in response
-        for issue in got.json():
-            # Type check the issue, we are expecting a dictionary
-            if type(issue) == type({}):
-                issue_dict = dict(title=issue['title'], html_url=issue['html_url'],
-                             labels=issue['labels'], body=issue['body'], project_id=project.id)
-                issues.append(issue_dict)
-            else:
-                logging.error('Issue for project %s is not a dictionary', project.name)
+        if not got.status_code in range(400,499):
+            # Save each issue in response
+            for issue in got.json():
+                # Type check the issue, we are expecting a dictionary
+                if type(issue) == type({}):
+                    issue_dict = dict(title=issue['title'], html_url=issue['html_url'],
+                                 labels=issue['labels'], body=issue['body'], project_id=project.id)
+                    issues.append(issue_dict)
+                else:
+                    logging.error('Issue for project %s is not a dictionary', project.name)
     return issues
 
 def count_people_totals(all_projects):

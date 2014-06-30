@@ -64,6 +64,9 @@ class RunUpdateTestCase(unittest.TestCase):
         elif url.geturl() == 'https://api.github.com/repos/codeforamerica/cityvoice/issues':
             return response(200, '''[ ]''')
 
+        elif url.geturl() == 'https://api.github.com/repos/civic-project/issues':
+            return response(200, '''[ ]''')
+
         elif url.geturl() == 'https://api.github.com/users/daguar':
             return response(200, '''{ "login": "daguar", "id": 994938, "avatar_url": "https://gravatar.com/avatar/bdd8cc46ae86e389388ae78dfc45effe?d=https%3A%2F%2Fidenticons.github.com%2F4b102bf6681e25c44a3c980791826c1f.png&r=x", "gravatar_id": "bdd8cc46ae86e389388ae78dfc45effe", "url": "https://api.github.com/users/daguar", "html_url": "https://github.com/daguar", "followers_url": "https://api.github.com/users/daguar/followers", "following_url": "https://api.github.com/users/daguar/following{/other_user}", "gists_url": "https://api.github.com/users/daguar/gists{/gist_id}", "starred_url": "https://api.github.com/users/daguar/starred{/owner}{/repo}", "subscriptions_url": "https://api.github.com/users/daguar/subscriptions", "organizations_url": "https://api.github.com/users/daguar/orgs", "repos_url": "https://api.github.com/users/daguar/repos", "events_url": "https://api.github.com/users/daguar/events{/privacy}", "received_events_url": "https://api.github.com/users/daguar/received_events", "type": "User", "site_admin": false, "name": "Dave Guarino", "company": "", "blog": null, "location": "Oakland, CA", "email": "dave@codeforamerica.org", "hireable": true, "bio": null, "public_repos": 66, "public_gists": 10, "followers": 30, "following": 14, "created_at": "2011-08-21T21:12:10Z", "updated_at": "2014-03-07T18:17:21Z" }''')
 
@@ -281,6 +284,9 @@ class RunUpdateTestCase(unittest.TestCase):
                 return response(200, '''name,website,events_url,rss,projects_list_url\nCode for America,,,,http://example.com/cfa-projects.csv''')
 
             elif url.geturl() == 'https://api.github.com/repos/codeforamerica/cityvoice':
+                return response(404, '''Not Found!''')
+
+            elif url.geturl() == 'https://api.github.com/repos/codeforamerica/cityvoice/issues':
                 return response(404, '''Not Found!''')
 
             else:
