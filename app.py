@@ -266,7 +266,9 @@ class Project(db.Model):
     # Relationships
     organization = db.relationship('Organization')
     organization_name = db.Column(db.Unicode(), db.ForeignKey('organization.name'))
-    issues = db.relationship('Issue')
+
+    # Issue has cascade so issues are deleted with their parent projects
+    issues = db.relationship('Issue', cascade='save-update, delete')
 
     def __init__(self, name, code_url=None, link_url=None,
                  description=None, type=None, categories=None,

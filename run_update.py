@@ -682,8 +682,6 @@ def main(org_name=None, minimum_age=3*3600):
         if bad_org.name in organization_names:
             continue
 
-        # TODO: How should issues be deleted here?
-        # Maybe add a cascading effect on project deletion?
         db.session.execute(db.delete(Event).where(Event.organization_name == bad_org.name))
         db.session.execute(db.delete(Story).where(Story.organization_name == bad_org.name))
         db.session.execute(db.delete(Project).where(Project.organization_name == bad_org.name))
