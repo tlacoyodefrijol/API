@@ -361,7 +361,7 @@ def get_issues():
     db.session.flush()
 
     # Get all projects not currently marked for deletion
-    projects = db.session.query(Project).all()
+    projects = db.session.query(Project).filter(Project.keep == True).all()
 
     # Populate issues for each project
     for project in projects:
