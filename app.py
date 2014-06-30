@@ -301,6 +301,8 @@ class Project(db.Model):
         if include_organization:
             project_dict['organization'] = self.organization.asdict()
 
+        project_dict['issues'] = [o.asdict() for o in db.session.query(Issue).filter(Issue.project_name == project_dict['name']).all()]
+
         return project_dict
 
 class Issue(db.Model):
