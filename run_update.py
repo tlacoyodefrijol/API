@@ -357,6 +357,9 @@ def update_project_info(project):
         url = all_github_attributes['issues_url'].replace('{/number}', '')
         got = get(url, auth=github_auth)
 
+        # Mark this projects issues for deletion
+        db.session.execute(db.update(Issue, values={'keep': False}).where(Issue.project_name == project['name']))
+
         # Check if GitHub Issues are disabled
         if all_github_attributes['has_issues']:
             for issue in got.json():
@@ -472,8 +475,8 @@ def save_issue_info(session, issue_dict):
         Save a dictionary of issue ingo to the datastore session.
         Return an app.Issue instance
     '''
-    # Select the current issue, filtering on title AND html_url.
-    filter = Issue.title == issue_dict['title'], Issue.html_url == issue_dict['html_url']
+    # Select the current issue, filtering on title AND project_name.
+    filter = Issue.title == issue_dict['title'], Issue.project_name == issue_dict['project_name']
     existing_issue = session.query(Issue).filter(*filter).first()
 
     # If this is a new issue, save and return it.
@@ -634,6 +637,7 @@ def main(org_name=None, minimum_age=3*3600):
         db.session.query(Event).filter(not Event.keep).delete()
         db.session.query(Story).filter(not Story.keep).delete()
         db.session.query(Project).filter(not Project.keep).delete()
+        db.session.query(Issue).filter(not Issue.keep).delete()
         db.session.query(Organization).filter(not Organization.keep).delete()
 
       except:
@@ -653,6 +657,8 @@ def main(org_name=None, minimum_age=3*3600):
         if bad_org.name in organization_names:
             continue
 
+        # TODO: How should issues be deleted here?
+        # Maybe add a cascading effect on project deletion?
         db.session.execute(db.delete(Event).where(Event.organization_name == bad_org.name))
         db.session.execute(db.delete(Story).where(Story.organization_name == bad_org.name))
         db.session.execute(db.delete(Project).where(Project.organization_name == bad_org.name))
