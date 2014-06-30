@@ -11,7 +11,7 @@ from dateutil.tz import tzoffset
 from unidecode import unidecode
 from feeds import extract_feed_links, get_first_working_feed_link
 import feedparser
-from app import db, app, Project, Organization, Story, Event, Error, is_safe_name
+from app import db, app, Project, Organization, Story, Event, Error, Issue, is_safe_name
 from urllib2 import HTTPError, URLError
 from urlparse import urlparse
 from random import shuffle
@@ -221,6 +221,10 @@ def get_projects(organization):
             project['organization_name'] = organization.name
 
     else:
+        # Fail silently when the github url is no valid
+        if type(data) != list and data['message'] == u'Not Found':
+            return []
+
         # If projects_list_url is a json file
         if len(data) and type(data[0]) in (str, unicode):
             # Likely that the JSON data is a simple list of strings
@@ -347,18 +351,41 @@ def update_project_info(project):
         except:
             project['github_details']['participation'] = [0] * 50
 
-        #
-        # Populate project needs from github_details[issues_url] (remove "{/number}")
-        #
-        project['github_details']['project_needs'] = []
-        url = all_github_attributes['issues_url'].replace('{/number}', '')
-        got = get(url, auth=github_auth, params=dict(labels='project-needs'))
+def get_issues():
+    '''
+        Get github issues associated to each Projects.
+    '''
+    issues = []
 
-        # Check if GitHub Issues are disabled
-        if all_github_attributes['has_issues']:
+    # Flush the current db session to save projects added in current run
+    db.session.flush()
+
+    # Get all projects not currently marked for deletion
+    projects = db.session.query(Project).filter(Project.keep == True).all()
+
+    # Populate issues for each project
+    for project in projects:
+        # Mark this projects issues for deletion
+        db.session.execute(db.update(Issue, values={'keep': False}).where(Issue.project_id == project.id))
+
+        # Get github issues api url
+        _, host, path, _, _, _ = urlparse(project.code_url)
+        issues_url = 'https://api.github.com/repos' + path + '/issues'
+
+        # Ping github's api for project issues
+        got = get(issues_url, auth=github_auth)
+
+        if not got.status_code in range(400,499):
+            # Save each issue in response
             for issue in got.json():
-                project_need = dict(title=issue['title'], issue_url=issue['html_url'])
-                project['github_details']['project_needs'].append(project_need)
+                # Type check the issue, we are expecting a dictionary
+                if type(issue) == type({}):
+                    issue_dict = dict(title=issue['title'], html_url=issue['html_url'],
+                                 labels=issue['labels'], body=issue['body'], project_id=project.id)
+                    issues.append(issue_dict)
+                else:
+                    logging.error('Issue for project %s is not a dictionary', project.name)
+    return issues
 
 def count_people_totals(all_projects):
     ''' Create a list of people details based on project details.
@@ -461,6 +488,33 @@ def save_project_info(session, proj_dict):
     session.flush()
 
     return existing_project
+
+def save_issue_info(session, issue_dict):
+    '''
+        Save a dictionary of issue ingo to the datastore session.
+        Return an app.Issue instance
+    '''
+    # Select the current issue, filtering on title AND project_name.
+    filter = Issue.title == issue_dict['title'], Issue.project_id == issue_dict['project_id']
+    existing_issue = session.query(Issue).filter(*filter).first()
+
+    # If this is a new issue, save and return it.
+    if not existing_issue:
+        new_issue = Issue(**issue_dict)
+        session.add(new_issue)
+        return new_issue
+
+    # Mark the existing issue for safekeeping.
+    existing_issue.keep = True
+
+    # Update existing issue details
+    for (field, value) in issue_dict.items():
+        setattr(existing_issue, field, value)
+
+    # Flush existing object, to prevent a sqlalchemy.orm.exc.StaleDataError.
+    session.flush()
+
+    return existing_issue
 
 def save_event_info(session, event_dict):
     '''
@@ -598,10 +652,17 @@ def main(org_name=None, minimum_age=3*3600):
             else:
                 logging.error("%s does not have a valid events url" % organization.name)
 
+        # Get issues for all of the projects
+        logging.info("Gathering all of %s's project's issues." % organization.name)
+        issues = get_issues()
+        for issue_info in issues:
+            save_issue_info(db.session, issue_info)
+
         # Remove everything marked for deletion.
         db.session.query(Event).filter(not Event.keep).delete()
         db.session.query(Story).filter(not Story.keep).delete()
         db.session.query(Project).filter(not Project.keep).delete()
+        db.session.query(Issue).filter(not Issue.keep).delete()
         db.session.query(Organization).filter(not Organization.keep).delete()
 
       except:

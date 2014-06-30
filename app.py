@@ -267,6 +267,9 @@ class Project(db.Model):
     organization = db.relationship('Organization')
     organization_name = db.Column(db.Unicode(), db.ForeignKey('organization.name'))
 
+    # Issue has cascade so issues are deleted with their parent projects
+    issues = db.relationship('Issue', cascade='save-update, delete')
+
     def __init__(self, name, code_url=None, link_url=None,
                  description=None, type=None, categories=None,
                  github_details=None, organization_name=None, keep=None):
@@ -298,7 +301,53 @@ class Project(db.Model):
         if include_organization:
             project_dict['organization'] = self.organization.asdict()
 
+        project_dict['issues'] = [o.asdict() for o in db.session.query(Issue).filter(Issue.project_id == project_dict['id']).all()]
+
         return project_dict
+
+class Issue(db.Model):
+    '''
+        Issues of Civic Tech Projects on Github
+    '''
+    # Columns
+    id = db.Column(db.Integer(), primary_key=True)
+    title = db.Column(db.Unicode())
+    html_url = db.Column(db.Unicode())
+    labels = db.Column(JsonType())
+    body = db.Column(db.Unicode())
+    keep = db.Column(db.Boolean())
+
+    # Relationships
+    project = db.relationship('Project')
+    project_id = db.Column(db.Integer(), db.ForeignKey('project.id'))
+
+    def __init__(self, title, project_id, html_url=None, labels=None, body=None):
+        self.title = title
+        self.html_url = html_url
+        self.labels = labels
+        self.body = body
+        self.project_id = project_id
+        self.keep = True
+
+    def api_url(self):
+        ''' API link to itself
+        '''
+        return '%s://%s/api/issues/%s' % (request.scheme, request.host, str(self.id))
+
+    def asdict(self, inclued_project=False):
+        '''
+            Return issue as a dictionary with some properties tweaked
+        '''
+        issue_dict = db.Model.asdict(self)
+
+        # TODO: Also paged_results assumes asdict takes this argument, should be checked and fixed later
+        if inclued_project:
+            issue_dict['project'] = db.session.query(Project).filter(Project.id == self.project_id).first().asdict()
+
+        del issue_dict['keep']
+        issue_dict['api_url'] = self.api_url()
+
+        return issue_dict
 
 class Event(db.Model):
     '''
@@ -573,6 +622,22 @@ def get_projects(id=None):
 
     # Get a bunch of projects.
     query = db.session.query(Project)
+    response = paged_results(query, int(request.args.get('page', 1)), 10)
+    return jsonify(response)
+
+@app.route('/api/issues/')
+@app.route('/api/issues/<int:id>/')
+def get_issues(id=None):
+    '''Regular response option for issues.
+    '''
+    if id:
+        # Get one issue
+        filter = Issue.id == id
+        issue = db.session.query(Issue).filter(filter).first()
+        return jsonify(issue.asdict())
+
+    # Get a bunch of issues
+    query = db.session.query(Issue)
     response = paged_results(query, int(request.args.get('page', 1)), 10)
     return jsonify(response)
 

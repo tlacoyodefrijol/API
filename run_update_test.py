@@ -61,7 +61,10 @@ class RunUpdateTestCase(unittest.TestCase):
         elif url.geturl() == 'https://api.github.com/repos/codeforamerica/cityvoice/stats/participation':
             return response(200, '''{ "all": [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 23, 9, 4, 0, 77, 26, 7, 17, 53, 59, 37, 40, 0, 47, 59, 55, 118, 11, 8, 3, 3, 30, 0, 1, 1, 4, 6, 1, 0, 0, 0, 0, 0, 0, 0, 0, 3, 1 ], "owner": [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] }''')
 
-        elif url.geturl() == 'https://api.github.com/repos/codeforamerica/cityvoice/issues?labels=project-needs':
+        elif url.geturl() == 'https://api.github.com/repos/codeforamerica/cityvoice/issues':
+            return response(200, '''[ ]''')
+
+        elif url.geturl() == 'https://api.github.com/repos/civic-project/issues':
             return response(200, '''[ ]''')
 
         elif url.geturl() == 'https://api.github.com/users/daguar':
@@ -281,6 +284,9 @@ class RunUpdateTestCase(unittest.TestCase):
                 return response(200, '''name,website,events_url,rss,projects_list_url\nCode for America,,,,http://example.com/cfa-projects.csv''')
 
             elif url.geturl() == 'https://api.github.com/repos/codeforamerica/cityvoice':
+                return response(404, '''Not Found!''')
+
+            elif url.geturl() == 'https://api.github.com/repos/codeforamerica/cityvoice/issues':
                 return response(404, '''Not Found!''')
 
             else:
