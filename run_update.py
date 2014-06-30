@@ -373,7 +373,7 @@ def get_issues():
         issues_url = 'https://api.github.com/repos' + path + '/issues'
 
         # Ping github's api for project issues
-        got = get(issues_url, auth=github_auth)
+        got = get_github_api(issues_url)
 
         if not got.status_code in range(400,499):
             # Save each issue in response
