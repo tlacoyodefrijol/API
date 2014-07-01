@@ -320,20 +320,18 @@ class Issue(db.Model):
     html_url = db.Column(db.Unicode())
     labels = db.Column(JsonType())
     body = db.Column(db.Unicode())
-    last_updated = db.Column(db.Unicode())
     keep = db.Column(db.Boolean())
 
     # Relationships
     project = db.relationship('Project')
     project_id = db.Column(db.Integer(), db.ForeignKey('project.id'))
 
-    def __init__(self, title, project_id, html_url=None, labels=None, body=None, last_updated=None):
+    def __init__(self, title, project_id, html_url=None, labels=None, body=None):
         self.title = title
         self.html_url = html_url
         self.labels = labels
         self.body = body
         self.project_id = project_id
-        self.last_updated = last_updated
         self.keep = True
 
     def api_url(self):
