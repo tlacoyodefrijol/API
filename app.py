@@ -343,6 +343,8 @@ class Issue(db.Model):
         # TODO: Also paged_results assumes asdict takes this argument, should be checked and fixed later
         if include_project:
             issue_dict['project'] = db.session.query(Project).filter(Project.id == self.project_id).first().asdict()
+            del issue_dict['project']['issues']
+            del issue_dict['project_id']
 
         del issue_dict['keep']
         issue_dict['api_url'] = self.api_url()
@@ -634,7 +636,7 @@ def get_issues(id=None):
         # Get one issue
         filter = Issue.id == id
         issue = db.session.query(Issue).filter(filter).first()
-        return jsonify(issue.asdict())
+        return jsonify(issue.asdict(True))
 
     # Get a bunch of issues
     query = db.session.query(Issue)

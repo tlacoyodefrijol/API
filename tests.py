@@ -416,12 +416,15 @@ class ApiTest(unittest.TestCase):
         self.assertTrue('project' in response['objects'][0])
         self.assertFalse('issues' in response['objects'][0])
 
+        #Check that project_id is hidden
+        self.assertTrue('project_id' not in response['objects'][0])
+
         # Check for linked project issues on single issue
         response = self.app.get('/api/issues/1', follow_redirects=True)
         self.assertEqual(response.status_code, 200)
         response = json.loads(response.data)
         self.assertTrue('project' in response)
-        self.assertFalse('issues' in response['project'])
+        self.assertTrue('issues' not in response['project'])
 
 if __name__ == '__main__':
     unittest.main()
