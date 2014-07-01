@@ -269,7 +269,8 @@
     "github_details": { … }, 
     "organization": { … }, 
     "organization_name": "Code for America", 
-    "type": "web service"
+    "type": "web service",
+    "issues": [ … ]
   },
   {
     "id": 2, 
@@ -323,6 +324,8 @@
                 <dd>String type.</dd>
                 <dt>github_details</dt>
                 <dd>Dictionary of Github-specific information, for projects hosted on Github.</dd>
+                <dt>issues</dt>
+                <dd>A list of project <a href="#api-issues">issues</a>.</dd>
             </dl>
         </div>
         <div class="half column">
@@ -360,6 +363,25 @@
     "updated_at": "2014-03-29T20:03:41Z", 
     "watchers_count": 14
   }
+  "issues": [
+    {
+    "id": 1,
+    "title": "Consider using Universal Analytics for Google Analytics",
+    "api_url": "http://codeforamerica.org/api/issues/193",
+    "body": "Google has officially released Universal Analytics about 2 months ago, …",
+    "html_url": "https://github.com/codeforamerica/cityvoice/issues/193",
+    "labels": [ 
+      {
+        "color": "84b6eb",
+        "name": "enhancement",
+        "url": "https://api.github.com/repos/codeforamerica/cityvoice/labels/enhancement"
+      }
+    ],
+    "project": { … },
+    "project_name": "cityvoice",
+    },
+    { … }
+  ]
 }</pre>
         </div>
     </div>
@@ -614,7 +636,7 @@
   {
     "id": 1,
     "title": "Write some tests",
-    "api_url": "http://localhost:5000/api/issues/2",
+    "api_url": "http://codeforamerica.org/api/issues/2",
     "body": "Start writing tests. ",
     "html_url": "https://github.com/sfbrigade/ballot_initiatives/issues/7",
     "labels": [ 
@@ -681,7 +703,7 @@
             <pre>{
   "id": 1,
   "title": "Write some tests",
-  "api_url": "http://localhost:5000/api/issues/2",
+  "api_url": "http://codeforamerica.org/api/issues/2",
   "body": "Start writing tests. ",
   "html_url": "https://github.com/sfbrigade/ballot_initiatives/issues/7",
   "labels": [ 
