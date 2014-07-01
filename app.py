@@ -334,14 +334,14 @@ class Issue(db.Model):
         '''
         return '%s://%s/api/issues/%s' % (request.scheme, request.host, str(self.id))
 
-    def asdict(self, inclued_project=False):
+    def asdict(self, include_project=False):
         '''
             Return issue as a dictionary with some properties tweaked
         '''
         issue_dict = db.Model.asdict(self)
 
         # TODO: Also paged_results assumes asdict takes this argument, should be checked and fixed later
-        if inclued_project:
+        if include_project:
             issue_dict['project'] = db.session.query(Project).filter(Project.id == self.project_id).first().asdict()
 
         del issue_dict['keep']
