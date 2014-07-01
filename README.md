@@ -40,12 +40,13 @@ See the full documentation at http://codeforamerica.org/api
 			categories: null,
 			code_url: "https://github.com/sfbrigade/open_ballot",
 			description: "An educational tool around ballot measures",
-			github_details: {},
+			github_details: {...},
 			id: 216,
 			link_url: null,
 			name: "open_ballot",
 			organization_name: "Code for San Francisco",
-			type: null
+			type: null,
+			issues:[...]
 		},
 		...
 	],
