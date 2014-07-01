@@ -389,9 +389,16 @@ def get_issues():
         issues_url = 'https://api.github.com/repos' + path + '/issues'
 
         # Ping github's api for project issues
-        got = get_github_api(issues_url)
+        got = get_github_api(issues_url, headers={'If-None-Match': project.last_updated_issues})
 
-        if not got.status_code in range(400,499):
+        # Verify if content has not been modified since last run
+        if got.status_code == 304:
+            logging.info('Issues %s have not changed since last update', issues_url)
+            return issues
+        elif not got.status_code in range(400,499):
+            # Update project's last_updated_issue field
+            project.last_updated_issues = got.headers['ETag']
+            db.session.add(project)
             # Save each issue in response
             for issue in got.json():
                 # Type check the issue, we are expecting a dictionary

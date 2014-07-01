@@ -262,6 +262,7 @@ class Project(db.Model):
     categories = db.Column(db.Unicode())
     github_details = db.Column(JsonType())
     last_updated = db.Column(db.Unicode())
+    last_updated_issues = db.Column(db.Unicode())
     keep = db.Column(db.Boolean())
 
     # Relationships
@@ -273,7 +274,8 @@ class Project(db.Model):
 
     def __init__(self, name, code_url=None, link_url=None,
                  description=None, type=None, categories=None,
-                 github_details=None, last_updated=None, organization_name=None, keep=None):
+                 github_details=None, last_updated=None, last_updated_issues=None,
+                 organization_name=None, keep=None):
         self.name = name
         self.code_url = code_url
         self.link_url = link_url
@@ -282,6 +284,7 @@ class Project(db.Model):
         self.categories = categories
         self.github_details = github_details
         self.last_updated = last_updated
+        self.last_updated_issues = last_updated_issues
         self.organization_name = organization_name
         self.keep = True
 
