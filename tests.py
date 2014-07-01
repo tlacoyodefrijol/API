@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from urlparse import urlparse
 
 from app import app, db
-from factories import OrganizationFactory, ProjectFactory, EventFactory, StoryFactory
+from factories import OrganizationFactory, ProjectFactory, EventFactory, StoryFactory, IssueFactory
 
 class ApiTest(unittest.TestCase):
 
@@ -388,6 +388,40 @@ class ApiTest(unittest.TestCase):
         self.assertEqual(response['total'], 2)
         self.assertEqual(response['objects'][0]['name'], 'Christmas Eve')
         self.assertEqual(response['objects'][1]['name'], 'Thanksgiving')
+
+    def test_issues(self):
+        '''
+        Test that issues have everything we expect.
+        Make sure linked issues are not included in the linked project
+        '''
+        organization = OrganizationFactory()
+        db.session.add(organization)
+        db.session.commit()
+        project = ProjectFactory(organization_name=organization.name)
+        db.session.add(project)
+        db.session.commit()
+        issue = IssueFactory(project_id=project.id)
+        db.session.add(issue)
+        db.session.commit()
+
+        response = self.app.get('/api/issues', follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+
+        self.assertEqual(response['total'], 1)
+        self.assertEqual(response['objects'][0]['title'], 'Civic Issue 1')
+        self.assertEqual(response['objects'][0]['body'], 'Civic Issue blah blah blah 1')
+        
+        # Check for linked issues in linked project
+        self.assertTrue('project' in response['objects'][0])
+        self.assertFalse('issues' in response['objects'][0])
+
+        # Check for linked project issues on single issue
+        response = self.app.get('/api/issues/1', follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+        self.assertTrue('project' in response)
+        self.assertFalse('issues' in response['project'])
 
 if __name__ == '__main__':
     unittest.main()

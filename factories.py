@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 
 import factory
-from app import Organization, Project, Event, Story, db
+from app import Organization, Project, Event, Story, db, Issue
 from factory.alchemy import SQLAlchemyModelFactory
 from sqlalchemy.orm import scoped_session, sessionmaker
 from random import choice
@@ -60,3 +60,19 @@ class StoryFactory(SQLAlchemyModelFactory):
     link = 'http://www.codeforamerica.org/blog/2014/03/19/thanks-again-for-your-support-esri/'
     type = "blog"
     organization_name = factory.LazyAttribute(lambda e: OrganizationFactory().name)
+
+class IssueFactory(SQLAlchemyModelFactory):
+    FACTORY_FOR = Issue
+    FACTORY_SESSION = db.session
+
+    title = factory.Sequence(lambda n: 'Civic Issue {0}'.format(n))
+    html_url = factory.Sequence(lambda n: 'http://www.github.com/codeforamerica/cfapi/issues/{0}'.format(n))
+    labels = [
+        {
+          "color": "84b6eb",
+          "name": "enhancement",
+          "url": "https://api.github.com/repos/codeforamerica/cfapi/labels/enhancement"
+        }
+      ]
+    body = factory.Sequence(lambda n: 'Civic Issue blah blah blah {0}'.format(n))
+    project_id = 1
