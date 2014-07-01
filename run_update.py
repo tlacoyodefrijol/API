@@ -44,13 +44,13 @@ else:
 
 github_throttling = False
 
-def get_github_api(url):
+def get_github_api(url, headers=None):
     '''
         Make authenticated GitHub requests.
     '''
     logging.info('Asking Github for ' + url)
 
-    got = get(url, auth=github_auth)
+    got = get(url, auth=github_auth, headers=headers)
 
     return got
 
@@ -277,7 +277,13 @@ def update_project_info(project):
         if github_throttling:
             return project
 
-        got = get_github_api(repo_url)
+        previous_project = db.session.query(Project).filter(Project.code_url == project['code_url']).first()
+        if previous_project:
+            last_updated = previous_project.last_updated
+            got = get_github_api(repo_url, headers={"If-Modified-Since": last_updated})
+        else:
+            got = get_github_api(repo_url)
+
         if got.status_code in range(400, 499):
             if got.status_code == 404:
                 logging.error(repo_url + ' doesn\'t exist.')
@@ -295,6 +301,13 @@ def update_project_info(project):
                 return project
             else:
               raise IOError
+        # If project has not been modified, return
+        elif got.status_code == 304:
+            logging.info('Project %s has not been modified since last update', repo_url)
+            return project
+
+        # Save last_updated time header for future requests
+        project['last_updated'] = got.headers['Last-Modified']
 
         all_github_attributes = got.json()
         github_details = {}
