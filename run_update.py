@@ -180,11 +180,11 @@ def get_projects(organization):
 
     if host in ('www.github.com', 'github.com') and matched:
         projects_url = 'https://api.github.com/users/%s/repos' % matched.group('name')
+        response = get_github_api(projects_url)
     else:
         projects_url = organization.projects_list_url
-
-    logging.info('Asking for ' + projects_url)
-    response = get(projects_url)
+        logging.info('Asking for ' + projects_url)
+        response = get(projects_url)
 
     try:
         data = get_adjoined_json_lists(response)
