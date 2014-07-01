@@ -37,7 +37,10 @@ if 'GITHUB_TOKEN' in os.environ:
 else:
     github_auth = None
 
-meetup_key = os.environ['MEETUP_KEY']
+if 'MEETUP_KEY' in os.environ:
+    meetup_key = os.environ['MEETUP_KEY']
+else:
+    meetup_key = None
 
 github_throttling = False
 
@@ -644,13 +647,16 @@ def main(org_name=None, minimum_age=3*3600):
                 save_project_info(db.session, proj_info)
 
         if organization.events_url:
-            logging.info("Gathering all of %s's events." % organization.name)
-            identifier = get_event_group_identifier(organization.events_url)
-            if identifier:
-                for event in get_meetup_events(organization, identifier):
-                    save_event_info(db.session, event)
+            if not meetup_key:
+                logging.error("No Meetup.com key set.")
             else:
-                logging.error("%s does not have a valid events url" % organization.name)
+                logging.info("Gathering all of %s's events." % organization.name)
+                identifier = get_event_group_identifier(organization.events_url)
+                if identifier:
+                    for event in get_meetup_events(organization, identifier):
+                        save_event_info(db.session, event)
+                else:
+                    logging.error("%s does not have a valid events url" % organization.name)
 
         # Get issues for all of the projects
         logging.info("Gathering all of %s's project's issues." % organization.name)

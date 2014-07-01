@@ -690,7 +690,10 @@ def well_known_status():
     else:
         github_auth = None
 
-    meetup_key = os.environ['MEETUP_KEY']
+    if 'MEETUP_KEY' in os.environ:
+        meetup_key = os.environ['MEETUP_KEY']
+    else:
+        meetup_key = None
 
     try:
         org = db.session.query(Organization).order_by(Organization.last_updated).limit(1).first()
@@ -699,8 +702,10 @@ def well_known_status():
         remaining_github = rate_limit.json()['resources']['core']['remaining']
         recent_error = db.session.query(Error).order_by(desc(Error.time)).limit(1).first()
 
-        meetup_url = 'https://api.meetup.com/status?format=json&key='+meetup_key
-        meetup_status = requests.get(meetup_url).json().get('status')
+        meetup_status = "No Meetup key set"
+        if meetup_key:
+            meetup_url = 'https://api.meetup.com/status?format=json&key='+meetup_key
+            meetup_status = requests.get(meetup_url).json().get('status')
 
         time_since_updated = time.time() - getattr(org, 'last_updated', -1)
 
