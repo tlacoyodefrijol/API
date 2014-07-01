@@ -261,6 +261,7 @@ class Project(db.Model):
     type = db.Column(db.Unicode())
     categories = db.Column(db.Unicode())
     github_details = db.Column(JsonType())
+    last_updated = db.Column(db.Unicode())
     keep = db.Column(db.Boolean())
 
     # Relationships
@@ -272,7 +273,7 @@ class Project(db.Model):
 
     def __init__(self, name, code_url=None, link_url=None,
                  description=None, type=None, categories=None,
-                 github_details=None, organization_name=None, keep=None):
+                 github_details=None, last_updated=None, organization_name=None, keep=None):
         self.name = name
         self.code_url = code_url
         self.link_url = link_url
@@ -280,6 +281,7 @@ class Project(db.Model):
         self.type = type
         self.categories = categories
         self.github_details = github_details
+        self.last_updated = last_updated
         self.organization_name = organization_name
         self.keep = True
 
@@ -315,18 +317,20 @@ class Issue(db.Model):
     html_url = db.Column(db.Unicode())
     labels = db.Column(JsonType())
     body = db.Column(db.Unicode())
+    last_updated = db.Column(db.Unicode())
     keep = db.Column(db.Boolean())
 
     # Relationships
     project = db.relationship('Project')
     project_id = db.Column(db.Integer(), db.ForeignKey('project.id'))
 
-    def __init__(self, title, project_id, html_url=None, labels=None, body=None):
+    def __init__(self, title, project_id, html_url=None, labels=None, body=None, last_updated=None):
         self.title = title
         self.html_url = html_url
         self.labels = labels
         self.body = body
         self.project_id = project_id
+        self.last_updated = last_updated
         self.keep = True
 
     def api_url(self):
