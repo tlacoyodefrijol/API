@@ -367,7 +367,7 @@ def update_project_info(project):
         except:
             project['github_details']['participation'] = [0] * 50
 
-def get_issues():
+def get_issues(org_name):
     '''
         Get github issues associated to each Projects.
     '''
@@ -394,7 +394,7 @@ def get_issues():
         # Verify if content has not been modified since last run
         if got.status_code == 304:
             logging.info('Issues %s have not changed since last update', issues_url)
-            
+
         elif not got.status_code in range(400,499):
             # Update project's last_updated_issue field
             project.last_updated_issues = got.headers['ETag']
@@ -680,7 +680,7 @@ def main(org_name=None, minimum_age=3*3600):
 
         # Get issues for all of the projects
         logging.info("Gathering all of %s's project's issues." % organization.name)
-        issues = get_issues()
+        issues = get_issues(organization.name)
         for issue_info in issues:
             save_issue_info(db.session, issue_info)
 
