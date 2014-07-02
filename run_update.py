@@ -376,8 +376,8 @@ def get_issues():
     # Flush the current db session to save projects added in current run
     db.session.flush()
 
-    # Get all projects not currently marked for deletion
-    projects = db.session.query(Project).filter(Project.keep == True).all()
+    # Only grab this organizations projects
+    projects = db.session.query(Project).filter(Project.organization_name == org_name).all()
 
     # Populate issues for each project
     for project in projects:
@@ -394,7 +394,7 @@ def get_issues():
         # Verify if content has not been modified since last run
         if got.status_code == 304:
             logging.info('Issues %s have not changed since last update', issues_url)
-            return issues
+            
         elif not got.status_code in range(400,499):
             # Update project's last_updated_issue field
             project.last_updated_issues = got.headers['ETag']
