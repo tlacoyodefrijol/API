@@ -509,6 +509,10 @@ def raw_name(name):
 def get_organizations(name=None):
     ''' Regular response option for organizations.
     '''
+
+    filters = request.args
+    print filters
+
     if name:
         # Get one named organization.
         filter = Organization.name == raw_name(name)
@@ -517,6 +521,8 @@ def get_organizations(name=None):
 
     # Get a bunch of organizations.
     query = db.session.query(Organization)
+    for attr, value in filters.iteritems():
+        query = query.filter(getattr(Organization, attr) == value)
     response = paged_results(query, int(request.args.get('page', 1)), 10)
     return jsonify(response)
 
