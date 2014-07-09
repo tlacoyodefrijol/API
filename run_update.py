@@ -247,14 +247,13 @@ def get_projects(organization):
         else:
             projects = []
 
+    projects = [update_project_info(proj) for proj in projects]
+
+    # Filter out projects that have not been updated
     new_projects = []
-
     for proj in projects:
-        proj_info = update_project_info(proj)
-        if proj_info:
-            new_projects.append(proj_info)
-
-    print new_projects
+        if proj is not None:
+            new_projects.append(proj)
 
     return new_projects
 
@@ -373,6 +372,7 @@ def update_project_info(project):
             project['github_details']['participation'] = got.json()['all']
         except:
             project['github_details']['participation'] = [0] * 50
+    return project
 
 def get_issues(org_name):
     '''
