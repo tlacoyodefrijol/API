@@ -18,6 +18,7 @@ from mimetypes import guess_type
 from copy import deepcopy
 from os.path import join
 from math import ceil
+from urllib import urlencode
 
 # -------------------
 # Init
@@ -455,7 +456,7 @@ def page_info(query, page, limit):
 
     return last, offset
 
-def pages_dict(page, last):
+def pages_dict(page, last, querystring):
     ''' Return a dictionary of pages to return in API responses.
     '''
     url = '%s://%s%s' % (request.scheme, request.host, request.path)
@@ -468,22 +469,22 @@ def pages_dict(page, last):
     if page == 2:
         pages['prev'] = url
     elif page > 2:
-        pages['prev'] = '%s?page=%d' % (url, page - 1)
+        pages['prev'] = '%s?page=%d&%s' % (url, page - 1, querystring)
 
     if page < last:
-        pages['next'] = '%s?page=%d' % (url, page + 1)
-        pages['last'] = '%s?page=%d' % (url, last)
+        pages['next'] = '%s?page=%d&%s' % (url, page + 1, querystring)
+        pages['last'] = '%s?page=%d&%s' % (url, last, querystring)
 
     return pages
 
-def paged_results(query, page, per_page):
+def paged_results(query, page, per_page, querystring):
     '''
     '''
     total = query.count()
     last, offset = page_info(query, page, per_page)
     model_dicts = [o.asdict(True) for o in query.limit(per_page).offset(offset)]
 
-    return dict(total=total, pages=pages_dict(page, last), objects=model_dicts)
+    return dict(total=total, pages=pages_dict(page, last, querystring), objects=model_dicts)
 
 def is_safe_name(name):
     ''' Return True if the string is a safe name.
@@ -511,7 +512,7 @@ def get_organizations(name=None):
     '''
 
     filters = request.args
-    print filters
+    querstring = urlencode(filters)
 
     if name:
         # Get one named organization.
@@ -523,7 +524,7 @@ def get_organizations(name=None):
     query = db.session.query(Organization)
     for attr, value in filters.iteritems():
         query = query.filter(getattr(Organization, attr) == value)
-    response = paged_results(query, int(request.args.get('page', 1)), 10)
+    response = paged_results(query, int(request.args.get('page', 1)), 10, querystring)
     return jsonify(response)
 
 @app.route('/api/organizations.geojson')
@@ -627,6 +628,10 @@ def get_orgs_projects(organization_name):
 def get_projects(id=None):
     ''' Regular response option for projects.
     '''
+
+    filters = request.args
+    querystring = urlencode(filters)
+
     if id:
         # Get one named project.
         filter = Project.id == id
@@ -635,7 +640,10 @@ def get_projects(id=None):
 
     # Get a bunch of projects.
     query = db.session.query(Project)
-    response = paged_results(query, int(request.args.get('page', 1)), 10)
+    for attr, value in filters.iteritems():
+        if attr != 'page':
+            query = query.filter(getattr(Project, attr) == value)
+    response = paged_results(query, int(request.args.get('page', 1)), 10, querystring)
     return jsonify(response)
 
 @app.route('/api/issues/')
