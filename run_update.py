@@ -247,9 +247,16 @@ def get_projects(organization):
         else:
             projects = []
 
-    map(update_project_info, projects)
+    new_projects = []
 
-    return projects
+    for proj in projects:
+        proj_info = update_project_info(proj)
+        if proj_info:
+            new_projects.append(proj_info)
+
+    print new_projects
+
+    return new_projects
 
 def update_project_info(project):
     ''' Update info from Github, if it's missing.
@@ -304,7 +311,7 @@ def update_project_info(project):
         # If project has not been modified, return
         elif got.status_code == 304:
             logging.info('Project %s has not been modified since last update', repo_url)
-            return project
+            return None
 
         # Save last_updated time header for future requests
         project['last_updated'] = got.headers['Last-Modified']
