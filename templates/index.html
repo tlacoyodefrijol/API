@@ -398,6 +398,7 @@
             <h4>Endpoints</h4>
             <p>
                 /api/events <br>
+                /api/events/upcoming_events <br/>
                 /api/organization/{organization id}/events <br>
                 /api/organization/{organization id}/events/upcoming_events <br>
                 /api/organization/{organization id}/events/past_events
@@ -408,7 +409,14 @@
                 <dd>Dictionary of pagination links, optionally including <i>first</i>, <i>prev</i>, <i>next</i>, and <i>last</i>.</dd>
                 <dt>objects</dt>
                 <dd>List of <a href="#event-properties">individual events</a>.</dd>
+                <dt>total</dt>
+                <dd>The total count of objects.</dd>
             </dl>
+            <h4>Event filters</h4>
+            <dt>upcoming_events</dt>
+            <dd>Only returns events happeining in the future.</dd>
+            <dt>past_events</dt>
+            <dd>Only returns events that have already happened.</dd>
         </div>
         <div class="half column">
             <h4>Sample Request</h4>
