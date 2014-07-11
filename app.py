@@ -664,11 +664,13 @@ def get_events(id=None):
     response = paged_results(query, int(request.args.get('page', 1)), 25)
     return jsonify(response)
 
+@app.route('/api/events/upcoming_events')
 @app.route('/api/events/upcoming_events/<filter>')
 def get_all_upcoming_events(filter=None):
     ''' Show all upcoming events.
+        Return them in chronological order.
     '''
-    query = Event.query.filter(Event.start_time_notz >= datetime.utcnow())
+    query = Event.query.filter(Event.start_time_notz >= datetime.utcnow()).order_by(Event.start_time_notz)
     if filter == 'all':
         response = paged_results(query, int(request.args.get('page', 1)), 10000000)
         del response['pages']
@@ -677,7 +679,7 @@ def get_all_upcoming_events(filter=None):
         response = paged_results(query, int(request.args.get('page', 1)), 25)
         return jsonify(response)
     else:
-        return make_response("We haven't added /"+filter+"yet.", 404)
+        return make_response("We haven't added /"+filter+" yet.", 404)
 
 @app.route('/api/stories')
 @app.route('/api/stories/<int:id>')
