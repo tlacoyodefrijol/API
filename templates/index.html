@@ -31,6 +31,10 @@
     <li><a href="#api-stories">Stories</a></li>
     <li><a href="#api-issues">Issues</a></li>
     </ul>
+    <p>Parameters:</p>
+    <ul>
+        <li><a href="#per_page">per_page</a></li>
+    </ul>
 
     <h3>
         Organizations
@@ -723,6 +727,36 @@
   ],
   "project": { … },
   "project_name": "ballot_initiatives",
+}</pre>
+        </div>
+    </div>
+
+    <div class="clearfix">
+        <div class="half column">
+            <h3>
+                Parameters
+            </h3>
+            <dl>
+                <dt>
+                    per_page
+                    <a id="per_page" href="#per_page">¶</a>
+                </dt>
+                <dd>The number of features to return on each page.</dd>
+            </dl>
+        </div>
+        <div class="half column">
+            <h4>Sample Request</h4>
+            <p><code><a href="{{ api_base }}/api/organizations?per_page=1">{{ api_base }}/api/organizations?per_page=1</a></code></p>
+            <p>Notice 12 pages each returning one feature each.</p>
+            <pre>{
+  "objects": [
+     ...
+  ], 
+  "pages": {
+    "last": "http://localhost:5000/api/organizations?page=12", 
+    "next": "http://localhost:5000/api/organizations?page=2"
+  }, 
+  "total": 12
 }</pre>
         </div>
     </div>
