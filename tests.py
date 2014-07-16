@@ -200,6 +200,17 @@ class ApiTest(unittest.TestCase):
         assert isinstance(response['objects'][0]['organization_name'], unicode)
         assert isinstance(response['objects'][0]['type'], unicode)
 
+    def test_pagination(self):
+        ProjectFactory()
+        ProjectFactory()
+        ProjectFactory()
+        db.session.flush()
+
+        response = self.app.get('/api/projects?per_page=2')
+        response = json.loads(response.data)
+        assert isinstance(response, dict)
+        self.assertEqual(len(response['objects']), 2)
+
     def test_good_orgs_projects(self):
         organization = OrganizationFactory(name="Code for America")
         project = ProjectFactory(organization_name="Code for America")
@@ -456,7 +467,7 @@ class ApiTest(unittest.TestCase):
         self.assertEqual(response['total'], 1)
         self.assertEqual(response['objects'][0]['title'], 'Civic Issue 1')
         self.assertEqual(response['objects'][0]['body'], 'Civic Issue blah blah blah 1')
-        
+
         # Check for linked issues in linked project
         self.assertTrue('project' in response['objects'][0])
         self.assertFalse('issues' in response['objects'][0])

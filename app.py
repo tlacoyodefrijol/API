@@ -517,7 +517,7 @@ def get_organizations(name=None):
 
     # Get a bunch of organizations.
     query = db.session.query(Organization)
-    response = paged_results(query, int(request.args.get('page', 1)), 10)
+    response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)))
     return jsonify(response)
 
 @app.route('/api/organizations.geojson')
@@ -554,7 +554,7 @@ def get_orgs_events(organization_name):
 
     # Get event objects
     query = Event.query.filter_by(organization_name=organization.name)
-    response = paged_results(query, int(request.args.get('page', 1)), 25)
+    response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 25)))
     return jsonify(response)
 
 @app.route("/api/organizations/<organization_name>/upcoming_events")
@@ -568,7 +568,7 @@ def get_upcoming_events(organization_name):
         return "Organization not found", 404
     # Get upcoming event objects
     query = Event.query.filter(Event.organization_name == organization.name, Event.start_time_notz >= datetime.utcnow())
-    response = paged_results(query, int(request.args.get('page', 1)), 25)
+    response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 25)))
     return jsonify(response)
 
 @app.route("/api/organizations/<organization_name>/past_events")
@@ -583,7 +583,7 @@ def get_past_events(organization_name):
     # Get past event objects
     query = Event.query.filter(Event.organization_name == organization.name, Event.start_time_notz < datetime.utcnow()).\
             order_by(desc(Event.start_time_notz))
-    response = paged_results(query, int(request.args.get('page', 1)), 25)
+    response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 25)))
     return jsonify(response)
 
 @app.route("/api/organizations/<organization_name>/stories")
@@ -598,7 +598,7 @@ def get_orgs_stories(organization_name):
 
     # Get story objects
     query = Story.query.filter_by(organization_name=organization.name)
-    response = paged_results(query, int(request.args.get('page', 1)), 25)
+    response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 25)))
     return jsonify(response)
 
 @app.route("/api/organizations/<organization_name>/projects")
@@ -613,7 +613,7 @@ def get_orgs_projects(organization_name):
 
     # Get project objects
     query = Project.query.filter_by(organization_name=organization.name)
-    response = paged_results(query, int(request.args.get('page', 1)), 10)
+    response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)))
     return jsonify(response)
 
 @app.route('/api/projects')
@@ -629,7 +629,7 @@ def get_projects(id=None):
 
     # Get a bunch of projects.
     query = db.session.query(Project)
-    response = paged_results(query, int(request.args.get('page', 1)), 10)
+    response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)))
     return jsonify(response)
 
 @app.route('/api/issues/')
@@ -645,7 +645,7 @@ def get_issues(id=None):
 
     # Get a bunch of issues
     query = db.session.query(Issue)
-    response = paged_results(query, int(request.args.get('page', 1)), 10)
+    response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)))
     return jsonify(response)
 
 @app.route('/api/events')
@@ -661,7 +661,7 @@ def get_events(id=None):
 
     # Get a bunch of events.
     query = db.session.query(Event)
-    response = paged_results(query, int(request.args.get('page', 1)), 25)
+    response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 25)))
     return jsonify(response)
 
 @app.route('/api/events/upcoming_events')
@@ -672,11 +672,11 @@ def get_all_upcoming_events(filter=None):
     '''
     query = Event.query.filter(Event.start_time_notz >= datetime.utcnow()).order_by(Event.start_time_notz)
     if filter == 'all':
-        response = paged_results(query, int(request.args.get('page', 1)), 10000000)
+        response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10000000)))
         del response['pages']
         return jsonify(response)
     if not filter:
-        response = paged_results(query, int(request.args.get('page', 1)), 25)
+        response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 25)))
         return jsonify(response)
     else:
         return make_response("We haven't added /"+filter+" yet.", 404)
@@ -694,7 +694,7 @@ def get_stories(id=None):
 
     # Get a bunch of stories.
     query = db.session.query(Story)
-    response = paged_results(query, int(request.args.get('page', 1)), 25)
+    response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 25)))
     return jsonify(response)
 
 # -------------------
