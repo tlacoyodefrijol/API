@@ -210,6 +210,10 @@ class ApiTest(unittest.TestCase):
         response = json.loads(response.data)
         assert isinstance(response, dict)
         self.assertEqual(len(response['objects']), 2)
+        self.assertEqual(response['pages']['next'], 'http://localhost/api/projects?per_page=2&page=2')
+        self.assertEqual(response['pages']['last'], 'http://localhost/api/projects?per_page=2&page=2')
+        self.assertNotIn('first', response['pages'])
+        self.assertNotIn('prev', response['pages'])
 
     def test_good_orgs_projects(self):
         organization = OrganizationFactory(name="Code for America")

@@ -18,6 +18,7 @@ from mimetypes import guess_type
 from copy import deepcopy
 from os.path import join
 from math import ceil
+from urllib import urlencode
 
 # -------------------
 # Init
@@ -463,16 +464,24 @@ def pages_dict(page, last):
     pages = dict()
 
     if page > 1:
-        pages['first'] = url
+        pages['first'] = dict()
+        pages['prev'] = dict()
+        if 'per_page' in request.args:
+            pages['first']['per_page'] = request.args['per_page']
+            pages['prev']['per_page'] = request.args['per_page']
 
-    if page == 2:
-        pages['prev'] = url
-    elif page > 2:
-        pages['prev'] = '%s?page=%d' % (url, page - 1)
+    if page > 2:
+        pages['prev']['page'] = page - 1
 
     if page < last:
-        pages['next'] = '%s?page=%d' % (url, page + 1)
-        pages['last'] = '%s?page=%d' % (url, last)
+        pages['next'] = {'page': page + 1}
+        pages['last'] = {'page': last}
+        if 'per_page' in request.args:
+            pages['next']['per_page'] = request.args['per_page']
+            pages['last']['per_page'] = request.args['per_page']
+
+    for key in pages:
+        pages[key] = '%s?%s' % (url, urlencode(pages[key])) if pages[key] else url
 
     return pages
 
