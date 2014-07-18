@@ -481,11 +481,11 @@ def pages_dict(page, last, querystring):
             pages['last']['per_page'] = request.args['per_page']
 
     for key in pages:
-        pages[key] = '%s?%s&%s' % (url, urlencode(pages[key]), querystring) if pages[key] else url
+        pages[key] = '%s?%s%s' % (url, urlencode(pages[key]), querystring) if pages[key] else url
 
     return pages
 
-def paged_results(query, page, per_page, querystring):
+def paged_results(query, page, per_page, querystring=''):
     '''
     '''
     total = query.count()
@@ -513,6 +513,13 @@ def raw_name(name):
     '''
     return name.replace('_', ' ').replace('-', ' ')
 
+def get_query_params(args):
+    filters = {}
+    for key,value in args.iteritems():
+        if 'page' not in key: 
+            filters[key] = value
+    return filters, urlencode(filters)
+
 @app.route('/api/organizations')
 @app.route('/api/organizations/<name>')
 def get_organizations(name=None):
@@ -520,7 +527,7 @@ def get_organizations(name=None):
     '''
 
     filters = request.args
-    querstring = urlencode(filters)
+    filters, querystring = get_query_params(request.args)
 
     if name:
         # Get one named organization.
@@ -532,8 +539,7 @@ def get_organizations(name=None):
     query = db.session.query(Organization)
 
     for attr, value in filters.iteritems():
-        if not 'page' in attr:
-            query = query.filter(getattr(Organization, attr) == value)
+        query = query.filter(getattr(Organization, attr) == value)
 
     response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)), querystring)
 
@@ -641,8 +647,7 @@ def get_projects(id=None):
     ''' Regular response option for projects.
     '''
 
-    filters = request.args
-    querystring = urlencode(filters)
+    filters, querystring = get_query_params(request.args)
 
     if id:
         # Get one named project.
@@ -654,8 +659,7 @@ def get_projects(id=None):
     query = db.session.query(Project)
 
     for attr, value in filters.iteritems():
-        if not 'page' in attr:
-            query = query.filter(getattr(Project, attr) == value)
+        query = query.filter(getattr(Project, attr) == value)
 
     response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)), querystring)
 
