@@ -324,8 +324,8 @@ class Issue(db.Model):
     keep = db.Column(db.Boolean())
 
     # Relationships
-    project = db.relationship('Project')
-    project_id = db.Column(db.Integer(), db.ForeignKey('project.id'))
+    project = db.relationship('Project', single_parent=True, cascade='all, delete-orphan')
+    project_id = db.Column(db.Integer(), db.ForeignKey('project.id', ondelete='CASCADE'))
 
     def __init__(self, title, project_id, html_url=None, labels=None, body=None):
         self.title = title
