@@ -124,15 +124,8 @@ class Organization(db.Model):
         all_projects = Project.query.filter_by(organization_name=self.name).all()
         all_projects_json = [project.asdict() for project in all_projects]
 
-        # If its a non GitHub project, don't show it as a most recent project.
-        # We don't have a good way to test dates of updates to non GitHub projects yet.
-        github_projects_only = []
-        for project in all_projects_json:
-            if project['github_details']:
-                github_projects_only.append(project)
-
-        github_projects_only.sort(key=lambda k: k['github_details']['updated_at'], reverse=True)
-        current_projects = github_projects_only[0:3]
+        all_projects_json.sort(key=lambda k: k['last_updated'], reverse=True)
+        current_projects = all_projects_json[0:3]
         return current_projects
 
     def current_stories(self):
