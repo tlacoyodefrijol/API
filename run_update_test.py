@@ -531,6 +531,30 @@ class RunUpdateTestCase(unittest.TestCase):
             self.assertEqual(projects[0]['description'], 'Web application to aggregate tasks across projects that are identified for "hacking".')
 
 
+    def test_non_github_projects(self):
+        ''' Test that non github and non code projects get last_updated timestamps.
+        '''
+        from factories import OrganizationFactory
+        whatever = OrganizationFactory(name='Whatever')
+        gdocs = OrganizationFactory(projects_list_url="http://www.gdocs.com")
+
+        def response_content(url, request):
+            if url.netloc == 'www.civicorganization5.com':
+                return response(200, '''"name","description","link_url","code_url","type","categories"\r\n"OpenPhillyGlobe","\\"Google Earth for Philadelphia\\" with open source and open transit data.","http://cesium.agi.com/OpenPhillyGlobe/","http://google.com","",""''')
+            if url.netloc == 'www.gdocs.com':
+                return response(200, '''name,description,link_url,code_url,type,categories\nHack Task Aggregator,"Web application to aggregate tasks across projects that are identified for ""hacking"".",,,web service,"project management, civic hacking"''')
+
+        
+        with HTTMock(response_content):
+            import run_update
+            projects = run_update.get_projects(whatever)
+            self.assertEqual(projects[0]['name'], "OpenPhillyGlobe")
+            self.assertEqual(projects[0]['last_updated'], datetime.datetime.now().strftime("%a, %d %b %Y %H:%M:%S %Z"))
+            print projects[0]['last_updated']
+
+            projects = run_update.get_projects(gdocs)
+            self.assertEqual(projects[0]['name'], "Hack Task Aggregator")
+            self.assertEqual(projects[0]['last_updated'], datetime.datetime.now().strftime("%a, %d %b %Y %H:%M:%S %Z"))
 
 if __name__ == '__main__':
     unittest.main()
