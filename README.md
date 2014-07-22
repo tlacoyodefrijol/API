@@ -91,7 +91,9 @@ This repository is forked from [Open City's Civic Json Worker](https://github.co
 ### How to add your Brigade to the API
 
 ##### Brigade Information
-The new site will be powered by this [Brigade Information](https://docs.google.com/spreadsheet/ccc?key=0ArHmv-6U1drqdGNCLWV5Q0d5YmllUzE5WGlUY3hhT2c&usp=sharing) Google Spreadsheet. This way you don't need yet another account for our Brigade site. Just keep your Brigade's info up to date and you're good. The columns are:
+The new site will be powered by this [Brigade Information](https://docs.google.com/spreadsheet/ccc?key=0ArHmv-6U1drqdGNCLWV5Q0d5YmllUzE5WGlUY3hhT2c&usp=sharing) Google Spreadsheet. This way you don't need yet another account for our Brigade site. Just keep your Brigade's info up to date and you're good. Email andrewh@codeforamerica.org if you want permission to add and edit groups. 
+
+The columns are:
 * Name
 * Website
 * Events Url - Point us to where ever you schedule your events. Only Meetup.com events are working right now.
