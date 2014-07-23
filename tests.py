@@ -517,9 +517,12 @@ class ApiTest(unittest.TestCase):
         '''
         Test that project query params work as expected.
         '''
+        brigade_somewhere_far = OrganizationFactory(name="Brigade Organization", type="Brigade, Code for All")
         web_project = ProjectFactory(name="Random Web App", type="web service")
         other_web_project = ProjectFactory(name="Random Web App 2", type="web service", description="Another")
         non_web_project = ProjectFactory(name="Random Other App", type="other service")
+
+        non_web_project.organization =  brigade_somewhere_far
 
         db.session.add(web_project)
         db.session.add(non_web_project)
@@ -539,6 +542,11 @@ class ApiTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         response = json.loads(response.data)
         self.assertEqual(response['total'], 0)
+
+        response = self.app.get('/api/projects?organization_type=Code+for+All', follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+        self.assertEqual(response['total'], 1)
 
 if __name__ == '__main__':
     unittest.main()

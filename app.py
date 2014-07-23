@@ -542,7 +542,7 @@ def get_organizations(name=None):
     query = db.session.query(Organization)
 
     for attr, value in filters.iteritems():
-        query = query.filter(getattr(Organization, attr) == value)
+        query = query.filter(getattr(Organization, attr).ilike('%%%s%%' % value))
 
     response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)), querystring)
 
@@ -662,10 +662,13 @@ def get_projects(id=None):
     query = db.session.query(Project)
 
     for attr, value in filters.iteritems():
-        query = query.filter(getattr(Project, attr) == value)
+        if 'organization' in attr:
+            org_attr = attr.split('_')[1]
+            query = query.join(Project.organization).filter(getattr(Organization, org_attr).ilike('%%%s%%' % value))
+        else:
+            query = query.filter(getattr(Project, attr) == value)
 
     response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)), querystring)
-
     return jsonify(response)
 
 @app.route('/api/issues/')
