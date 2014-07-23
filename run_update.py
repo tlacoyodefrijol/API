@@ -18,6 +18,11 @@ from random import shuffle
 from argparse import ArgumentParser
 from time import time
 from re import match
+import yaml
+
+
+GOV_GITHUB_YAML_FILE = 'https://raw.githubusercontent.com/github/government.github.com/gh-pages/_data/governments.yml'
+READ_GOV_ORGS = False
 
 # Logging Setup
 logging.basicConfig(level=logging.INFO)
@@ -106,6 +111,16 @@ def get_meetup_events(organization, group_urlname):
         return events
 
 def get_organizations():
+    ''' Collate all organizations from different sources.
+    '''
+    organizations = get_organizations_from_spreadsheet()
+    # Make this optional for now
+    if READ_GOV_ORGS:
+        organizations.extend(get_organizations_from_government_github_com())
+
+    return organizations
+
+def get_organizations_from_spreadsheet():
     '''
         Get a row for each organization from the Brigade Info spreadsheet.
         Return a list of dictionaries, one for each row past the header.
@@ -121,6 +136,22 @@ def get_organizations():
     for (index, org) in enumerate(organizations):
         organizations[index] = dict([(k.decode('utf8'), v.decode('utf8'))
                                      for (k, v) in org.items()])
+
+    return organizations
+
+def get_organizations_from_government_github_com():
+    ''' Get a row for each organization from government.github.com.
+
+    That GitHub site is a useful resource and index of government organisations
+    across the world that have organization profiles on GitHub.
+    '''
+    got = get(GOV_GITHUB_YAML_FILE)
+    org_list = yaml.load(got.content)
+    organizations = []
+    for group in org_list:
+        for org in org_list[group]:
+            org = {'name': org, 'projects_list_url': 'https://github.com/' + org, 'type': 'government', 'city': group}
+            organizations.append(org)
 
     return organizations
 
@@ -611,12 +642,12 @@ def get_event_group_identifier(events_url):
 
 def main(org_name=None, minimum_age=3*3600):
     ''' Run update over all organizations. Optionally, update just one.
-    
+
         Also optionally, reset minimum age to trigger org update, in seconds.
     '''
     # Set a single cutoff timestamp for orgs we'll look at.
     maximum_updated = time() - minimum_age
-    
+
     # Keep a set of fresh organization names.
     organization_names = set()
 
@@ -644,13 +675,13 @@ def main(org_name=None, minimum_age=3*3600):
         filter = Organization.name == org_info['name']
         existing_org = db.session.query(Organization).filter(filter).first()
         organization_names.add(org_info['name'])
-        
+
         if existing_org and not org_name:
             if existing_org.last_updated > maximum_updated:
                 # Skip this organization, it's been updated too recently.
                 logging.info("Skipping update for {0}".format(org_info['name'].encode('utf8')))
                 continue
-      
+
         # Mark everything in this organization for deletion at first.
         db.session.execute(db.update(Event, values={'keep': False}).where(Event.organization_name == org_info['name']))
         db.session.execute(db.update(Story, values={'keep': False}).where(Story.organization_name == org_info['name']))
