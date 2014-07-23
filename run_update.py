@@ -327,7 +327,8 @@ def update_project_info(project):
         if got.status_code in range(400, 499):
             if got.status_code == 404:
                 logging.error(repo_url + ' doesn\'t exist.')
-                return project
+                # If its a bad GitHub link, don't return it at all.
+                return None
             elif got.status_code == 403:
                 logging.error("GitHub Rate Limit Remaining: " + str(got.headers["x-ratelimit-remaining"]))
                 error_dict = {
