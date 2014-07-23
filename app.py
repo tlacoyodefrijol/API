@@ -121,12 +121,10 @@ class Organization(db.Model):
         '''
             Return the three most current projects
         '''
-        all_projects = Project.query.filter_by(organization_name=self.name).all()
-        all_projects_json = [project.asdict() for project in all_projects]
-
-        all_projects_json.sort(key=lambda k: k['last_updated'], reverse=True)
-        current_projects = all_projects_json[0:3]
-        return current_projects
+        current_projects = Project.query.filter_by(organization_name=self.name).order_by(desc(Project.last_updated)).limit(3)
+        current_projects_json = [project.asdict() for project in current_projects]
+        
+        return current_projects_json
 
     def current_stories(self):
         '''
@@ -255,7 +253,7 @@ class Project(db.Model):
     type = db.Column(db.Unicode())
     categories = db.Column(db.Unicode())
     github_details = db.Column(JsonType())
-    last_updated = db.Column(db.Unicode())
+    last_updated = db.Column(db.DateTime())
     last_updated_issues = db.Column(db.Unicode())
     keep = db.Column(db.Boolean())
 

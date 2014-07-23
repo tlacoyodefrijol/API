@@ -278,11 +278,18 @@ def update_project_info(project):
         existing_project = db.session.query(Project).filter(Project.name == project['name']).first()
 
         if existing_project:
-            attributes = ['description', 'categories', 'type', 'link_url']
-            for attribute in attributes:
-                if project[attribute] != existing_project.__dict__[attribute]:
-                    project['last_updated'] = datetime.now().strftime("%a, %d %b %Y %H:%M:%S %Z")
-                    # "Wed, 15 Jan 2014 03:23:19 GMT"
+            # project gets existing last_updated
+            project['last_updated'] = existing_project.last_updated
+
+            # unless one of the fields has been updated
+            if project['description'] != existing_project.description:
+                project['last_updated'] = datetime.now().strftime("%a, %d %b %Y %H:%M:%S %Z")
+            if project['categories'] != existing_project.categories:
+                project['last_updated'] = datetime.now().strftime("%a, %d %b %Y %H:%M:%S %Z")
+            if project['type'] != existing_project.type:
+                project['last_updated'] = datetime.now().strftime("%a, %d %b %Y %H:%M:%S %Z")
+            if project['link_url'] != existing_project.link_url:
+                project['last_updated'] = datetime.now().strftime("%a, %d %b %Y %H:%M:%S %Z")
 
         else:
             # Set a date when we first see a non-github project

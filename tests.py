@@ -27,10 +27,10 @@ class ApiTest(unittest.TestCase):
         organization = OrganizationFactory(name='Code for San Francisco')
         db.session.flush()
 
-        ProjectFactory(organization_name=organization.name, name="Project 1", last_updated="2011-01-01 00:00:00")
-        ProjectFactory(organization_name=organization.name, name="Project 2", last_updated="2012-01-01 00:00:00")
-        ProjectFactory(organization_name=organization.name, name="Non Github Project", last_updated="2013-01-01 00:00:00", github_details=None)
-        ProjectFactory(organization_name=organization.name, name="Project 3", last_updated="2014-01-01 00:00:00")
+        ProjectFactory(organization_name=organization.name, name="Project 1", last_updated="Mon, 01 Jan 2010 00:00:00 GMT")
+        ProjectFactory(organization_name=organization.name, name="Project 2", last_updated="Tue, 01 Jan 2011 00:00:00 GMT")
+        ProjectFactory(organization_name=organization.name, name="Non Github Project", last_updated="Wed, 01 Jan 2013 00:00:00 ", github_details=None)
+        ProjectFactory(organization_name=organization.name, name="Project 3", last_updated="Thu, 01 Jan 2014 00:00:00 GMT")
         db.session.flush()
 
         response = self.app.get('/api/organizations/Code for San Francisco')
