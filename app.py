@@ -481,7 +481,10 @@ def pages_dict(page, last, querystring):
             pages['last']['per_page'] = request.args['per_page']
 
     for key in pages:
-        pages[key] = '%s?%s%s' % (url, urlencode(pages[key]), querystring) if pages[key] else url
+        if querystring != '':
+            pages[key] = '%s?%s&%s' % (url, urlencode(pages[key]), querystring) if pages[key] else url
+        else:
+            pages[key] = '%s?%s' % (url, urlencode(pages[key])) if pages[key] else url
 
     return pages
 

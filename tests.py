@@ -486,11 +486,12 @@ class ApiTest(unittest.TestCase):
         self.assertTrue('project' in response)
         self.assertTrue('issues' not in response['project'])
 
-    def test_single_organization_query_filter(self):
+    def test_organization_query_filter(self):
         '''
         Test that organization query params work as expected.
         '''
         brigade = OrganizationFactory(name="Brigade Organization", type="Brigade")
+        brigade = OrganizationFactory(name="Bayamon Organization", type="Brigade", city="Bayamon, PR")
         meetup = OrganizationFactory(name="Meetup Organization", type="Meetup")
 
         db.session.add(meetup)
@@ -500,6 +501,11 @@ class ApiTest(unittest.TestCase):
         response = self.app.get('/api/organizations?type=Brigade', follow_redirects=True)
         self.assertEqual(response.status_code, 200)
         response = json.loads(response.data)
+        self.assertEqual(response['total'], 2)
+
+        response = self.app.get('/api/organizations?type=Brigade&city=Bayamon,%20PR', follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
         self.assertEqual(response['total'], 1)
 
         response = self.app.get('/api/organizations?type=SomeType', follow_redirects=True)
@@ -507,11 +513,12 @@ class ApiTest(unittest.TestCase):
         response = json.loads(response.data)
         self.assertEqual(response['total'], 0)
 
-    def test_single_organization_query_filter(self):
+    def test_single_project_query_filter(self):
         '''
         Test that project query params work as expected.
         '''
         web_project = ProjectFactory(name="Random Web App", type="web service")
+        other_web_project = ProjectFactory(name="Random Web App 2", type="web service", description="Another")
         non_web_project = ProjectFactory(name="Random Other App", type="other service")
 
         db.session.add(web_project)
@@ -519,6 +526,11 @@ class ApiTest(unittest.TestCase):
         db.session.commit()
 
         response = self.app.get('/api/projects?type=web%20service', follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+        self.assertEqual(response['total'], 2)
+
+        response = self.app.get('/api/projects?type=web%20service&description=Another', follow_redirects=True)
         self.assertEqual(response.status_code, 200)
         response = json.loads(response.data)
         self.assertEqual(response['total'], 1)
