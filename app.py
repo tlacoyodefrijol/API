@@ -447,7 +447,7 @@ def page_info(query, page, limit):
 
     return last, offset
 
-def pages_dict(page, last):
+def pages_dict(page, last, querystring):
     ''' Return a dictionary of pages to return in API responses.
     '''
     url = '%s://%s%s' % (request.scheme, request.host, request.path)
@@ -472,18 +472,21 @@ def pages_dict(page, last):
             pages['last']['per_page'] = request.args['per_page']
 
     for key in pages:
-        pages[key] = '%s?%s' % (url, urlencode(pages[key])) if pages[key] else url
+        if querystring != '':
+            pages[key] = '%s?%s&%s' % (url, urlencode(pages[key]), querystring) if pages[key] else url
+        else:
+            pages[key] = '%s?%s' % (url, urlencode(pages[key])) if pages[key] else url
 
     return pages
 
-def paged_results(query, page, per_page):
+def paged_results(query, page, per_page, querystring=''):
     '''
     '''
     total = query.count()
     last, offset = page_info(query, page, per_page)
     model_dicts = [o.asdict(True) for o in query.limit(per_page).offset(offset)]
 
-    return dict(total=total, pages=pages_dict(page, last), objects=model_dicts)
+    return dict(total=total, pages=pages_dict(page, last, querystring), objects=model_dicts)
 
 def is_safe_name(name):
     ''' Return True if the string is a safe name.
@@ -504,11 +507,22 @@ def raw_name(name):
     '''
     return name.replace('_', ' ').replace('-', ' ')
 
+def get_query_params(args):
+    filters = {}
+    for key,value in args.iteritems():
+        if 'page' not in key: 
+            filters[key] = value
+    return filters, urlencode(filters)
+
 @app.route('/api/organizations')
 @app.route('/api/organizations/<name>')
 def get_organizations(name=None):
     ''' Regular response option for organizations.
     '''
+
+    filters = request.args
+    filters, querystring = get_query_params(request.args)
+
     if name:
         # Get one named organization.
         filter = Organization.name == raw_name(name)
@@ -517,7 +531,12 @@ def get_organizations(name=None):
 
     # Get a bunch of organizations.
     query = db.session.query(Organization)
-    response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)))
+
+    for attr, value in filters.iteritems():
+        query = query.filter(getattr(Organization, attr).ilike('%%%s%%' % value))
+
+    response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)), querystring)
+
     return jsonify(response)
 
 @app.route('/api/organizations.geojson')
@@ -621,6 +640,9 @@ def get_orgs_projects(organization_name):
 def get_projects(id=None):
     ''' Regular response option for projects.
     '''
+
+    filters, querystring = get_query_params(request.args)
+
     if id:
         # Get one named project.
         filter = Project.id == id
@@ -629,7 +651,15 @@ def get_projects(id=None):
 
     # Get a bunch of projects.
     query = db.session.query(Project)
-    response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)))
+
+    for attr, value in filters.iteritems():
+        if 'organization' in attr:
+            org_attr = attr.split('_')[1]
+            query = query.join(Project.organization).filter(getattr(Organization, org_attr).ilike('%%%s%%' % value))
+        else:
+            query = query.filter(getattr(Project, attr) == value)
+
+    response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)), querystring)
     return jsonify(response)
 
 @app.route('/api/issues/')
