@@ -327,6 +327,8 @@ class Issue(db.Model):
     project = db.relationship('Project')
     project_id = db.Column(db.Integer(), db.ForeignKey('project.id'))
 
+    labels = db.relationship('Label', backref='issue', cascade='save-update, delete')
+
     def __init__(self, title, project_id, html_url=None, labels=None, body=None):
         self.title = title
         self.html_url = html_url
@@ -356,6 +358,18 @@ class Issue(db.Model):
         issue_dict['api_url'] = self.api_url()
 
         return issue_dict
+
+class Label(db.Model):
+    '''
+        Issue labels for projects on Github
+    '''
+    # Columns
+    id = db.Column(db.Integer(), primary_key=True)
+    name = db.Column(db.Unicode())
+    color = db.Column(db.Unicode())
+    url = db.Column(db.Unicode())
+
+    issue_id = db.Column(db.Integer, db.ForeignKey('issue.id'))
 
 class Event(db.Model):
     '''
