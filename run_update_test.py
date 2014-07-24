@@ -62,10 +62,7 @@ class RunUpdateTestCase(unittest.TestCase):
             return response(200, '''{ "all": [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 23, 9, 4, 0, 77, 26, 7, 17, 53, 59, 37, 40, 0, 47, 59, 55, 118, 11, 8, 3, 3, 30, 0, 1, 1, 4, 6, 1, 0, 0, 0, 0, 0, 0, 0, 0, 3, 1 ], "owner": [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] }''')
 
         elif url.geturl() == 'https://api.github.com/repos/codeforamerica/cityvoice/issues':
-            return response(200, '''[ ]''', {'ETag': '8456bc53d4cf6b78779ded3408886f82'})
-
-        elif url.geturl() == 'https://api.github.com/repos/civic-project/issues':
-            return response(200, '''[ ]''', {'ETag': '8456bc53d4cf6b78779ded3408886f82'})
+            return response(200, ''' [ {"url": "https://api.github.com/repos/codeforamerica/cityvoice/issues/210","labels_url": "https://api.github.com/repos/codeforamerica/cityvoice/issues/210/labels{/name}","comments_url": "https://api.github.com/repos/codeforamerica/cityvoice/issues/210/comments","events_url": "https://api.github.com/repos/codeforamerica/cityvoice/issues/210/events","html_url": "https://github.com/codeforamerica/cityvoice/pull/210","id": 38200470,"number": 210,"title": "Important cityvoice issue","user": {"login": "daguar","id": 994938,"avatar_url": "https://avatars.githubusercontent.com/u/994938?","gravatar_id": "bdd8cc46ae86e389388ae78dfc45effe","url": "https://api.github.com/users/daguar","html_url": "https://github.com/daguar","followers_url": "https://api.github.com/users/daguar/followers","following_url": "https://api.github.com/users/daguar/following{/other_user}","gists_url": "https://api.github.com/users/daguar/gists{/gist_id}","starred_url": "https://api.github.com/users/daguar/starred{/owner}{/repo}","subscriptions_url": "https://api.github.com/users/daguar/subscriptions","organizations_url": "https://api.github.com/users/daguar/orgs","repos_url": "https://api.github.com/users/daguar/repos","events_url": "https://api.github.com/users/daguar/events{/privacy}","received_events_url": "https://api.github.com/users/daguar/received_events","type": "User","site_admin": false},"labels": [ ],"state": "open","assignee": null,"milestone": null,"comments": 0,"created_at": "2014-07-18T18:27:50Z","updated_at": "2014-07-18T18:27:50Z","closed_at": null,"pull_request": {"url": "https://api.github.com/repos/codeforamerica/cityvoice/pulls/210","html_url": "https://github.com/codeforamerica/cityvoice/pull/210","diff_url": "https://github.com/codeforamerica/cityvoice/pull/210.diff","patch_url": "https://github.com/codeforamerica/cityvoice/pull/210.patch"},"body": ""} ] ''', {'ETag': '8456bc53d4cf6b78779ded3408886f82'})
 
         elif url.geturl() == 'https://api.github.com/users/daguar':
             return response(200, '''{ "login": "daguar", "id": 994938, "avatar_url": "https://gravatar.com/avatar/bdd8cc46ae86e389388ae78dfc45effe?d=https%3A%2F%2Fidenticons.github.com%2F4b102bf6681e25c44a3c980791826c1f.png&r=x", "gravatar_id": "bdd8cc46ae86e389388ae78dfc45effe", "url": "https://api.github.com/users/daguar", "html_url": "https://github.com/daguar", "followers_url": "https://api.github.com/users/daguar/followers", "following_url": "https://api.github.com/users/daguar/following{/other_user}", "gists_url": "https://api.github.com/users/daguar/gists{/gist_id}", "starred_url": "https://api.github.com/users/daguar/starred{/owner}{/repo}", "subscriptions_url": "https://api.github.com/users/daguar/subscriptions", "organizations_url": "https://api.github.com/users/daguar/orgs", "repos_url": "https://api.github.com/users/daguar/repos", "events_url": "https://api.github.com/users/daguar/events{/privacy}", "received_events_url": "https://api.github.com/users/daguar/received_events", "type": "User", "site_admin": false, "name": "Dave Guarino", "company": "", "blog": null, "location": "Oakland, CA", "email": "dave@codeforamerica.org", "hireable": true, "bio": null, "public_repos": 66, "public_gists": 10, "followers": 30, "following": 14, "created_at": "2011-08-21T21:12:10Z", "updated_at": "2014-03-07T18:17:21Z" }''')
@@ -104,12 +101,12 @@ class RunUpdateTestCase(unittest.TestCase):
             raise Exception('Asked for unknown URL ' + url.geturl())
 
     def test_import(self):
-        ''' Add one sample organization with two projects, verify that it comes back.
+        ''' Add one sample organization with two projects and issues, verify that it comes back.
         '''
         with HTTMock(self.response_content):
             import run_update
 
-            # Iterate over organizations and projects, saving them to db.session.
+            # Iterate over organizations, projects and issues, saving them to db.session.
             for org_info in run_update.get_organizations():
                 organization = run_update.save_organization_info(self.db.session, org_info)
 
@@ -118,9 +115,14 @@ class RunUpdateTestCase(unittest.TestCase):
                 for proj_info in projects:
                     run_update.save_project_info(self.db.session, proj_info)
 
+                issues = run_update.get_issues(organization.name)
+
+                for issue_info in issues:
+                    run_update.save_issue_info(self.db.session, issue_info)
+
         self.db.session.flush()
 
-        from app import Organization, Project
+        from app import Organization, Project, Issue
 
         # check for the one organization
         filter = Organization.name == u'Cöde for Ameriça'
@@ -139,6 +141,12 @@ class RunUpdateTestCase(unittest.TestCase):
         project = self.db.session.query(Project).filter(filter).first()
         self.assertIsNotNone(project)
         self.assertEqual(project.name,'cityvoice')
+
+        # check for cityvoice project's issues
+        filter = Issue.project_id == project.id
+        issue = self.db.session.query(Issue).filter(filter).first()
+        self.assertIsNotNone(issue)
+        self.assertEqual(issue.title, 'Important cityvoice issue')
 
     def test_import_with_times(self):
         ''' Test passage of time on organization updates.
@@ -204,11 +212,12 @@ class RunUpdateTestCase(unittest.TestCase):
             the new organization, its project, and events should be saved. The out of date
             organization, its project and event should be deleted.
         '''
-        from factories import OrganizationFactory, ProjectFactory, EventFactory
+        from factories import OrganizationFactory, ProjectFactory, EventFactory, IssueFactory
 
         old_organization = OrganizationFactory(name='Old Organization')
         old_project = ProjectFactory(name='Old Project', organization_name='Old Organization')
         old_event = EventFactory(name='Old Event', organization_name='Old Organization')
+        old_issue = IssueFactory(title='Old Issue')
         self.db.session.flush()
 
         self.mock_rss_response()
@@ -219,7 +228,7 @@ class RunUpdateTestCase(unittest.TestCase):
 
         self.db.session.flush()
 
-        from app import Organization, Project, Event
+        from app import Organization, Project, Event, Issue
 
         # make sure old org is no longer there
         filter = Organization.name == 'Old Organization'
@@ -231,10 +240,16 @@ class RunUpdateTestCase(unittest.TestCase):
         project = self.db.session.query(Project).filter(filter).first()
         self.assertIsNone(project)
 
+        # make sure the old issue is no longer there
+        filter = Issue.title == 'Old Issue'
+        issue = self.db.session.query(Issue).filter(filter).first()
+        self.assertIsNone(issue)
+
         # make sure old event is no longer there
         filter = Event.name == 'Old Event'
         event = self.db.session.query(Event).filter(filter).first()
         self.assertIsNone(event)
+
 
         # check for the one organization
         filter = Organization.name == u'Cöde for Ameriça'
@@ -245,6 +260,11 @@ class RunUpdateTestCase(unittest.TestCase):
         filter = Project.name == 'SouthBendVoices'
         project = self.db.session.query(Project).filter(filter).first()
         self.assertEqual(project.name,'SouthBendVoices')
+
+        # check for the one issue
+        filter = Issue.title == 'Important cityvoice issue'
+        issue = self.db.session.query(Issue).filter(filter).first()
+        self.assertEqual(issue.title, 'Important cityvoice issue')
 
         # check for events
         filter = Event.name.in_(['Organizational meeting',
@@ -511,6 +531,30 @@ class RunUpdateTestCase(unittest.TestCase):
             self.assertEqual(projects[0]['description'], 'Web application to aggregate tasks across projects that are identified for "hacking".')
 
 
+    def test_non_github_projects(self):
+        ''' Test that non github and non code projects get last_updated timestamps.
+        '''
+        from factories import OrganizationFactory
+        whatever = OrganizationFactory(name='Whatever')
+        gdocs = OrganizationFactory(projects_list_url="http://www.gdocs.com")
+
+        def response_content(url, request):
+            if url.netloc == 'www.civicorganization5.com':
+                return response(200, '''"name","description","link_url","code_url","type","categories"\r\n"OpenPhillyGlobe","\\"Google Earth for Philadelphia\\" with open source and open transit data.","http://cesium.agi.com/OpenPhillyGlobe/","http://google.com","",""''')
+            if url.netloc == 'www.gdocs.com':
+                return response(200, '''name,description,link_url,code_url,type,categories\nHack Task Aggregator,"Web application to aggregate tasks across projects that are identified for ""hacking"".",,,web service,"project management, civic hacking"''')
+
+        
+        with HTTMock(response_content):
+            import run_update
+            projects = run_update.get_projects(whatever)
+            self.assertEqual(projects[0]['name'], "OpenPhillyGlobe")
+            self.assertEqual(projects[0]['last_updated'], datetime.datetime.now().strftime("%a, %d %b %Y %H:%M:%S %Z"))
+            print projects[0]['last_updated']
+
+            projects = run_update.get_projects(gdocs)
+            self.assertEqual(projects[0]['name'], "Hack Task Aggregator")
+            self.assertEqual(projects[0]['last_updated'], datetime.datetime.now().strftime("%a, %d %b %Y %H:%M:%S %Z"))
 
 if __name__ == '__main__':
     unittest.main()

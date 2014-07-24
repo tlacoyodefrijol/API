@@ -268,10 +268,37 @@ def update_project_info(project):
         Github_details is specifically expected to be used on this page:
         http://opengovhacknight.org/projects.html
     '''
+
+    def non_github_project_update_time(project):
+        ''' If its a non-github project, we should check if any of the fields
+            have been updated, such as the description.
+
+            Set the last_updated timestamp.
+        '''
+        existing_project = db.session.query(Project).filter(Project.name == project['name']).first()
+
+        if existing_project:
+            attributes = ['description', 'categories', 'type', 'link_url']
+            for attribute in attributes:
+                if project[attribute] != existing_project.__dict__[attribute]:
+                    project['last_updated'] = datetime.now().strftime("%a, %d %b %Y %H:%M:%S %Z")
+                    # "Wed, 15 Jan 2014 03:23:19 GMT"
+
+        else:
+            # Set a date when we first see a non-github project
+            project['last_updated'] = datetime.now().strftime("%a, %d %b %Y %H:%M:%S %Z")
+
+        return project
+
     if 'code_url' not in project:
+        project = non_github_project_update_time(project) 
         return project
 
     _, host, path, _, _, _ = urlparse(project['code_url'])
+
+    if host != 'github.com':
+        project = non_github_project_update_time(project) 
+        return project
 
     # Get the Github attributes
     if host == 'github.com':
