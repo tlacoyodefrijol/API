@@ -332,7 +332,6 @@ class Issue(db.Model):
     def __init__(self, title, project_id, html_url=None, labels=None, body=None):
         self.title = title
         self.html_url = html_url
-        self.labels = labels
         self.body = body
         self.project_id = project_id
         self.keep = True
@@ -356,6 +355,7 @@ class Issue(db.Model):
 
         del issue_dict['keep']
         issue_dict['api_url'] = self.api_url()
+        issue_dict['labels'] = [l.asdict() for l in self.labels]
 
         return issue_dict
 
@@ -370,6 +370,22 @@ class Label(db.Model):
     url = db.Column(db.Unicode())
 
     issue_id = db.Column(db.Integer, db.ForeignKey('issue.id'))
+
+    def __init__(self, name, color, url):
+        self.name = name
+        self.color = color
+        self.url = url
+
+    def asdict(self):
+        '''
+            Return label as a dictionary with some properties tweaked
+        '''
+        label_dict = db.Model.asdict(self)
+
+        del label_dict['id']
+        del label_dict['issue_id']
+
+        return label_dict
 
 class Event(db.Model):
     '''
