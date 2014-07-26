@@ -11,7 +11,7 @@ import json, os, requests, time
 from flask.ext.heroku import Heroku
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy.ext.mutable import Mutable
-from sqlalchemy import types, desc
+from sqlalchemy import types, desc, or_
 from dictalchemy import make_class_dictable
 from dateutil.tz import tzoffset
 from mimetypes import guess_type
@@ -707,6 +707,28 @@ def get_issues(id=None):
 
     # Get a bunch of issues
     query = db.session.query(Issue)
+    response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)))
+    return jsonify(response)
+
+@app.route('/api/issues/labels/<labels>')
+def get_issues_by_labels(labels):
+    '''
+    A clean url to filter issues by a comma-separated list of labels
+    '''
+
+    # Create a labels list by comma separating the argument
+    labels = labels.split(',')
+
+    # Create the filter for each label
+    labels = [Label.name.ilike('%%%s%%' % label) for label in labels]
+
+    # Create the query object by joining on Issue.labels
+    query = db.session.query(Issue).join(Issue.labels)
+
+    # Filter by all of the given labels
+    query = query.filter(or_(*labels))
+
+    # Return the paginated reponse
     response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)))
     return jsonify(response)
 
