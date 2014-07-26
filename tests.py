@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from urlparse import urlparse
 
 from app import app, db
-from factories import OrganizationFactory, ProjectFactory, EventFactory, StoryFactory, IssueFactory
+from factories import OrganizationFactory, ProjectFactory, EventFactory, StoryFactory, IssueFactory, LabelFactory
 
 class ApiTest(unittest.TestCase):
 
@@ -486,6 +486,35 @@ class ApiTest(unittest.TestCase):
         self.assertTrue('project' in response)
         self.assertTrue('issues' not in response['project'])
 
+    def test_issues_with_labels(self):
+        '''
+        Test that /api/issues/labels works as expected.
+        Should return issues with any of the passed in label names
+        '''
+        ProjectFactory()
+        issue = IssueFactory()
+        issue2 = IssueFactory()
+        label1 = LabelFactory(name="enhancement")
+        label2 = LabelFactory(name="hack")
+        issue.labels = [label1]
+        issue2.labels = [label2]
+
+        db.session.add(issue)
+        db.session.add(issue2)
+        db.session.add(label1)
+        db.session.add(label2)
+        db.session.commit()
+
+        response = self.app.get('/api/issues/labels/enhancement', follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+        self.assertEqual(response['total'], 1)
+
+        response = self.app.get('/api/issues/labels/enhancement,hack', follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+        self.assertEqual(response['total'], 2)
+
     def test_organization_query_filter(self):
         '''
         Test that organization query params work as expected.
@@ -513,7 +542,7 @@ class ApiTest(unittest.TestCase):
         response = json.loads(response.data)
         self.assertEqual(response['total'], 0)
 
-    def test_single_project_query_filter(self):
+    def test_project_query_filter(self):
         '''
         Test that project query params work as expected.
         '''

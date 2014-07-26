@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 
 import factory
-from app import Organization, Project, Event, Story, db, Issue
+from app import Organization, Project, Event, Story, db, Issue, Label
 from factory.alchemy import SQLAlchemyModelFactory
 from sqlalchemy.orm import scoped_session, sessionmaker
 from random import choice
@@ -67,12 +67,14 @@ class IssueFactory(SQLAlchemyModelFactory):
 
     title = factory.Sequence(lambda n: 'Civic Issue {0}'.format(n))
     html_url = factory.Sequence(lambda n: 'http://www.github.com/codeforamerica/cfapi/issues/{0}'.format(n))
-    labels = [
-        {
-          "color": "84b6eb",
-          "name": "enhancement",
-          "url": "https://api.github.com/repos/codeforamerica/cfapi/labels/enhancement"
-        }
-      ]
     body = factory.Sequence(lambda n: 'Civic Issue blah blah blah {0}'.format(n))
+
     project_id = 1
+
+class LabelFactory(SQLAlchemyModelFactory):
+    FACTORY_FOR = Label
+    FACTORY_SESSION = db.session
+
+    name = factory.Sequence(lambda n: 'enhancement {0}'.format(n))
+    url = factory.Sequence(lambda n: 'https://api.github.com/repos/codeforamerica/cfapi/labels/enhancement{0}'.format(n))
+    color = factory.Sequence(lambda n: 'FFF {0}'.format(n))
