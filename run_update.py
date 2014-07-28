@@ -1,4 +1,4 @@
-import os, sys
+import os, sys, csv, yaml
 import logging
 from urlparse import urlparse
 from csv import DictReader, Sniffer
@@ -18,11 +18,6 @@ from random import shuffle
 from argparse import ArgumentParser
 from time import time
 from re import match
-import yaml
-
-
-GOV_GITHUB_YAML_FILE = 'https://raw.githubusercontent.com/github/government.github.com/gh-pages/_data/governments.yml'
-READ_GOV_ORGS = False
 
 # Logging Setup
 logging.basicConfig(level=logging.INFO)
@@ -30,12 +25,10 @@ logger = logging.getLogger(__name__)
 requests_log = logging.getLogger("requests")
 requests_log.setLevel(logging.WARNING)
 
-# Production
-gdocs_url = 'https://docs.google.com/a/codeforamerica.org/spreadsheet/ccc?key=0ArHmv-6U1drqdGNCLWV5Q0d5YmllUzE5WGlUY3hhT2c&output=csv'
-
-# Testing
-# gdocs_url = "https://docs.google.com/spreadsheet/pub?key=0ArHmv-6U1drqdEVkTUtZNVlYRE5ndERLLTFDb2RqQlE&output=csv"
-
+# Org sources can be csv or yaml
+# They should be lists of organizations you want included at /organizations
+# columns should be name, website, events_url, rss, projects_list_url, city, latitude, longitude, type
+ORG_SOURCES = 'org_sources.csv'
 
 if 'GITHUB_TOKEN' in os.environ:
     github_auth = (os.environ['GITHUB_TOKEN'], '')
@@ -110,22 +103,26 @@ def get_meetup_events(organization, group_urlname):
             events.append(event)
         return events
 
-def get_organizations():
+def get_organizations(org_sources):
     ''' Collate all organizations from different sources.
     '''
-    organizations = get_organizations_from_spreadsheet()
-    # Make this optional for now
-    if READ_GOV_ORGS:
-        organizations.extend(get_organizations_from_government_github_com())
+    organizations = []
+    with open(org_sources) as file:
+        for org_source in file.read().splitlines():
+            if 'docs.google.com' in org_source:
+                organizations.extend(get_organizations_from_spreadsheet(org_source))
+            if '.yml' in org_source:
+                # Only case is GitHub government list
+                organizations.extend(get_organizations_from_government_github_com(org_source))
 
     return organizations
 
-def get_organizations_from_spreadsheet():
+def get_organizations_from_spreadsheet(org_source):
     '''
         Get a row for each organization from the Brigade Info spreadsheet.
         Return a list of dictionaries, one for each row past the header.
     '''
-    got = get(gdocs_url)
+    got = get(org_source)
 
     #
     # Requests response.text is a lying liar, with its UTF8 bytes as unicode()?
@@ -139,13 +136,13 @@ def get_organizations_from_spreadsheet():
 
     return organizations
 
-def get_organizations_from_government_github_com():
+def get_organizations_from_government_github_com(org_source):
     ''' Get a row for each organization from government.github.com.
 
     That GitHub site is a useful resource and index of government organisations
     across the world that have organization profiles on GitHub.
     '''
-    got = get(GOV_GITHUB_YAML_FILE)
+    got = get(org_source)
     org_list = yaml.load(got.content)
     organizations = []
     for group in org_list:
@@ -675,19 +672,19 @@ def get_event_group_identifier(events_url):
     else:
         return None
 
-def main(org_name=None, minimum_age=3*3600):
+def main(org_name=None, org_sources=None, minimum_age=3*3600):
     ''' Run update over all organizations. Optionally, update just one.
 
         Also optionally, reset minimum age to trigger org update, in seconds.
     '''
-    # Set a single cutoff timestamp for orgs we'll look at.
+    # Set a single cutoff timestamp for orgs we'll look atself.
     maximum_updated = time() - minimum_age
 
     # Keep a set of fresh organization names.
     organization_names = set()
 
     # Retrieve all organizations and shuffle the list in place.
-    orgs_info = get_organizations()
+    orgs_info = get_organizations(org_sources)
     shuffle(orgs_info)
 
     if org_name:
@@ -793,4 +790,4 @@ parser.add_argument('--name', dest='name', help='Single organization name to upd
 if __name__ == "__main__":
     args = parser.parse_args()
     org_name = args.name and args.name.decode('utf8') or ''
-    main(org_name=org_name)
+    main(org_name=org_name, org_sources=ORG_SOURCES)
