@@ -577,5 +577,26 @@ class ApiTest(unittest.TestCase):
         response = json.loads(response.data)
         self.assertEqual(response['total'], 1)
 
+    def test_organization_issues(self):
+        '''
+        Test getting all of an organization's issues
+        '''
+        organization = OrganizationFactory(name="Civic Project", type="Not a brigade")
+        db.session.flush()
+
+        project1 = ProjectFactory(organization_name=organization.name, name="Civic Project 1")
+        project2 = ProjectFactory(organization_name=organization.name, name="Civic Project 2")
+        db.session.flush()
+
+        issue11 = IssueFactory(project_id=project1.id, title="Civic Issue 1.1")
+        issue12 = IssueFactory(project_id=project1.id, title="Civic Issue 1.2")
+        issue21 = IssueFactory(project_id=project2.id, title="Civic Issue 2.1")
+        db.session.flush()
+
+        response = self.app.get('/api/organizations/%s/issues' % organization.name, follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+        self.assertEqual(response['total'], 3)
+
 if __name__ == '__main__':
     unittest.main()

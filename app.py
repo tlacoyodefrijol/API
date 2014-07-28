@@ -164,6 +164,13 @@ class Organization(db.Model):
         organization_name = safe_name(self.name)
         return '%s://%s/api/organizations/%s/projects' % (request.scheme, request.host, organization_name)
 
+    def all_issues(self):
+        '''API link to all an orgs issues
+        '''
+        # Make a nice org name
+        organization_name = safe_name(self.name)
+        return '%s://%s/api/organizations/%s/issues' % (request.scheme, request.host, organization_name)
+
     def all_stories(self):
         ''' API link to all an orgs stories
         '''
@@ -190,7 +197,7 @@ class Organization(db.Model):
 
         del organization_dict['keep']
 
-        for key in ('all_events', 'all_projects', 'all_stories',
+        for key in ('all_events', 'all_projects', 'all_stories', 'all_issues',
                     'upcoming_events', 'past_events', 'api_url'):
             organization_dict[key] = getattr(self, key)()
 
@@ -322,7 +329,7 @@ class Issue(db.Model):
 
     labels = db.relationship('Label', backref='issue', cascade='save-update, delete')
 
-    def __init__(self, title, project_id, html_url=None, labels=None, body=None):
+    def __init__(self, title, project_id=None, html_url=None, labels=None, body=None):
         self.title = title
         self.html_url = html_url
         self.body = body
@@ -364,10 +371,11 @@ class Label(db.Model):
 
     issue_id = db.Column(db.Integer, db.ForeignKey('issue.id'))
 
-    def __init__(self, name, color, url):
+    def __init__(self, name, color, url, issue_id=None):
         self.name = name
         self.color = color
         self.url = url
+        self.issue_id = issue_id
 
     def asdict(self):
         '''
@@ -664,6 +672,26 @@ def get_orgs_projects(organization_name):
 
     # Get project objects
     query = Project.query.filter_by(organization_name=organization.name)
+    response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)))
+    return jsonify(response)
+
+@app.route("/api/organizations/<organization_name>/issues")
+def get_orgs_issues(organization_name):
+    ''' A clean url to get an organizations issues
+    '''
+
+    # Get one named organization.
+    organization = Organization.query.filter_by(name=raw_name(organization_name)).first()
+    if not organization:
+        return "Organization not found", 404
+
+    # Get that organization's projects
+    projects = Project.query.filter_by(organization_name=organization.name).all()
+    project_ids = [project.id for project in projects]
+
+    # Get all issues belonging to these projects
+    query = Issue.query.filter(Issue.project_id.in_(project_ids))
+
     response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)))
     return jsonify(response)
 
