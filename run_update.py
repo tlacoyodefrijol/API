@@ -1,4 +1,4 @@
-import os, sys
+import os, sys, csv, yaml
 import logging
 from urlparse import urlparse
 from csv import DictReader, Sniffer
@@ -25,12 +25,10 @@ logger = logging.getLogger(__name__)
 requests_log = logging.getLogger("requests")
 requests_log.setLevel(logging.WARNING)
 
-# Production
-gdocs_url = 'https://docs.google.com/a/codeforamerica.org/spreadsheet/ccc?key=0ArHmv-6U1drqdGNCLWV5Q0d5YmllUzE5WGlUY3hhT2c&output=csv'
-
-# Testing
-# gdocs_url = "https://docs.google.com/spreadsheet/pub?key=0ArHmv-6U1drqdEVkTUtZNVlYRE5ndERLLTFDb2RqQlE&output=csv"
-
+# Org sources can be csv or yaml
+# They should be lists of organizations you want included at /organizations
+# columns should be name, website, events_url, rss, projects_list_url, city, latitude, longitude, type
+ORG_SOURCES = 'org_sources.csv'
 
 if 'GITHUB_TOKEN' in os.environ:
     github_auth = (os.environ['GITHUB_TOKEN'], '')
@@ -105,12 +103,26 @@ def get_meetup_events(organization, group_urlname):
             events.append(event)
         return events
 
-def get_organizations():
+def get_organizations(org_sources):
+    ''' Collate all organizations from different sources.
+    '''
+    organizations = []
+    with open(org_sources) as file:
+        for org_source in file.read().splitlines():
+            if 'docs.google.com' in org_source:
+                organizations.extend(get_organizations_from_spreadsheet(org_source))
+            if '.yml' in org_source:
+                # Only case is GitHub government list
+                organizations.extend(get_organizations_from_government_github_com(org_source))
+
+    return organizations
+
+def get_organizations_from_spreadsheet(org_source):
     '''
         Get a row for each organization from the Brigade Info spreadsheet.
         Return a list of dictionaries, one for each row past the header.
     '''
-    got = get(gdocs_url)
+    got = get(org_source)
 
     #
     # Requests response.text is a lying liar, with its UTF8 bytes as unicode()?
@@ -121,6 +133,22 @@ def get_organizations():
     for (index, org) in enumerate(organizations):
         organizations[index] = dict([(k.decode('utf8'), v.decode('utf8'))
                                      for (k, v) in org.items()])
+
+    return organizations
+
+def get_organizations_from_government_github_com(org_source):
+    ''' Get a row for each organization from government.github.com.
+
+    That GitHub site is a useful resource and index of government organisations
+    across the world that have organization profiles on GitHub.
+    '''
+    got = get(org_source)
+    org_list = yaml.load(got.content)
+    organizations = []
+    for group in org_list:
+        for org in org_list[group]:
+            org = {'name': org, 'projects_list_url': 'https://github.com/' + org, 'type': 'government', 'city': group}
+            organizations.append(org)
 
     return organizations
 
@@ -278,11 +306,18 @@ def update_project_info(project):
         existing_project = db.session.query(Project).filter(Project.name == project['name']).first()
 
         if existing_project:
-            attributes = ['description', 'categories', 'type', 'link_url']
-            for attribute in attributes:
-                if project[attribute] != existing_project.__dict__[attribute]:
-                    project['last_updated'] = datetime.now().strftime("%a, %d %b %Y %H:%M:%S %Z")
-                    # "Wed, 15 Jan 2014 03:23:19 GMT"
+            # project gets existing last_updated
+            project['last_updated'] = existing_project.last_updated
+
+            # unless one of the fields has been updated
+            if project['description'] != existing_project.description:
+                project['last_updated'] = datetime.now().strftime("%a, %d %b %Y %H:%M:%S %Z")
+            if project['categories'] != existing_project.categories:
+                project['last_updated'] = datetime.now().strftime("%a, %d %b %Y %H:%M:%S %Z")
+            if project['type'] != existing_project.type:
+                project['last_updated'] = datetime.now().strftime("%a, %d %b %Y %H:%M:%S %Z")
+            if project['link_url'] != existing_project.link_url:
+                project['last_updated'] = datetime.now().strftime("%a, %d %b %Y %H:%M:%S %Z")
 
         else:
             # Set a date when we first see a non-github project
@@ -320,7 +355,8 @@ def update_project_info(project):
         if got.status_code in range(400, 499):
             if got.status_code == 404:
                 logging.error(repo_url + ' doesn\'t exist.')
-                return project
+                # If its a bad GitHub link, don't return it at all.
+                return None
             elif got.status_code == 403:
                 logging.error("GitHub Rate Limit Remaining: " + str(got.headers["x-ratelimit-remaining"]))
                 error_dict = {
@@ -648,19 +684,19 @@ def get_event_group_identifier(events_url):
     else:
         return None
 
-def main(org_name=None, minimum_age=3*3600):
+def main(org_name=None, org_sources=None, minimum_age=3*3600):
     ''' Run update over all organizations. Optionally, update just one.
-    
+
         Also optionally, reset minimum age to trigger org update, in seconds.
     '''
-    # Set a single cutoff timestamp for orgs we'll look at.
+    # Set a single cutoff timestamp for orgs we'll look atself.
     maximum_updated = time() - minimum_age
-    
+
     # Keep a set of fresh organization names.
     organization_names = set()
 
     # Retrieve all organizations and shuffle the list in place.
-    orgs_info = get_organizations()
+    orgs_info = get_organizations(org_sources)
     shuffle(orgs_info)
 
     if org_name:
@@ -683,13 +719,13 @@ def main(org_name=None, minimum_age=3*3600):
         filter = Organization.name == org_info['name']
         existing_org = db.session.query(Organization).filter(filter).first()
         organization_names.add(org_info['name'])
-        
+
         if existing_org and not org_name:
             if existing_org.last_updated > maximum_updated:
                 # Skip this organization, it's been updated too recently.
                 logging.info("Skipping update for {0}".format(org_info['name'].encode('utf8')))
                 continue
-      
+
         # Mark everything in this organization for deletion at first.
         db.session.execute(db.update(Event, values={'keep': False}).where(Event.organization_name == org_info['name']))
         db.session.execute(db.update(Story, values={'keep': False}).where(Story.organization_name == org_info['name']))
@@ -766,4 +802,4 @@ parser.add_argument('--name', dest='name', help='Single organization name to upd
 if __name__ == "__main__":
     args = parser.parse_args()
     org_name = args.name and args.name.decode('utf8') or ''
-    main(org_name=org_name)
+    main(org_name=org_name, org_sources=ORG_SOURCES)
