@@ -11,7 +11,7 @@ import json, os, requests, time
 from flask.ext.heroku import Heroku
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy.ext.mutable import Mutable
-from sqlalchemy import types, desc
+from sqlalchemy import types, desc, or_
 from dictalchemy import make_class_dictable
 from dateutil.tz import tzoffset
 from mimetypes import guess_type
@@ -162,6 +162,13 @@ class Organization(db.Model):
         organization_name = safe_name(self.name)
         return '%s://%s/api/organizations/%s/projects' % (request.scheme, request.host, organization_name)
 
+    def all_issues(self):
+        '''API link to all an orgs issues
+        '''
+        # Make a nice org name
+        organization_name = safe_name(self.name)
+        return '%s://%s/api/organizations/%s/issues' % (request.scheme, request.host, organization_name)
+
     def all_stories(self):
         ''' API link to all an orgs stories
         '''
@@ -188,7 +195,7 @@ class Organization(db.Model):
 
         del organization_dict['keep']
 
-        for key in ('all_events', 'all_projects', 'all_stories',
+        for key in ('all_events', 'all_projects', 'all_stories', 'all_issues',
                     'upcoming_events', 'past_events', 'api_url'):
             organization_dict[key] = getattr(self, key)()
 
@@ -318,10 +325,11 @@ class Issue(db.Model):
     project = db.relationship('Project', single_parent=True, cascade='all, delete-orphan')
     project_id = db.Column(db.Integer(), db.ForeignKey('project.id', ondelete='CASCADE'))
 
-    def __init__(self, title, project_id, html_url=None, labels=None, body=None):
+    labels = db.relationship('Label', backref='issue', cascade='save-update, delete')
+
+    def __init__(self, title, project_id=None, html_url=None, labels=None, body=None):
         self.title = title
         self.html_url = html_url
-        self.labels = labels
         self.body = body
         self.project_id = project_id
         self.keep = True
@@ -345,8 +353,38 @@ class Issue(db.Model):
 
         del issue_dict['keep']
         issue_dict['api_url'] = self.api_url()
+        issue_dict['labels'] = [l.asdict() for l in self.labels]
 
         return issue_dict
+
+class Label(db.Model):
+    '''
+        Issue labels for projects on Github
+    '''
+    # Columns
+    id = db.Column(db.Integer(), primary_key=True)
+    name = db.Column(db.Unicode())
+    color = db.Column(db.Unicode())
+    url = db.Column(db.Unicode())
+
+    issue_id = db.Column(db.Integer, db.ForeignKey('issue.id'))
+
+    def __init__(self, name, color, url, issue_id=None):
+        self.name = name
+        self.color = color
+        self.url = url
+        self.issue_id = issue_id
+
+    def asdict(self):
+        '''
+            Return label as a dictionary with some properties tweaked
+        '''
+        label_dict = db.Model.asdict(self)
+
+        del label_dict['id']
+        del label_dict['issue_id']
+
+        return label_dict
 
 class Event(db.Model):
     '''
@@ -631,7 +669,41 @@ def get_orgs_projects(organization_name):
         return "Organization not found", 404
 
     # Get project objects
-    query = Project.query.filter_by(organization_name=organization.name)
+    query = Project.query.filter_by(organization_name=organization.name).order_by(desc(Project.last_updated))
+    response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)))
+    return jsonify(response)
+
+@app.route("/api/organizations/<organization_name>/issues")
+@app.route("/api/organizations/<organization_name>/issues/labels/<labels>")
+def get_orgs_issues(organization_name, labels=None):
+    ''' A clean url to get an organizations issues
+    '''
+
+    # Get one named organization.
+    organization = Organization.query.filter_by(name=raw_name(organization_name)).first()
+    if not organization:
+        return "Organization not found", 404
+
+    # Get that organization's projects
+    projects = Project.query.filter_by(organization_name=organization.name).all()
+    project_ids = [project.id for project in projects]
+
+    # Get all issues belonging to these projects
+    query = Issue.query.filter(Issue.project_id.in_(project_ids))
+
+    if labels:
+        # Create a labels list by comma separating the argument
+        labels = labels.split(',')
+
+        # Create the filter for each label
+        labels = [Label.name.ilike('%%%s%%' % label) for label in labels]
+
+        # Create the query object by joining on Issue.labels
+        query = query.join(Issue.labels)
+
+        # Filter by all of the given labels
+        query = query.filter(or_(*labels))        
+
     response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)))
     return jsonify(response)
 
@@ -659,6 +731,7 @@ def get_projects(id=None):
         else:
             query = query.filter(getattr(Project, attr) == value)
 
+    query = query.order_by(desc(Project.last_updated))
     response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)), querystring)
     return jsonify(response)
 
@@ -675,6 +748,28 @@ def get_issues(id=None):
 
     # Get a bunch of issues
     query = db.session.query(Issue)
+    response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)))
+    return jsonify(response)
+
+@app.route('/api/issues/labels/<labels>')
+def get_issues_by_labels(labels):
+    '''
+    A clean url to filter issues by a comma-separated list of labels
+    '''
+
+    # Create a labels list by comma separating the argument
+    labels = labels.split(',')
+
+    # Create the filter for each label
+    labels = [Label.name.ilike('%%%s%%' % label) for label in labels]
+
+    # Create the query object by joining on Issue.labels
+    query = db.session.query(Issue).join(Issue.labels)
+
+    # Filter by all of the given labels
+    query = query.filter(or_(*labels))
+
+    # Return the paginated reponse
     response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)))
     return jsonify(response)
 

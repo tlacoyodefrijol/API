@@ -49,7 +49,7 @@ class RunUpdateTestCase(unittest.TestCase):
         if url.geturl() == 'http://example.com/cfa-projects.csv':
             return response(200, '''name,description,link_url,code_url,type,categories\n,"Thing for ""stuff"".",,https://github.com/codeforamerica/cityvoice,web service,"community engagement, housing"\nSouthBendVoices,,,https://github.com/codeforamerica/cityvoice,,''')
 
-        elif url.geturl() == run_update.gdocs_url:
+        elif "docs.google.com" in url:
             return response(200, u'''name,website,events_url,rss,projects_list_url\nCöde for Ameriça,http://codeforamerica.org,http://www.meetup.com/events/Code-For-Charlotte/,http://www.codeforamerica.org/blog/feed/,http://example.com/cfa-projects.csv\nCode for America (2),,,,https://github.com/codeforamerica\nCode for America (3),,,,https://www.github.com/orgs/codeforamerica'''.encode('utf8'))
 
         elif url.geturl() == 'https://api.github.com/repos/codeforamerica/cityvoice':
@@ -107,7 +107,7 @@ class RunUpdateTestCase(unittest.TestCase):
             import run_update
 
             # Iterate over organizations, projects and issues, saving them to db.session.
-            for org_info in run_update.get_organizations():
+            for org_info in run_update.get_organizations("test_org_sources.csv"):
                 organization = run_update.save_organization_info(self.db.session, org_info)
 
                 projects = run_update.get_projects(organization)
@@ -115,10 +115,10 @@ class RunUpdateTestCase(unittest.TestCase):
                 for proj_info in projects:
                     run_update.save_project_info(self.db.session, proj_info)
 
-                issues = run_update.get_issues(organization.name)
-
-                for issue_info in issues:
-                    run_update.save_issue_info(self.db.session, issue_info)
+                issues, labels = run_update.get_issues(organization.name)
+                
+                for i in range(0, len(issues)):
+                    run_update.save_issue_info(self.db.session, issues[i], labels[i])
 
         self.db.session.flush()
 
@@ -154,17 +154,14 @@ class RunUpdateTestCase(unittest.TestCase):
         def response_content(url, request):
             import run_update
 
-            if url.geturl() == run_update.gdocs_url:
+            if "docs.google.com" in url:
                 return response(200, '''name,website,events_url,rss,projects_list_url\nCfA,,,,''')
-
-            else:
-                raise Exception('Asked for unknown URL ' + url.geturl())
 
         from app import Organization
 
         with HTTMock(response_content):
             import run_update
-            run_update.main(minimum_age=10)
+            run_update.main(minimum_age=10, org_sources="test_org_sources.csv")
         
         # Show that CfA has been recently updated.
         org = self.db.session.query(Organization).first()
@@ -176,7 +173,7 @@ class RunUpdateTestCase(unittest.TestCase):
 
         with HTTMock(response_content):
             import run_update
-            run_update.main(minimum_age=10)
+            run_update.main(minimum_age=10, org_sources="test_org_sources.csv")
         
         # Show that CfA has *not* been recently updated.
         org = self.db.session.query(Organization).first()
@@ -188,7 +185,7 @@ class RunUpdateTestCase(unittest.TestCase):
 
         with HTTMock(response_content):
             import run_update
-            run_update.main(minimum_age=10)
+            run_update.main(minimum_age=10, org_sources="test_org_sources.csv")
         
         # Show that CfA has been recently updated.
         org = self.db.session.query(Organization).first()
@@ -201,7 +198,7 @@ class RunUpdateTestCase(unittest.TestCase):
         # ...but also ask for the org by name.
         with HTTMock(response_content):
             import run_update
-            run_update.main(org_name='CfA')
+            run_update.main(org_name='CfA', org_sources="test_org_sources.csv")
         
         # Show that CfA has been recently updated.
         org = self.db.session.query(Organization).first()
@@ -224,7 +221,7 @@ class RunUpdateTestCase(unittest.TestCase):
 
         with HTTMock(self.response_content):
             import run_update
-            run_update.main()
+            run_update.main(org_sources="test_org_sources.csv")
 
         self.db.session.flush()
 
@@ -300,7 +297,7 @@ class RunUpdateTestCase(unittest.TestCase):
             if url.geturl() == 'http://example.com/cfa-projects.csv':
                 return response(200, '''name,description,link_url,code_url,type,categories\n,,http://google.com,https://github.com/codeforamerica/cityvoice,,''')
 
-            elif url.geturl() == run_update.gdocs_url:
+            elif "docs.google.com" in url:
                 return response(200, '''name,website,events_url,rss,projects_list_url\nCode for America,,,,http://example.com/cfa-projects.csv''')
 
             elif url.geturl() == 'https://api.github.com/repos/codeforamerica/cityvoice':
@@ -317,7 +314,7 @@ class RunUpdateTestCase(unittest.TestCase):
 
         with HTTMock(response_content):
             import run_update
-            run_update.main()
+            run_update.main(org_sources="test_org_sources.csv")
 
         logging.error.assert_called_with('https://api.github.com/repos/codeforamerica/cityvoice doesn\'t exist.')
 
@@ -330,7 +327,7 @@ class RunUpdateTestCase(unittest.TestCase):
             if url.geturl() == 'http://example.com/cfa-projects.csv':
                 return response(200, '''name,description,link_url,code_url,type,categories\n,,,https://github.com/codeforamerica/cityvoice,,''')
 
-            elif url.geturl() == run_update.gdocs_url:
+            elif "docs.google.com" in url:
                 return response(200, '''name,website,events_url,rss,projects_list_url\nCode for America,,,,http://example.com/cfa-projects.csv''')
 
             elif url.geturl() == 'https://api.github.com/repos/codeforamerica/cityvoice':
@@ -339,7 +336,8 @@ class RunUpdateTestCase(unittest.TestCase):
         with HTTMock(response_content):
             import run_update
             self.assertFalse(run_update.github_throttling)
-            self.assertRaises(IOError, run_update.main)
+            with self.assertRaises(IOError):
+                run_update.main(org_sources="test_org_sources.csv")
 
     def test_main_with_weird_organization_name(self):
         ''' When an organization has a weird name, ...
@@ -347,7 +345,7 @@ class RunUpdateTestCase(unittest.TestCase):
         def response_content(url, request):
             import run_update
 
-            if url.geturl() == run_update.gdocs_url:
+            if "docs.google.com" in url:
                 return response(200, '''name,website,events_url,rss,projects_list_url\nCode_for-America,http://codeforamerica.org,http://www.meetup.com/events/foo-%%%,,http://example.com/cfa-projects.csv''')
             else:
                 raise Exception('Asked for unknown URL ' + url.geturl())
@@ -359,7 +357,7 @@ class RunUpdateTestCase(unittest.TestCase):
 
         with HTTMock(response_content):
             import run_update
-            run_update.main()
+            run_update.main(org_sources="test_org_sources.csv")
             from app import Error
             errors = self.db.session.query(Error).all()
             for error in errors:
@@ -382,7 +380,7 @@ class RunUpdateTestCase(unittest.TestCase):
 
       with HTTMock(response_content):
           import run_update
-          run_update.main()
+          run_update.main(org_sources="test_org_sources.csv")
           from app import Error
           errors = self.db.session.query(Error).all()
           for error in errors:
@@ -400,7 +398,7 @@ class RunUpdateTestCase(unittest.TestCase):
         def response_content(url, request):
             import run_update
 
-            if url.geturl() == run_update.gdocs_url:
+            if "docs.google.com" in url:
                 return response(200, '''name,website,events_url,rss,projects_list_url\nCode for America,,http://www.meetup.com/events/foo-%%%,,''')
 
             else:
@@ -411,7 +409,7 @@ class RunUpdateTestCase(unittest.TestCase):
 
         with HTTMock(response_content):
             import run_update
-            run_update.main()
+            run_update.main(org_sources="test_org_sources.csv")
 
         logging.error.assert_called_with('Code for America does not have a valid events url')
 
@@ -428,10 +426,10 @@ class RunUpdateTestCase(unittest.TestCase):
         def response_content(url, request):
             import run_update
 
-            if url.geturl() == run_update.gdocs_url:
+            if "docs.google.com" in url:
                 return response(200, '''name,website,events_url,rss,projects_list_url\nCode for America,,http://www.meetup.com/events/Code-For-Charlotte,,''')
 
-            elif match(r'https:\/\/api\.meetup\.com\/2\/events\?status=past,upcoming&format=json&group_urlname=Code-For-Charlotte&key=', url.geturl()):
+            if match(r'https:\/\/api\.meetup\.com\/2\/events\?status=past,upcoming&format=json&group_urlname=Code-For-Charlotte&key=', url.geturl()):
                 return response(404, '''Not Found!''')
 
             else:
@@ -444,7 +442,7 @@ class RunUpdateTestCase(unittest.TestCase):
 
         with HTTMock(response_content):
             import run_update
-            run_update.main()
+            run_update.main(org_sources="test_org_sources.csv")
 
         logging.error.assert_called_with('Code for America\'s meetup page cannot be found')
 
@@ -490,7 +488,7 @@ class RunUpdateTestCase(unittest.TestCase):
 
         with HTTMock(response_content):
             import run_update
-            run_update.main()
+            run_update.main(org_sources="test_org_sources.csv")
 
         from app import Project
         projects = self.db.session.query(Project).all()
@@ -555,6 +553,12 @@ class RunUpdateTestCase(unittest.TestCase):
             projects = run_update.get_projects(gdocs)
             self.assertEqual(projects[0]['name'], "Hack Task Aggregator")
             self.assertEqual(projects[0]['last_updated'], datetime.datetime.now().strftime("%a, %d %b %Y %H:%M:%S %Z"))
+
+    def test_org_sources_csv(self):
+        '''Test that there is a csv file with links to lists of organizations
+        '''
+        import run_update
+        self.assertTrue(os.path.exists(run_update.ORG_SOURCES))
 
 if __name__ == '__main__':
     unittest.main()

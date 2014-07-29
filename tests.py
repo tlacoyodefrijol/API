@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from urlparse import urlparse
 
 from app import app, db
-from factories import OrganizationFactory, ProjectFactory, EventFactory, StoryFactory, IssueFactory
+from factories import OrganizationFactory, ProjectFactory, EventFactory, StoryFactory, IssueFactory, LabelFactory
 
 class ApiTest(unittest.TestCase):
 
@@ -33,13 +33,51 @@ class ApiTest(unittest.TestCase):
         ProjectFactory(organization_name=organization.name, name="Project 3", last_updated="Thu, 01 Jan 2014 00:00:00 GMT")
         db.session.flush()
 
-        response = self.app.get('/api/organizations/Code for San Francisco')
+        response = self.app.get('/api/organizations/Code-for-San-Francisco')
         response = json.loads(response.data)
 
         self.assertEqual(len(response['current_projects']), 3)
         self.assertEqual(response['current_projects'][0]['name'], "Project 3")
         self.assertEqual(response['current_projects'][1]['name'], "Non Github Project")
         self.assertEqual(response['current_projects'][2]['name'], "Project 2")
+
+    def test_all_projects_order(self):
+        '''
+        Test that projects gets returned in order of last_updated
+        '''
+        ProjectFactory(name="Project 1", last_updated="Mon, 01 Jan 2010 00:00:00 GMT")
+        ProjectFactory(name="Project 2", last_updated="Tue, 01 Jan 2011 00:00:00 GMT")
+        ProjectFactory(name="Non Github Project", last_updated="Wed, 01 Jan 2013 00:00:00 ", github_details=None)
+        ProjectFactory(name="Project 3", last_updated="Thu, 01 Jan 2014 00:00:00 GMT")
+        db.session.flush()
+
+        response = self.app.get('/api/projects')
+        response = json.loads(response.data)
+
+        self.assertEqual(response['objects'][0]['name'], "Project 3")
+        self.assertEqual(response['objects'][1]['name'], "Non Github Project")
+        self.assertEqual(response['objects'][2]['name'], "Project 2")
+        self.assertEqual(response['objects'][3]['name'], "Project 1")
+
+    def test_orgs_projects_order(self):
+        ''' Test that a orgs projects come back in order of last_updated.
+        '''
+        organization = OrganizationFactory(name='Code for San Francisco')
+        db.session.flush()
+
+        ProjectFactory(organization_name=organization.name, name="Project 1", last_updated="Mon, 01 Jan 2010 00:00:00 GMT")
+        ProjectFactory(organization_name=organization.name, name="Project 2", last_updated="Tue, 01 Jan 2011 00:00:00 GMT")
+        ProjectFactory(organization_name=organization.name, name="Non Github Project", last_updated="Wed, 01 Jan 2013 00:00:00 ", github_details=None)
+        ProjectFactory(organization_name=organization.name, name="Project 3", last_updated="Thu, 01 Jan 2014 00:00:00 GMT")
+        db.session.flush()
+
+        response = self.app.get('/api/organizations/Code-for-San-Francisco/projects')
+        response = json.loads(response.data)
+
+        self.assertEqual(response['objects'][0]['name'], "Project 3")
+        self.assertEqual(response['objects'][1]['name'], "Non Github Project")
+        self.assertEqual(response['objects'][2]['name'], "Project 2")
+        self.assertEqual(response['objects'][3]['name'], "Project 1")
 
     def test_current_events(self):
         '''
@@ -486,6 +524,35 @@ class ApiTest(unittest.TestCase):
         self.assertTrue('project' in response)
         self.assertTrue('issues' not in response['project'])
 
+    def test_issues_with_labels(self):
+        '''
+        Test that /api/issues/labels works as expected.
+        Should return issues with any of the passed in label names
+        '''
+        ProjectFactory()
+        issue = IssueFactory()
+        issue2 = IssueFactory()
+        label1 = LabelFactory(name="enhancement")
+        label2 = LabelFactory(name="hack")
+        issue.labels = [label1]
+        issue2.labels = [label2]
+
+        db.session.add(issue)
+        db.session.add(issue2)
+        db.session.add(label1)
+        db.session.add(label2)
+        db.session.commit()
+
+        response = self.app.get('/api/issues/labels/enhancement', follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+        self.assertEqual(response['total'], 1)
+
+        response = self.app.get('/api/issues/labels/enhancement,hack', follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+        self.assertEqual(response['total'], 2)
+
     def test_organization_query_filter(self):
         '''
         Test that organization query params work as expected.
@@ -513,7 +580,7 @@ class ApiTest(unittest.TestCase):
         response = json.loads(response.data)
         self.assertEqual(response['total'], 0)
 
-    def test_single_project_query_filter(self):
+    def test_project_query_filter(self):
         '''
         Test that project query params work as expected.
         '''
@@ -547,6 +614,27 @@ class ApiTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         response = json.loads(response.data)
         self.assertEqual(response['total'], 1)
+
+    def test_organization_issues(self):
+        '''
+        Test getting all of an organization's issues
+        '''
+        organization = OrganizationFactory(name="Civic Project", type="Not a brigade")
+        db.session.flush()
+
+        project1 = ProjectFactory(organization_name=organization.name, name="Civic Project 1")
+        project2 = ProjectFactory(organization_name=organization.name, name="Civic Project 2")
+        db.session.flush()
+
+        issue11 = IssueFactory(project_id=project1.id, title="Civic Issue 1.1")
+        issue12 = IssueFactory(project_id=project1.id, title="Civic Issue 1.2")
+        issue21 = IssueFactory(project_id=project2.id, title="Civic Issue 2.1")
+        db.session.flush()
+
+        response = self.app.get('/api/organizations/%s/issues' % organization.name, follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+        self.assertEqual(response['total'], 3)
 
 if __name__ == '__main__':
     unittest.main()

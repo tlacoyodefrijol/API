@@ -1,4 +1,4 @@
-import os, sys
+import os, sys, csv, yaml
 import logging
 from urlparse import urlparse
 from csv import DictReader, Sniffer
@@ -11,7 +11,7 @@ from dateutil.tz import tzoffset
 from unidecode import unidecode
 from feeds import extract_feed_links, get_first_working_feed_link
 import feedparser
-from app import db, app, Project, Organization, Story, Event, Error, Issue, is_safe_name
+from app import db, app, Project, Organization, Story, Event, Error, Issue, Label, is_safe_name
 from urllib2 import HTTPError, URLError
 from urlparse import urlparse
 from random import shuffle
@@ -25,12 +25,10 @@ logger = logging.getLogger(__name__)
 requests_log = logging.getLogger("requests")
 requests_log.setLevel(logging.WARNING)
 
-# Production
-gdocs_url = 'https://docs.google.com/a/codeforamerica.org/spreadsheet/ccc?key=0ArHmv-6U1drqdGNCLWV5Q0d5YmllUzE5WGlUY3hhT2c&output=csv'
-
-# Testing
-# gdocs_url = "https://docs.google.com/spreadsheet/pub?key=0ArHmv-6U1drqdEVkTUtZNVlYRE5ndERLLTFDb2RqQlE&output=csv"
-
+# Org sources can be csv or yaml
+# They should be lists of organizations you want included at /organizations
+# columns should be name, website, events_url, rss, projects_list_url, city, latitude, longitude, type
+ORG_SOURCES = 'org_sources.csv'
 
 if 'GITHUB_TOKEN' in os.environ:
     github_auth = (os.environ['GITHUB_TOKEN'], '')
@@ -105,12 +103,26 @@ def get_meetup_events(organization, group_urlname):
             events.append(event)
         return events
 
-def get_organizations():
+def get_organizations(org_sources):
+    ''' Collate all organizations from different sources.
+    '''
+    organizations = []
+    with open(org_sources) as file:
+        for org_source in file.read().splitlines():
+            if 'docs.google.com' in org_source:
+                organizations.extend(get_organizations_from_spreadsheet(org_source))
+            if '.yml' in org_source:
+                # Only case is GitHub government list
+                organizations.extend(get_organizations_from_government_github_com(org_source))
+
+    return organizations
+
+def get_organizations_from_spreadsheet(org_source):
     '''
         Get a row for each organization from the Brigade Info spreadsheet.
         Return a list of dictionaries, one for each row past the header.
     '''
-    got = get(gdocs_url)
+    got = get(org_source)
 
     #
     # Requests response.text is a lying liar, with its UTF8 bytes as unicode()?
@@ -121,6 +133,22 @@ def get_organizations():
     for (index, org) in enumerate(organizations):
         organizations[index] = dict([(k.decode('utf8'), v.decode('utf8'))
                                      for (k, v) in org.items()])
+
+    return organizations
+
+def get_organizations_from_government_github_com(org_source):
+    ''' Get a row for each organization from government.github.com.
+
+    That GitHub site is a useful resource and index of government organisations
+    across the world that have organization profiles on GitHub.
+    '''
+    got = get(org_source)
+    org_list = yaml.load(got.content)
+    organizations = []
+    for group in org_list:
+        for org in org_list[group]:
+            org = {'name': org, 'projects_list_url': 'https://github.com/' + org, 'type': 'government', 'city': group}
+            organizations.append(org)
 
     return organizations
 
@@ -414,6 +442,7 @@ def get_issues(org_name):
         Get github issues associated to each Projects.
     '''
     issues = []
+    labels = []
 
     # Flush the current db session to save projects added in current run
     db.session.flush()
@@ -446,11 +475,12 @@ def get_issues(org_name):
                 # Type check the issue, we are expecting a dictionary
                 if type(issue) == type({}):
                     issue_dict = dict(title=issue['title'], html_url=issue['html_url'],
-                                 labels=issue['labels'], body=issue['body'], project_id=project.id)
+                                      body=issue['body'], project_id=project.id)
                     issues.append(issue_dict)
+                    labels.append(issue['labels'])
                 else:
                     logging.error('Issue for project %s is not a dictionary', project.name)
-    return issues
+    return issues, labels
 
 def count_people_totals(all_projects):
     ''' Create a list of people details based on project details.
@@ -554,11 +584,19 @@ def save_project_info(session, proj_dict):
 
     return existing_project
 
-def save_issue_info(session, issue_dict):
+def save_issue_info(session, issue_dict, label_list):
     '''
         Save a dictionary of issue ingo to the datastore session.
         Return an app.Issue instance
     '''
+
+    # Turn label lists into actual Label models
+    labels = []
+    for label_dict in label_list:
+        new_label = Label(**label_dict)
+        labels.append(new_label)
+        session.add(new_label)
+
     # Select the current issue, filtering on title AND project_name.
     filter = Issue.title == issue_dict['title'], Issue.project_id == issue_dict['project_id']
     existing_issue = session.query(Issue).filter(*filter).first()
@@ -566,6 +604,7 @@ def save_issue_info(session, issue_dict):
     # If this is a new issue, save and return it.
     if not existing_issue:
         new_issue = Issue(**issue_dict)
+        new_issue.labels = labels
         session.add(new_issue)
         return new_issue
 
@@ -575,6 +614,7 @@ def save_issue_info(session, issue_dict):
     # Update existing issue details
     for (field, value) in issue_dict.items():
         setattr(existing_issue, field, value)
+    existing_issue.labels = labels
 
     # Flush existing object, to prevent a sqlalchemy.orm.exc.StaleDataError.
     session.flush()
@@ -644,19 +684,19 @@ def get_event_group_identifier(events_url):
     else:
         return None
 
-def main(org_name=None, minimum_age=3*3600):
+def main(org_name=None, org_sources=None, minimum_age=3*3600):
     ''' Run update over all organizations. Optionally, update just one.
-    
+
         Also optionally, reset minimum age to trigger org update, in seconds.
     '''
-    # Set a single cutoff timestamp for orgs we'll look at.
+    # Set a single cutoff timestamp for orgs we'll look atself.
     maximum_updated = time() - minimum_age
-    
+
     # Keep a set of fresh organization names.
     organization_names = set()
 
     # Retrieve all organizations and shuffle the list in place.
-    orgs_info = get_organizations()
+    orgs_info = get_organizations(org_sources)
     shuffle(orgs_info)
 
     if org_name:
@@ -679,13 +719,13 @@ def main(org_name=None, minimum_age=3*3600):
         filter = Organization.name == org_info['name']
         existing_org = db.session.query(Organization).filter(filter).first()
         organization_names.add(org_info['name'])
-        
+
         if existing_org and not org_name:
             if existing_org.last_updated > maximum_updated:
                 # Skip this organization, it's been updated too recently.
                 logging.info("Skipping update for {0}".format(org_info['name'].encode('utf8')))
                 continue
-      
+
         # Mark everything in this organization for deletion at first.
         db.session.execute(db.update(Event, values={'keep': False}).where(Event.organization_name == org_info['name']))
         db.session.execute(db.update(Story, values={'keep': False}).where(Story.organization_name == org_info['name']))
@@ -722,9 +762,9 @@ def main(org_name=None, minimum_age=3*3600):
 
         # Get issues for all of the projects
         logging.info("Gathering all of %s's project's issues." % organization.name)
-        issues = get_issues(organization.name)
-        for issue_info in issues:
-            save_issue_info(db.session, issue_info)
+        issues, labels = get_issues(organization.name)
+        for i in range(0,len(issues)):
+            save_issue_info(db.session, issues[i], labels[i])
 
         # Remove everything marked for deletion.
         db.session.query(Event).filter(not Event.keep).delete()
@@ -762,4 +802,4 @@ parser.add_argument('--name', dest='name', help='Single organization name to upd
 if __name__ == "__main__":
     args = parser.parse_args()
     org_name = args.name and args.name.decode('utf8') or ''
-    main(org_name=org_name)
+    main(org_name=org_name, org_sources=ORG_SOURCES)
