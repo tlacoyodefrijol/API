@@ -41,6 +41,27 @@ class ApiTest(unittest.TestCase):
         self.assertEqual(response['current_projects'][1]['name'], "Non Github Project")
         self.assertEqual(response['current_projects'][2]['name'], "Project 2")
 
+    def test_projects_order(self):
+        '''
+        Test that projects gets returned in order of last_updated
+        '''
+        organization = OrganizationFactory(name='Code for San Francisco')
+        db.session.flush()
+
+        ProjectFactory(organization_name=organization.name, name="Project 1", last_updated="Mon, 01 Jan 2010 00:00:00 GMT")
+        ProjectFactory(organization_name=organization.name, name="Project 2", last_updated="Tue, 01 Jan 2011 00:00:00 GMT")
+        ProjectFactory(organization_name=organization.name, name="Non Github Project", last_updated="Wed, 01 Jan 2013 00:00:00 ", github_details=None)
+        ProjectFactory(organization_name=organization.name, name="Project 3", last_updated="Thu, 01 Jan 2014 00:00:00 GMT")
+        db.session.flush()
+
+        response = self.app.get('/api/projects')
+        response = json.loads(response.data)
+
+        self.assertEqual(response['objects'][0]['name'], "Project 3")
+        self.assertEqual(response['objects'][1]['name'], "Non Github Project")
+        self.assertEqual(response['objects'][2]['name'], "Project 2")
+        self.assertEqual(response['objects'][3]['name'], "Project 1")
+
     def test_current_events(self):
         '''
         The three soonest upcoming events should be returned.

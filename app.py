@@ -628,7 +628,7 @@ def get_projects(id=None):
         return jsonify(proj.asdict(True))
 
     # Get a bunch of projects.
-    query = db.session.query(Project)
+    query = Project.query.order_by(desc(Project.last_updated))
     response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)))
     return jsonify(response)
 
