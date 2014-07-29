@@ -676,7 +676,8 @@ def get_orgs_projects(organization_name):
     return jsonify(response)
 
 @app.route("/api/organizations/<organization_name>/issues")
-def get_orgs_issues(organization_name):
+@app.route("/api/organizations/<organization_name>/issues/labels/<labels>")
+def get_orgs_issues(organization_name, labels=None):
     ''' A clean url to get an organizations issues
     '''
 
@@ -691,6 +692,19 @@ def get_orgs_issues(organization_name):
 
     # Get all issues belonging to these projects
     query = Issue.query.filter(Issue.project_id.in_(project_ids))
+
+    if labels:
+        # Create a labels list by comma separating the argument
+        labels = labels.split(',')
+
+        # Create the filter for each label
+        labels = [Label.name.ilike('%%%s%%' % label) for label in labels]
+
+        # Create the query object by joining on Issue.labels
+        query = query.join(Issue.labels)
+
+        # Filter by all of the given labels
+        query = query.filter(or_(*labels))        
 
     response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)))
     return jsonify(response)
