@@ -612,7 +612,7 @@ def get_orgs_projects(organization_name):
         return "Organization not found", 404
 
     # Get project objects
-    query = Project.query.filter_by(organization_name=organization.name)
+    query = Project.query.filter_by(organization_name=organization.name).order_by(desc(Project.last_updated))
     response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)))
     return jsonify(response)
 

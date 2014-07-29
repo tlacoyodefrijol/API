@@ -33,7 +33,7 @@ class ApiTest(unittest.TestCase):
         ProjectFactory(organization_name=organization.name, name="Project 3", last_updated="Thu, 01 Jan 2014 00:00:00 GMT")
         db.session.flush()
 
-        response = self.app.get('/api/organizations/Code for San Francisco')
+        response = self.app.get('/api/organizations/Code-for-San-Francisco')
         response = json.loads(response.data)
 
         self.assertEqual(len(response['current_projects']), 3)
@@ -41,9 +41,26 @@ class ApiTest(unittest.TestCase):
         self.assertEqual(response['current_projects'][1]['name'], "Non Github Project")
         self.assertEqual(response['current_projects'][2]['name'], "Project 2")
 
-    def test_projects_order(self):
+    def test_all_projects_order(self):
         '''
         Test that projects gets returned in order of last_updated
+        '''
+        ProjectFactory(name="Project 1", last_updated="Mon, 01 Jan 2010 00:00:00 GMT")
+        ProjectFactory(name="Project 2", last_updated="Tue, 01 Jan 2011 00:00:00 GMT")
+        ProjectFactory(name="Non Github Project", last_updated="Wed, 01 Jan 2013 00:00:00 ", github_details=None)
+        ProjectFactory(name="Project 3", last_updated="Thu, 01 Jan 2014 00:00:00 GMT")
+        db.session.flush()
+
+        response = self.app.get('/api/projects')
+        response = json.loads(response.data)
+
+        self.assertEqual(response['objects'][0]['name'], "Project 3")
+        self.assertEqual(response['objects'][1]['name'], "Non Github Project")
+        self.assertEqual(response['objects'][2]['name'], "Project 2")
+        self.assertEqual(response['objects'][3]['name'], "Project 1")
+
+    def test_orgs_projects_order(self):
+        ''' Test that a orgs projects come back in order of last_updated.
         '''
         organization = OrganizationFactory(name='Code for San Francisco')
         db.session.flush()
@@ -54,7 +71,7 @@ class ApiTest(unittest.TestCase):
         ProjectFactory(organization_name=organization.name, name="Project 3", last_updated="Thu, 01 Jan 2014 00:00:00 GMT")
         db.session.flush()
 
-        response = self.app.get('/api/projects')
+        response = self.app.get('/api/organizations/Code-for-San-Francisco/projects')
         response = json.loads(response.data)
 
         self.assertEqual(response['objects'][0]['name'], "Project 3")
