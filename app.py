@@ -730,8 +730,8 @@ def get_projects(id=None):
             query = query.join(Project.organization).filter(getattr(Organization, org_attr).ilike('%%%s%%' % value))
         else:
             query = query.filter(getattr(Project, attr) == value)
-            
-    query = Project.query.order_by(desc(Project.last_updated))
+
+    query = query.order_by(desc(Project.last_updated))
     response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)), querystring)
     return jsonify(response)
 
