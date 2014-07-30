@@ -277,7 +277,8 @@
             <h4>Url parameters</h4>
             <dl>
                 You can add any of the <a href="#project-properties">Project properties</a> as a parameter and the API will filter by Organizations that have that property. You can also do request projects based on organization properties such as: <br> <br>
-                /api/project/organization_type=Brigade
+                /api/project/organization_type=Brigade <br>
+                /api/project/organization_city=San%20Francisco,%20CA
             </dl>
             <h4>Response Properties</h4>
             <dl>
@@ -737,6 +738,51 @@
   {
     "id": 2,
     "title": "Import SFGOV data set",
+    …  
+  },
+  …
+  ]
+}</pre>
+            <h4>Sample Request with labels filter</h4>
+            <p><code><a href="{{ api_base }}/api/issues/labels/enhancement">{{ api_base }}/api/issues/labels/enhancement</a></code></p>
+            <h4>Sample Response</h4>
+            <pre>{
+  "pages": {
+    "next": …,
+    "last": …
+  },
+  "objects": [
+  {
+    "id": 1,
+    "title": "Write some tests",
+    "api_url": "http://codeforamerica.org/api/issues/2",
+    "body": "Start writing tests. ",
+    "html_url": "https://github.com/sfbrigade/ballot_initiatives/issues/7",
+    "labels": [ 
+      {
+        "color": "84b6eb",
+        "name": "enhancement",
+        "url": "https://api.github.com/repos/sfbrigade/ballot_initiatives/labels/enhancement"
+      }
+    ],
+    "project": { … },
+    "project_name": "ballot_initiatives",
+  },
+  {
+    "id": 2,
+    "title": "help for non-service residents",
+    "labels": [
+      {
+        "color": "84b6eb",
+        "name": "enhancement",
+        "url": "https://api.github.com/repos/open-austin/austin-recycles/labels/enhancement"
+      },
+      {
+        "color": "fef2c0",
+        "name": "hack",
+        "url": "https://api.github.com/repos/open-austin/austin-recycles/labels/hack"
+      }
+    ]
     …  
   },
   …
