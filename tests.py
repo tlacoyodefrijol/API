@@ -537,45 +537,45 @@ class ApiTest(unittest.TestCase):
         issue.labels = [label1]
         issue2.labels = [label2]
 
-        db.session.add(issue)
-        db.session.add(issue2)
-        db.session.add(label1)
-        db.session.add(label2)
         db.session.commit()
 
-        response = self.app.get('/api/issues/labels/enhancement', follow_redirects=True)
+        response = self.app.get('/api/issues/labels/enhancement')
         self.assertEqual(response.status_code, 200)
         response = json.loads(response.data)
         self.assertEqual(response['total'], 1)
+        self.assertEqual(response['objects'][0]['labels'][0]['name'], "enhancement")
 
-        response = self.app.get('/api/issues/labels/enhancement,hack', follow_redirects=True)
+        response = self.app.get('/api/issues/labels/enhancement,hack')
         self.assertEqual(response.status_code, 200)
         response = json.loads(response.data)
         self.assertEqual(response['total'], 2)
+        self.assertEqual(response['objects'][0]['labels'][0]['name'], "enhancement")
+        self.assertEqual(response['objects'][1]['labels'][0]['name'], "hack")
 
     def test_organization_query_filter(self):
         '''
         Test that organization query params work as expected.
         '''
-        brigade = OrganizationFactory(name="Brigade Organization", type="Brigade")
-        brigade = OrganizationFactory(name="Bayamon Organization", type="Brigade", city="Bayamon, PR")
-        meetup = OrganizationFactory(name="Meetup Organization", type="Meetup")
+        OrganizationFactory(name="Brigade Organization", type="Brigade")
+        OrganizationFactory(name="Bayamon Organization", type="Brigade", city="Bayamon, PR")
+        OrganizationFactory(name="Meetup Organization", type="Meetup")
 
-        db.session.add(meetup)
-        db.session.add(brigade)
         db.session.commit()
 
-        response = self.app.get('/api/organizations?type=Brigade', follow_redirects=True)
+        response = self.app.get('/api/organizations?type=Brigade')
         self.assertEqual(response.status_code, 200)
         response = json.loads(response.data)
         self.assertEqual(response['total'], 2)
+        self.assertEqual(response['objects'][0]['name'], "Brigade Organization")
+        self.assertEqual(response['objects'][1]['name'], "Bayamon Organization")
 
-        response = self.app.get('/api/organizations?type=Brigade&city=Bayamon,%20PR', follow_redirects=True)
+        response = self.app.get('/api/organizations?type=Brigade&city=Bayamon,%20PR')
         self.assertEqual(response.status_code, 200)
         response = json.loads(response.data)
         self.assertEqual(response['total'], 1)
+        self.assertEqual(response['objects'][0]['name'], "Bayamon Organization")
 
-        response = self.app.get('/api/organizations?type=SomeType', follow_redirects=True)
+        response = self.app.get('/api/organizations?type=SomeType')
         self.assertEqual(response.status_code, 200)
         response = json.loads(response.data)
         self.assertEqual(response['total'], 0)
@@ -584,33 +584,38 @@ class ApiTest(unittest.TestCase):
         '''
         Test that project query params work as expected.
         '''
+        brigade = OrganizationFactory(name="Whatever", type="Brigade")
         brigade_somewhere_far = OrganizationFactory(name="Brigade Organization", type="Brigade, Code for All")
         web_project = ProjectFactory(name="Random Web App", type="web service")
         other_web_project = ProjectFactory(name="Random Web App 2", type="web service", description="Another")
         non_web_project = ProjectFactory(name="Random Other App", type="other service")
 
+        web_project.organization = brigade
         non_web_project.organization =  brigade_somewhere_far
 
         db.session.add(web_project)
         db.session.add(non_web_project)
         db.session.commit()
 
-        response = self.app.get('/api/projects?type=web%20service', follow_redirects=True)
+        response = self.app.get('/api/projects?type=web%20service')
         self.assertEqual(response.status_code, 200)
         response = json.loads(response.data)
         self.assertEqual(response['total'], 2)
+        self.assertEqual(response['objects'][0]['name'], "Random Web App")
+        self.assertEqual(response['objects'][1]['name'], "Random Web App 2")
 
-        response = self.app.get('/api/projects?type=web%20service&description=Another', follow_redirects=True)
+        response = self.app.get('/api/projects?type=web%20service&description=Another')
         self.assertEqual(response.status_code, 200)
         response = json.loads(response.data)
         self.assertEqual(response['total'], 1)
+        self.assertEqual(response['objects'][0]['name'], "Random Web App 2")
 
-        response = self.app.get('/api/projects?type=different%20service', follow_redirects=True)
+        response = self.app.get('/api/projects?type=different%20service')
         self.assertEqual(response.status_code, 200)
         response = json.loads(response.data)
         self.assertEqual(response['total'], 0)
 
-        response = self.app.get('/api/projects?organization_type=Code+for+All', follow_redirects=True)
+        response = self.app.get('/api/projects?organization_type=Code+for+All')
         self.assertEqual(response.status_code, 200)
         response = json.loads(response.data)
         self.assertEqual(response['total'], 1)
@@ -631,10 +636,12 @@ class ApiTest(unittest.TestCase):
         issue21 = IssueFactory(project_id=project2.id, title="Civic Issue 2.1")
         db.session.flush()
 
-        response = self.app.get('/api/organizations/%s/issues' % organization.name, follow_redirects=True)
+        response = self.app.get('/api/organizations/%s/issues' % organization.name)
         self.assertEqual(response.status_code, 200)
         response = json.loads(response.data)
         self.assertEqual(response['total'], 3)
+
+        self.assertEqual(response["objects"][0]["title"], "Civic Issue 1.1")
 
 if __name__ == '__main__':
     unittest.main()
