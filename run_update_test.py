@@ -116,7 +116,7 @@ class RunUpdateTestCase(unittest.TestCase):
                     run_update.save_project_info(self.db.session, proj_info)
 
                 issues, labels = run_update.get_issues(organization.name)
-                
+
                 for i in range(0, len(issues)):
                     run_update.save_issue_info(self.db.session, issues[i], labels[i])
 
@@ -162,11 +162,11 @@ class RunUpdateTestCase(unittest.TestCase):
         with HTTMock(response_content):
             import run_update
             run_update.main(minimum_age=10, org_sources="test_org_sources.csv")
-        
+
         # Show that CfA has been recently updated.
         org = self.db.session.query(Organization).first()
         self.assertTrue(org.last_updated >= time() - 1)
-        
+
         # Set last_updated to a time in the too-recent past.
         self.db.session.execute(self.db.update(Organization, values={'last_updated': time() - 5}))
         self.db.session.commit()
@@ -174,11 +174,11 @@ class RunUpdateTestCase(unittest.TestCase):
         with HTTMock(response_content):
             import run_update
             run_update.main(minimum_age=10, org_sources="test_org_sources.csv")
-        
+
         # Show that CfA has *not* been recently updated.
         org = self.db.session.query(Organization).first()
         self.assertFalse(org.last_updated >= time() - 1)
-        
+
         # Set last_updated to a time in the distant past.
         self.db.session.execute(self.db.update(Organization, values={'last_updated': time() - 99}))
         self.db.session.commit()
@@ -186,11 +186,11 @@ class RunUpdateTestCase(unittest.TestCase):
         with HTTMock(response_content):
             import run_update
             run_update.main(minimum_age=10, org_sources="test_org_sources.csv")
-        
+
         # Show that CfA has been recently updated.
         org = self.db.session.query(Organization).first()
         self.assertTrue(org.last_updated >= time() - 1)
-        
+
         # Set last_updated to a time in the too-recent past...
         self.db.session.execute(self.db.update(Organization, values={'last_updated': time() - 5}))
         self.db.session.commit()
@@ -199,7 +199,7 @@ class RunUpdateTestCase(unittest.TestCase):
         with HTTMock(response_content):
             import run_update
             run_update.main(org_name='CfA', org_sources="test_org_sources.csv")
-        
+
         # Show that CfA has been recently updated.
         org = self.db.session.query(Organization).first()
         self.assertTrue(org.last_updated >= time() - 1)
@@ -517,7 +517,6 @@ class RunUpdateTestCase(unittest.TestCase):
             if url.netloc == 'www.gdocs.com':
                 return response(200, '''name,description,link_url,code_url,type,categories\nHack Task Aggregator,"Web application to aggregate tasks across projects that are identified for ""hacking"".",http://open-austin.github.io/hack-task-aggregator/public/index.html,,web service,"project management, civic hacking"''')
 
-        
         with HTTMock(response_content):
             import run_update
             projects = run_update.get_projects(philly)
@@ -527,7 +526,6 @@ class RunUpdateTestCase(unittest.TestCase):
             projects = run_update.get_projects(gdocs)
             self.assertEqual(projects[0]['name'], "Hack Task Aggregator")
             self.assertEqual(projects[0]['description'], 'Web application to aggregate tasks across projects that are identified for "hacking".')
-
 
     def test_non_github_projects(self):
         ''' Test that non github and non code projects get last_updated timestamps.
@@ -542,7 +540,7 @@ class RunUpdateTestCase(unittest.TestCase):
             if url.netloc == 'www.gdocs.com':
                 return response(200, '''name,description,link_url,code_url,type,categories\nHack Task Aggregator,"Web application to aggregate tasks across projects that are identified for ""hacking"".",,,web service,"project management, civic hacking"''')
 
-        
+
         with HTTMock(response_content):
             import run_update
             projects = run_update.get_projects(whatever)

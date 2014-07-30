@@ -343,13 +343,13 @@ def update_project_info(project):
         return project
 
     if 'code_url' not in project:
-        project = non_github_project_update_time(project) 
+        project = non_github_project_update_time(project)
         return project
 
     _, host, path, _, _, _ = urlparse(project['code_url'])
 
     if host != 'github.com':
-        project = non_github_project_update_time(project) 
+        project = non_github_project_update_time(project)
         return project
 
     # Get the Github attributes
@@ -385,6 +385,7 @@ def update_project_info(project):
                 db.session.commit()
                 github_throttling = True
                 return project
+
             else:
               raise IOError
         # If project has not been modified, return
