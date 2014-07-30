@@ -11,7 +11,7 @@ import json, os, requests, time
 from flask.ext.heroku import Heroku
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy.ext.mutable import Mutable
-from sqlalchemy import types, desc
+from sqlalchemy import types, desc, or_
 from dictalchemy import make_class_dictable
 from dateutil.tz import tzoffset
 from mimetypes import guess_type
@@ -162,6 +162,13 @@ class Organization(db.Model):
         organization_name = safe_name(self.name)
         return '%s://%s/api/organizations/%s/projects' % (request.scheme, request.host, organization_name)
 
+    def all_issues(self):
+        '''API link to all an orgs issues
+        '''
+        # Make a nice org name
+        organization_name = safe_name(self.name)
+        return '%s://%s/api/organizations/%s/issues' % (request.scheme, request.host, organization_name)
+
     def all_stories(self):
         ''' API link to all an orgs stories
         '''
@@ -188,7 +195,7 @@ class Organization(db.Model):
 
         del organization_dict['keep']
 
-        for key in ('all_events', 'all_projects', 'all_stories',
+        for key in ('all_events', 'all_projects', 'all_stories', 'all_issues',
                     'upcoming_events', 'past_events', 'api_url'):
             organization_dict[key] = getattr(self, key)()
 
@@ -318,10 +325,11 @@ class Issue(db.Model):
     project = db.relationship('Project', single_parent=True, cascade='all, delete-orphan')
     project_id = db.Column(db.Integer(), db.ForeignKey('project.id', ondelete='CASCADE'))
 
-    def __init__(self, title, project_id, html_url=None, labels=None, body=None):
+    labels = db.relationship('Label', backref='issue', cascade='save-update, delete')
+
+    def __init__(self, title, project_id=None, html_url=None, labels=None, body=None):
         self.title = title
         self.html_url = html_url
-        self.labels = labels
         self.body = body
         self.project_id = project_id
         self.keep = True
@@ -345,8 +353,38 @@ class Issue(db.Model):
 
         del issue_dict['keep']
         issue_dict['api_url'] = self.api_url()
+        issue_dict['labels'] = [l.asdict() for l in self.labels]
 
         return issue_dict
+
+class Label(db.Model):
+    '''
+        Issue labels for projects on Github
+    '''
+    # Columns
+    id = db.Column(db.Integer(), primary_key=True)
+    name = db.Column(db.Unicode())
+    color = db.Column(db.Unicode())
+    url = db.Column(db.Unicode())
+
+    issue_id = db.Column(db.Integer, db.ForeignKey('issue.id'))
+
+    def __init__(self, name, color, url, issue_id=None):
+        self.name = name
+        self.color = color
+        self.url = url
+        self.issue_id = issue_id
+
+    def asdict(self):
+        '''
+            Return label as a dictionary with some properties tweaked
+        '''
+        label_dict = db.Model.asdict(self)
+
+        del label_dict['id']
+        del label_dict['issue_id']
+
+        return label_dict
 
 class Event(db.Model):
     '''
@@ -447,7 +485,7 @@ def page_info(query, page, limit):
 
     return last, offset
 
-def pages_dict(page, last):
+def pages_dict(page, last, querystring):
     ''' Return a dictionary of pages to return in API responses.
     '''
     url = '%s://%s%s' % (request.scheme, request.host, request.path)
@@ -472,18 +510,21 @@ def pages_dict(page, last):
             pages['last']['per_page'] = request.args['per_page']
 
     for key in pages:
-        pages[key] = '%s?%s' % (url, urlencode(pages[key])) if pages[key] else url
+        if querystring != '':
+            pages[key] = '%s?%s&%s' % (url, urlencode(pages[key]), querystring) if pages[key] else url
+        else:
+            pages[key] = '%s?%s' % (url, urlencode(pages[key])) if pages[key] else url
 
     return pages
 
-def paged_results(query, page, per_page):
+def paged_results(query, page, per_page, querystring=''):
     '''
     '''
     total = query.count()
     last, offset = page_info(query, page, per_page)
     model_dicts = [o.asdict(True) for o in query.limit(per_page).offset(offset)]
 
-    return dict(total=total, pages=pages_dict(page, last), objects=model_dicts)
+    return dict(total=total, pages=pages_dict(page, last, querystring), objects=model_dicts)
 
 def is_safe_name(name):
     ''' Return True if the string is a safe name.
@@ -504,11 +545,22 @@ def raw_name(name):
     '''
     return name.replace('_', ' ').replace('-', ' ')
 
+def get_query_params(args):
+    filters = {}
+    for key,value in args.iteritems():
+        if 'page' not in key: 
+            filters[key] = value
+    return filters, urlencode(filters)
+
 @app.route('/api/organizations')
 @app.route('/api/organizations/<name>')
 def get_organizations(name=None):
     ''' Regular response option for organizations.
     '''
+
+    filters = request.args
+    filters, querystring = get_query_params(request.args)
+
     if name:
         # Get one named organization.
         filter = Organization.name == raw_name(name)
@@ -517,7 +569,12 @@ def get_organizations(name=None):
 
     # Get a bunch of organizations.
     query = db.session.query(Organization)
-    response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)))
+
+    for attr, value in filters.iteritems():
+        query = query.filter(getattr(Organization, attr).ilike('%%%s%%' % value))
+
+    response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)), querystring)
+
     return jsonify(response)
 
 @app.route('/api/organizations.geojson')
@@ -616,11 +673,48 @@ def get_orgs_projects(organization_name):
     response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)))
     return jsonify(response)
 
+@app.route("/api/organizations/<organization_name>/issues")
+@app.route("/api/organizations/<organization_name>/issues/labels/<labels>")
+def get_orgs_issues(organization_name, labels=None):
+    ''' A clean url to get an organizations issues
+    '''
+
+    # Get one named organization.
+    organization = Organization.query.filter_by(name=raw_name(organization_name)).first()
+    if not organization:
+        return "Organization not found", 404
+
+    # Get that organization's projects
+    projects = Project.query.filter_by(organization_name=organization.name).all()
+    project_ids = [project.id for project in projects]
+
+    # Get all issues belonging to these projects
+    query = Issue.query.filter(Issue.project_id.in_(project_ids))
+
+    if labels:
+        # Create a labels list by comma separating the argument
+        labels = labels.split(',')
+
+        # Create the filter for each label
+        labels = [Label.name.ilike('%%%s%%' % label) for label in labels]
+
+        # Create the query object by joining on Issue.labels
+        query = query.join(Issue.labels)
+
+        # Filter by all of the given labels
+        query = query.filter(or_(*labels))        
+
+    response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)))
+    return jsonify(response)
+
 @app.route('/api/projects')
 @app.route('/api/projects/<int:id>')
 def get_projects(id=None):
     ''' Regular response option for projects.
     '''
+
+    filters, querystring = get_query_params(request.args)
+
     if id:
         # Get one named project.
         filter = Project.id == id
@@ -628,8 +722,17 @@ def get_projects(id=None):
         return jsonify(proj.asdict(True))
 
     # Get a bunch of projects.
-    query = Project.query.order_by(desc(Project.last_updated))
-    response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)))
+    query = db.session.query(Project)
+
+    for attr, value in filters.iteritems():
+        if 'organization' in attr:
+            org_attr = attr.split('_')[1]
+            query = query.join(Project.organization).filter(getattr(Organization, org_attr).ilike('%%%s%%' % value))
+        else:
+            query = query.filter(getattr(Project, attr) == value)
+
+    query = query.order_by(desc(Project.last_updated))
+    response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)), querystring)
     return jsonify(response)
 
 @app.route('/api/issues/')
@@ -645,6 +748,28 @@ def get_issues(id=None):
 
     # Get a bunch of issues
     query = db.session.query(Issue)
+    response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)))
+    return jsonify(response)
+
+@app.route('/api/issues/labels/<labels>')
+def get_issues_by_labels(labels):
+    '''
+    A clean url to filter issues by a comma-separated list of labels
+    '''
+
+    # Create a labels list by comma separating the argument
+    labels = labels.split(',')
+
+    # Create the filter for each label
+    labels = [Label.name.ilike('%%%s%%' % label) for label in labels]
+
+    # Create the query object by joining on Issue.labels
+    query = db.session.query(Issue).join(Issue.labels)
+
+    # Filter by all of the given labels
+    query = query.filter(or_(*labels))
+
+    # Return the paginated reponse
     response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)))
     return jsonify(response)
 

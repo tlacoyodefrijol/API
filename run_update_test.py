@@ -115,10 +115,10 @@ class RunUpdateTestCase(unittest.TestCase):
                 for proj_info in projects:
                     run_update.save_project_info(self.db.session, proj_info)
 
-                issues = run_update.get_issues(organization.name)
-
-                for issue_info in issues:
-                    run_update.save_issue_info(self.db.session, issue_info)
+                issues, labels = run_update.get_issues(organization.name)
+                
+                for i in range(0, len(issues)):
+                    run_update.save_issue_info(self.db.session, issues[i], labels[i])
 
         self.db.session.flush()
 

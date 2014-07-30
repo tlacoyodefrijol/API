@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from urlparse import urlparse
 
 from app import app, db
-from factories import OrganizationFactory, ProjectFactory, EventFactory, StoryFactory, IssueFactory
+from factories import OrganizationFactory, ProjectFactory, EventFactory, StoryFactory, IssueFactory, LabelFactory
 
 class ApiTest(unittest.TestCase):
 
@@ -523,6 +523,125 @@ class ApiTest(unittest.TestCase):
         response = json.loads(response.data)
         self.assertTrue('project' in response)
         self.assertTrue('issues' not in response['project'])
+
+    def test_issues_with_labels(self):
+        '''
+        Test that /api/issues/labels works as expected.
+        Should return issues with any of the passed in label names
+        '''
+        ProjectFactory()
+        issue = IssueFactory()
+        issue2 = IssueFactory()
+        label1 = LabelFactory(name="enhancement")
+        label2 = LabelFactory(name="hack")
+        issue.labels = [label1]
+        issue2.labels = [label2]
+
+        db.session.commit()
+
+        response = self.app.get('/api/issues/labels/enhancement')
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+        self.assertEqual(response['total'], 1)
+        self.assertEqual(response['objects'][0]['labels'][0]['name'], "enhancement")
+
+        response = self.app.get('/api/issues/labels/enhancement,hack')
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+        self.assertEqual(response['total'], 2)
+        self.assertEqual(response['objects'][0]['labels'][0]['name'], "enhancement")
+        self.assertEqual(response['objects'][1]['labels'][0]['name'], "hack")
+
+    def test_organization_query_filter(self):
+        '''
+        Test that organization query params work as expected.
+        '''
+        OrganizationFactory(name="Brigade Organization", type="Brigade")
+        OrganizationFactory(name="Bayamon Organization", type="Brigade", city="Bayamon, PR")
+        OrganizationFactory(name="Meetup Organization", type="Meetup")
+
+        db.session.commit()
+
+        response = self.app.get('/api/organizations?type=Brigade')
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+        self.assertEqual(response['total'], 2)
+        self.assertEqual(response['objects'][0]['name'], "Brigade Organization")
+        self.assertEqual(response['objects'][1]['name'], "Bayamon Organization")
+
+        response = self.app.get('/api/organizations?type=Brigade&city=Bayamon,%20PR')
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+        self.assertEqual(response['total'], 1)
+        self.assertEqual(response['objects'][0]['name'], "Bayamon Organization")
+
+        response = self.app.get('/api/organizations?type=SomeType')
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+        self.assertEqual(response['total'], 0)
+
+    def test_project_query_filter(self):
+        '''
+        Test that project query params work as expected.
+        '''
+        brigade = OrganizationFactory(name="Whatever", type="Brigade")
+        brigade_somewhere_far = OrganizationFactory(name="Brigade Organization", type="Brigade, Code for All")
+        web_project = ProjectFactory(name="Random Web App", type="web service")
+        other_web_project = ProjectFactory(name="Random Web App 2", type="web service", description="Another")
+        non_web_project = ProjectFactory(name="Random Other App", type="other service")
+
+        web_project.organization = brigade
+        non_web_project.organization =  brigade_somewhere_far
+
+        db.session.add(web_project)
+        db.session.add(non_web_project)
+        db.session.commit()
+
+        response = self.app.get('/api/projects?type=web%20service')
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+        self.assertEqual(response['total'], 2)
+        self.assertEqual(response['objects'][0]['name'], "Random Web App")
+        self.assertEqual(response['objects'][1]['name'], "Random Web App 2")
+
+        response = self.app.get('/api/projects?type=web%20service&description=Another')
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+        self.assertEqual(response['total'], 1)
+        self.assertEqual(response['objects'][0]['name'], "Random Web App 2")
+
+        response = self.app.get('/api/projects?type=different%20service')
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+        self.assertEqual(response['total'], 0)
+
+        response = self.app.get('/api/projects?organization_type=Code+for+All')
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+        self.assertEqual(response['total'], 1)
+
+    def test_organization_issues(self):
+        '''
+        Test getting all of an organization's issues
+        '''
+        organization = OrganizationFactory(name="Civic Project", type="Not a brigade")
+        db.session.flush()
+
+        project1 = ProjectFactory(organization_name=organization.name, name="Civic Project 1")
+        project2 = ProjectFactory(organization_name=organization.name, name="Civic Project 2")
+        db.session.flush()
+
+        issue11 = IssueFactory(project_id=project1.id, title="Civic Issue 1.1")
+        issue12 = IssueFactory(project_id=project1.id, title="Civic Issue 1.2")
+        issue21 = IssueFactory(project_id=project2.id, title="Civic Issue 2.1")
+        db.session.flush()
+
+        response = self.app.get('/api/organizations/%s/issues' % organization.name)
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+        self.assertEqual(response['total'], 3)
+
+        self.assertEqual(response["objects"][0]["title"], "Civic Issue 1.1")
 
 if __name__ == '__main__':
     unittest.main()

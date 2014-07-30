@@ -11,7 +11,7 @@ from dateutil.tz import tzoffset
 from unidecode import unidecode
 from feeds import extract_feed_links, get_first_working_feed_link
 import feedparser
-from app import db, app, Project, Organization, Story, Event, Error, Issue, is_safe_name
+from app import db, app, Project, Organization, Story, Event, Error, Issue, Label, is_safe_name
 from urllib2 import HTTPError, URLError
 from urlparse import urlparse
 from random import shuffle
@@ -442,6 +442,7 @@ def get_issues(org_name):
         Get github issues associated to each Projects.
     '''
     issues = []
+    labels = []
 
     # Flush the current db session to save projects added in current run
     db.session.flush()
@@ -474,11 +475,12 @@ def get_issues(org_name):
                 # Type check the issue, we are expecting a dictionary
                 if type(issue) == type({}):
                     issue_dict = dict(title=issue['title'], html_url=issue['html_url'],
-                                 labels=issue['labels'], body=issue['body'], project_id=project.id)
+                                      body=issue['body'], project_id=project.id)
                     issues.append(issue_dict)
+                    labels.append(issue['labels'])
                 else:
                     logging.error('Issue for project %s is not a dictionary', project.name)
-    return issues
+    return issues, labels
 
 def count_people_totals(all_projects):
     ''' Create a list of people details based on project details.
@@ -582,11 +584,19 @@ def save_project_info(session, proj_dict):
 
     return existing_project
 
-def save_issue_info(session, issue_dict):
+def save_issue_info(session, issue_dict, label_list):
     '''
         Save a dictionary of issue ingo to the datastore session.
         Return an app.Issue instance
     '''
+
+    # Turn label lists into actual Label models
+    labels = []
+    for label_dict in label_list:
+        new_label = Label(**label_dict)
+        labels.append(new_label)
+        session.add(new_label)
+
     # Select the current issue, filtering on title AND project_name.
     filter = Issue.title == issue_dict['title'], Issue.project_id == issue_dict['project_id']
     existing_issue = session.query(Issue).filter(*filter).first()
@@ -594,6 +604,7 @@ def save_issue_info(session, issue_dict):
     # If this is a new issue, save and return it.
     if not existing_issue:
         new_issue = Issue(**issue_dict)
+        new_issue.labels = labels
         session.add(new_issue)
         return new_issue
 
@@ -603,6 +614,7 @@ def save_issue_info(session, issue_dict):
     # Update existing issue details
     for (field, value) in issue_dict.items():
         setattr(existing_issue, field, value)
+    existing_issue.labels = labels
 
     # Flush existing object, to prevent a sqlalchemy.orm.exc.StaleDataError.
     session.flush()
@@ -750,9 +762,9 @@ def main(org_name=None, org_sources=None, minimum_age=3*3600):
 
         # Get issues for all of the projects
         logging.info("Gathering all of %s's project's issues." % organization.name)
-        issues = get_issues(organization.name)
-        for issue_info in issues:
-            save_issue_info(db.session, issue_info)
+        issues, labels = get_issues(organization.name)
+        for i in range(0,len(issues)):
+            save_issue_info(db.session, issues[i], labels[i])
 
         # Remove everything marked for deletion.
         db.session.query(Event).filter(not Event.keep).delete()

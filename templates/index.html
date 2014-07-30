@@ -49,6 +49,13 @@
             <p>
                 /api/organizations
             </p>
+            <p>
+                /api/organizations?param=value&amp;param2=value2
+            </p>
+            <h4>Url parameters</h4>
+            <dl>
+                You can add any of the <a href="#organization-properties">Organization properties</a> as a parameter and the API will filter by Organizations that have that property.
+            </dl>
             <h4>Response Properties</h4>
             <dl>
                 <dt>pages</dt>
@@ -73,8 +80,30 @@
      …
    },
    {
+     "type": "Code for All", 
+     "name": "Code for Berlin",
+     …
+   },
+   …
+  ]
+}</pre>
+            <h4>Sample Request with query params</h4>
+            <p><code><a href="{{ api_base }}/api/organizations?type=Brigade">{{ api_base }}/api/organizations?type=Brigade</a></code></p>
+            <h4>Sample Response</h4>
+            <pre>{
+  "pages": {
+    "next": …,
+    "last": …
+  },
+  "objects": [
+   {
+     "type": "Brigade, Code for All", 
+     "name": "OK Lab Hamburg", 
+     …
+   },
+   {
      "type": "Brigade", 
-     "name": "Code for Chicago", 
+     "name": "Code for Puerto Rico",
      …
    },
    …
@@ -242,8 +271,14 @@
             <h4>Endpoints</h4>
             <p>
                 /api/projects <br>
+                /api/projects?param=value&amp;param2=value2 <br>
                 /api/organization/{organization id}/projects
             </p>
+            <h4>Url parameters</h4>
+            <dl>
+                You can add any of the <a href="#project-properties">Project properties</a> as a parameter and the API will filter by Organizations that have that property. You can also do request projects based on organization properties such as: <br> <br>
+                /api/project/organization_type=Brigade
+            </dl>
             <h4>Response Properties</h4>
             <dl>
                 <dt>pages</dt>
@@ -279,6 +314,40 @@
   {
     "id": 2, 
     "name": "Adopt-a-Thingie", 
+    …
+  },
+   …
+  ]
+}</pre>
+            <h4>Sample Request with query params</h4>
+            <p><code><a href="{{ api_base }}/api/projects?categories=Knowledge&organization_type=Brigade">{{ api_base }}/api/projects?categories=Knowledge&organization_type=Brigade</a></code></p>
+            <h4>Sample Response</h4>
+            <pre>{
+  "pages": {
+    "next": …,
+    "last": …
+  },
+  "objects": [
+  {
+    "id": 1, 
+    "name": "myPhillyRising", 
+    "link_url": "http://www.myphillyrising.com/", 
+    "code_url": "https://github.com/openplans/myphillyrising/", 
+    "api_url": "{{ api_base }}/api/projects/74", 
+    "categories": "Knowledge", 
+    "description": "myPhillyRising", 
+    "github_details": { … }, 
+    "organization": { 
+        "name": "Philly",
+        "type": "Brigade, Code for All"
+    }, 
+    "organization_name": "Philly", 
+    "type": "",
+    "issues": [ … ]
+  },
+  {
+    "id": 2, 
+    "name": "LocalWiki", 
     …
   },
    …
@@ -625,7 +694,8 @@
             <h4>Endpoints</h4>
             <p>
                 /api/issues <br>
-                /api/issues/{issue id}
+                /api/issues/{issue id} <br>
+                /api/issues/labels/{labels}
             </p>
             <h4>Response Properties</h4>
             <dl>
@@ -634,6 +704,9 @@
                 <dt>objects</dt>
                 <dd>List of <a href="#issue-properties">individual issues</a>.</dd>
             </dl>
+            <h4>Issue filters</h4>
+            <dt>labels (comma separated)</dt>
+            <dd>Return issues that have atleast one of the given labels</dd>
         </div>
         <div class="half column">
             <h4>Sample Request</h4>
