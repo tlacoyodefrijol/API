@@ -218,29 +218,36 @@ def get_projects(organization):
         data = get_adjoined_json_lists(response)
 
     except ValueError:
+
         # If projects_list_url is a type of csv
         data = response.content.splitlines()
-        dialect = Sniffer().sniff(response.content)
-        #
-        # Google Docs CSV output uses double quotes instead of an escape char,
-        # but there's not typically a way to know that just from the dialect
-        # sniffer. If we see a comma delimiter and no escapechar, then set
-        # doublequote to True so that GDocs output doesn't barf.
-        #
-        # Code for Philly's CSV is confusing the sniffer. I suspect its the
-        # fields with quoted empty strings.
-        # "OpenPhillyGlobe","\"Google Earth for Philadelphia\" with open source
-        # and open transit data." ","http://cesium.agi.com/OpenPhillyGlobe/",
-        # "https://github.com/AnalyticalGraphicsInc/OpenPhillyGlobe","",""
-        #
-        if '\\' in response.content:
-            dialect.escapechar = '\\'
 
-        # Check for quoted empty strings vs doublequotes
-        if ',""' not in response.content and '""' in response.content:
-            dialect.doublequote = True
+        try:
+            dialect = Sniffer().sniff(response.content)
 
-        projects = list(DictReader(data, dialect=dialect))
+            #
+            # Google Docs CSV output uses double quotes instead of an escape char,
+            # but there's not typically a way to know that just from the dialect
+            # sniffer. If we see a comma delimiter and no escapechar, then set
+            # doublequote to True so that GDocs output doesn't barf.
+            #
+            # Code for Philly's CSV is confusing the sniffer. I suspect its the
+            # fields with quoted empty strings.
+            # "OpenPhillyGlobe","\"Google Earth for Philadelphia\" with open source
+            # and open transit data." ","http://cesium.agi.com/OpenPhillyGlobe/",
+            # "https://github.com/AnalyticalGraphicsInc/OpenPhillyGlobe","",""
+            #
+            if '\\' in response.content:
+                dialect.escapechar = '\\'
+
+            # Check for quoted empty strings vs doublequotes
+            if ',""' not in response.content and '""' in response.content:
+                dialect.doublequote = True
+
+            projects = list(DictReader(data, dialect=dialect))
+
+        except csv.Error:
+            projects = list(DictReader(data))
 
         # Decode everything to unicode objects.
         for (index, proj) in enumerate(projects):
