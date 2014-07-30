@@ -264,10 +264,20 @@ def get_projects(organization):
 
         elif len(data) and type(data[0]) is dict:
             # Map data to name, description, link_url, code_url (skip type, categories)
-            projects = [dict(name=p['name'], description=p['description'],
-                             link_url=p['homepage'], code_url=p['html_url'],
-                             organization_name=organization.name)
-                        for p in data]
+            # all keys don't always exist
+            projects = []
+            for project in data:
+                new_project = {}
+                new_project['organization_name'] = organization.name
+                if "name" in project:
+                    new_project["name"] = project["name"]
+                if "description" in project:
+                    new_project["description"] = project["description"]
+                if "homepage" in project:
+                    new_project["link_url"] = project["homepage"]
+                if "html_url" in project:
+                    new_project["code_url"] = project["html_url"]
+                projects.append(new_project)
 
         elif len(data):
             raise Exception('Unknown type for first project: "%s"' % repr(type(data[0])))
