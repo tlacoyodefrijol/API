@@ -750,6 +750,12 @@ def main(org_name=None, org_sources=None, minimum_age=3*3600):
         db.session.execute(db.update(Project, values={'keep': False}).where(Project.organization_name == org_info['name']))
         db.session.execute(db.update(Organization, values={'keep': False}).where(Organization.name == org_info['name']))
 
+        # Empty lat longs are okay.
+        if not org_info['latitude']:
+            org_info['latitude'] = None
+        if not org_info['longitude']:
+            org_info['longitude'] = None
+
         organization = save_organization_info(db.session, org_info)
         organization_names.add(organization.name)
 
