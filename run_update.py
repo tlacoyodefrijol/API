@@ -364,8 +364,9 @@ def update_project_info(project):
 
         previous_project = db.session.query(Project).filter(Project.code_url == project['code_url']).first()
         if previous_project:
-            last_updated = previous_project.last_updated
+            last_updated = datetime.strftime(previous_project.last_updated, "%a, %d %b %Y %H:%M:%S GMT")
             got = get_github_api(repo_url, headers={"If-Modified-Since": last_updated})
+
         else:
             got = get_github_api(repo_url)
 
