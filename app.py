@@ -735,8 +735,8 @@ def get_projects(id=None):
     response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)), querystring)
     return jsonify(response)
 
-@app.route('/api/issues/')
-@app.route('/api/issues/<int:id>/')
+@app.route('/api/issues')
+@app.route('/api/issues/<int:id>')
 def get_issues(id=None):
     '''Regular response option for issues.
     '''
@@ -754,7 +754,11 @@ def get_issues(id=None):
     query = db.session.query(Issue)
 
     for attr, value in filters.iteritems():
-        query = query.filter(getattr(Issue, attr).ilike('%%%s%%' % value))
+        if 'project' in attr:
+            proj_attr = attr.split('_')[1]
+            query = query.join(Issue.project).filter(getattr(Project, proj_attr).ilike('%%%s%%' % value))
+        else:
+            query = query.filter(getattr(Issue, attr).ilike('%%%s%%' % value))
 
     response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)), querystring)
     return jsonify(response)
