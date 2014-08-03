@@ -15,7 +15,7 @@ class OrganizationFactory(SQLAlchemyModelFactory):
     website = factory.Sequence(lambda n: 'http://www.civicorganization{0}.com'.format(n))
     events_url = factory.Sequence(lambda n: 'http://www.meetup.com.com/events/civicproject{0}'.format(n))
     rss = factory.Sequence(lambda n: 'http://www.civicorganization{0}.rss'.format(n))
-    projects_list_url = factory.Sequence(lambda n: 'http://www.civicorganization{0}.com/projects'.format(n))
+    projects_list_url = factory.Sequence(lambda n: 'http://www.civicorganization{0}.com/projects.csv'.format(n))
     city = "San Francisco, CA"
     latitude = 37.7749
     longitude = -122.4194

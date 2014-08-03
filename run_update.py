@@ -28,7 +28,7 @@ requests_log.setLevel(logging.WARNING)
 # Org sources can be csv or yaml
 # They should be lists of organizations you want included at /organizations
 # columns should be name, website, events_url, rss, projects_list_url, city, latitude, longitude, type
-ORG_SOURCES = 'org_sources.csv'
+ORG_SOURCES = 'test_org_sources.csv'
 
 if 'GITHUB_TOKEN' in os.environ:
     github_auth = (os.environ['GITHUB_TOKEN'], '')
@@ -197,110 +197,88 @@ def get_adjoined_json_lists(response):
 
     return result
 
+def beta_nyc_projects(projects, organization):
+    '''Map data to name, description, link_url, code_url (skip type, categories)
+       all keys don't always exist
+    '''
+    transformed_projects = []
+    for project in projects:
+        new_project = {}
+        new_project['organization_name'] = organization.name
+        if "name" in project:
+            new_project["name"] = project["name"]
+        if "description" in project:
+            new_project["description"] = project["description"]
+        if "homepage" in project:
+            new_project["link_url"] = project["homepage"]
+        if "html_url" in project:
+            new_project["code_url"] = project["html_url"]
+        transformed_projects.append(new_project)
+    return transformed_projects
+
 def get_projects(organization):
     '''
         Get a list of projects from CSV, TSV, JSON, or Github URL.
         Convert to a dict.
         TODO: Have this work for GDocs.
     '''
+
+    # If projects_list is a GitHub organization
+    # Use the GitHub auth to request all the included repos.
+    # Follow next page links
     _, host, path, _, _, _ = urlparse(organization.projects_list_url)
     matched = match(r'(/orgs)?/(?P<name>[^/]+)/?$', path)
-
     if host in ('www.github.com', 'github.com') and matched:
         projects_url = 'https://api.github.com/users/%s/repos' % matched.group('name')
         response = get_github_api(projects_url)
+        if response.status_code == '404':
+            return []
+        projects = get_adjoined_json_lists(response)
+
+    # Else its a csv or json of projects
     else:
         projects_url = organization.projects_list_url
         logging.info('Asking for ' + projects_url)
         response = get(projects_url)
 
-    try:
-        data = get_adjoined_json_lists(response)
+        # If its a csv
+        if "csv" in organization.projects_list_url:
+            data = response.content.splitlines()
+            projects = list(DictReader(data, dialect='excel'))
 
-    except ValueError:
+        # Else just grab it as json
+        else:
+            projects = response.json()
 
-        # If projects_list_url is a type of csv
-        data = response.content.splitlines()
+    # If projects is just a list of GitHub urls, like Open Gov Hack Night
+    # turn it into a dict with
+    if len(projects) and type(projects[0]) in (str, unicode):
+        projects = [dict(code_url=item) for item in projects]
 
-        try:
-            dialect = Sniffer().sniff(response.content)
-
-            #
-            # Google Docs CSV output uses double quotes instead of an escape char,
-            # but there's not typically a way to know that just from the dialect
-            # sniffer. If we see a comma delimiter and no escapechar, then set
-            # doublequote to True so that GDocs output doesn't barf.
-            #
-            # Code for Philly's CSV is confusing the sniffer. I suspect its the
-            # fields with quoted empty strings.
-            # "OpenPhillyGlobe","\"Google Earth for Philadelphia\" with open source
-            # and open transit data." ","http://cesium.agi.com/OpenPhillyGlobe/",
-            # "https://github.com/AnalyticalGraphicsInc/OpenPhillyGlobe","",""
-            #
-            if '\\' in response.content:
-                dialect.escapechar = '\\'
-
-            # Check for quoted empty strings vs doublequotes
-            if ',""' not in response.content and '""' in response.content:
-                dialect.doublequote = True
-
-            projects = list(DictReader(data, dialect=dialect))
-
-        except csv.Error:
-            projects = list(DictReader(data))
-
-        # Decode everything to unicode objects.
-        for (index, proj) in enumerate(projects):
-            projects[index] = dict([(k.decode('utf8'), v.decode('utf8'))
-                                         for (k, v) in proj.items()])
-
-        # Add organization names along the way.
+    # If data is list of dicts, like BetaNYC or a GitHub org
+    elif len(projects) and type(projects[0]) is dict:
         for project in projects:
             project['organization_name'] = organization.name
+            if "homepage" in project:
+                project["link_url"] = project["homepage"]
+            if "html_url" in project:
+                project["code_url"] = project["html_url"]
+            for key in project.keys():
+                if key not in ['name','description','link_url','code_url','type','categories','organization_name']:
+                    del project[key]
 
-    else:
-        # Fail silently when the github url is no valid
-        if type(data) != list and data['message'] == u'Not Found':
-            return []
-
-        # If projects_list_url is a json file
-        if len(data) and type(data[0]) in (str, unicode):
-            # Likely that the JSON data is a simple list of strings
-            projects = [dict(organization_name=organization.name, code_url=item)
-                        for item in data]
-
-        elif len(data) and type(data[0]) is dict:
-            # Map data to name, description, link_url, code_url (skip type, categories)
-            # all keys don't always exist
-            projects = []
-            for project in data:
-                new_project = {}
-                new_project['organization_name'] = organization.name
-                if "name" in project:
-                    new_project["name"] = project["name"]
-                if "description" in project:
-                    new_project["description"] = project["description"]
-                if "homepage" in project:
-                    new_project["link_url"] = project["homepage"]
-                if "html_url" in project:
-                    new_project["code_url"] = project["html_url"]
-                projects.append(new_project)
-
-        elif len(data):
-            raise Exception('Unknown type for first project: "%s"' % repr(type(data[0])))
-
-        else:
-            projects = []
-
+    # Get any updates on the projects
     projects = [update_project_info(proj) for proj in projects]
 
-    # Filter out projects that have not been updated
-    new_projects = []
-    for proj in projects:
-        if proj is not None:
-            new_projects.append(proj)
+    # Drop projects with no updates
+    projects = filter(None, projects)
 
-    return new_projects
+    # Add organization names along the way.
+    for project in projects:
+            project['organization_name'] = organization.name
+
+    return projects
+    
 
 def update_project_info(project):
     ''' Update info from Github, if it's missing.
