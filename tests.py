@@ -548,9 +548,7 @@ class ApiTest(unittest.TestCase):
         response = self.app.get('/api/issues/labels/enhancement,hack')
         self.assertEqual(response.status_code, 200)
         response = json.loads(response.data)
-        self.assertEqual(response['total'], 2)
-        self.assertEqual(response['objects'][0]['labels'][0]['name'], "enhancement")
-        self.assertEqual(response['objects'][1]['labels'][0]['name'], "hack")
+        self.assertEqual(response['total'], 0)
 
     def test_organization_query_filter(self):
         '''
