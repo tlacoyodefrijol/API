@@ -19,6 +19,8 @@ from copy import deepcopy
 from os.path import join
 from math import ceil
 from urllib import urlencode
+from flask.ext.script import Manager
+from flask.ext.migrate import Migrate, MigrateCommand
 
 # -------------------
 # Init
@@ -27,6 +29,11 @@ from urllib import urlencode
 app = Flask(__name__)
 heroku = Heroku(app)
 db = SQLAlchemy(app)
+
+migrate = Migrate(app, db)
+manager = Manager(app)
+manager.add_command('db', MigrateCommand)
+
 make_class_dictable(db.Model)
 
 # -------------------
@@ -734,17 +741,21 @@ def get_projects(id=None):
             org_attr = attr.split('_')[1]
             query = query.join(Project.organization).filter(getattr(Organization, org_attr).ilike('%%%s%%' % value))
         else:
-            query = query.filter(getattr(Project, attr) == value)
+            query = query.filter(getattr(Project, attr).ilike('%%%s%%' % value))
 
     query = query.order_by(desc(Project.last_updated))
     response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)), querystring)
     return jsonify(response)
 
-@app.route('/api/issues/')
-@app.route('/api/issues/<int:id>/')
+@app.route('/api/issues')
+@app.route('/api/issues/<int:id>')
 def get_issues(id=None):
     '''Regular response option for issues.
     '''
+
+    filters = request.args
+    filters, querystring = get_query_params(request.args)
+
     if id:
         # Get one issue
         filter = Issue.id == id
@@ -753,7 +764,15 @@ def get_issues(id=None):
 
     # Get a bunch of issues
     query = db.session.query(Issue)
-    response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)))
+
+    for attr, value in filters.iteritems():
+        if 'project' in attr:
+            proj_attr = attr.split('_')[1]
+            query = query.join(Issue.project).filter(getattr(Project, proj_attr).ilike('%%%s%%' % value))
+        else:
+            query = query.filter(getattr(Issue, attr).ilike('%%%s%%' % value))
+
+    response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)), querystring)
     return jsonify(response)
 
 @app.route('/api/issues/labels/<labels>')
@@ -786,6 +805,10 @@ def get_issues_by_labels(labels):
 def get_events(id=None):
     ''' Regular response option for events.
     '''
+
+    filters = request.args
+    filters, querystring = get_query_params(request.args)
+
     if id:
         # Get one named event.
         filter = Event.id == id
@@ -794,7 +817,15 @@ def get_events(id=None):
 
     # Get a bunch of events.
     query = db.session.query(Event)
-    response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 25)))
+
+    for attr, value in filters.iteritems():
+        if 'organization' in attr:
+            org_attr = attr.split('_')[1]
+            query = query.join(Event.organization).filter(getattr(Organization, org_attr).ilike('%%%s%%' % value))
+        else:
+            query = query.filter(getattr(Event, attr).ilike('%%%s%%' % value))
+
+    response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 25)), querystring)
     return jsonify(response)
 
 @app.route('/api/events/upcoming_events')
@@ -819,6 +850,10 @@ def get_all_upcoming_events(filter=None):
 def get_stories(id=None):
     ''' Regular response option for stories.
     '''
+
+    filters = request.args
+    filters, querystring = get_query_params(request.args)
+
     if id:
         # Get one named story.
         filter = Story.id == id
@@ -827,7 +862,15 @@ def get_stories(id=None):
 
     # Get a bunch of stories.
     query = db.session.query(Story)
-    response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 25)))
+
+    for attr, value in filters.iteritems():
+        if 'organization' in attr:
+            org_attr = attr.split('_')[1]
+            query = query.join(Story.organization).filter(getattr(Organization, org_attr).ilike('%%%s%%' % value))
+        else:
+            query = query.filter(getattr(Story, attr).ilike('%%%s%%' % value))
+
+    response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 25)), querystring)
     return jsonify(response)
 
 # -------------------
@@ -916,4 +959,4 @@ def api_static_file(path):
     return response
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    manager.run()
