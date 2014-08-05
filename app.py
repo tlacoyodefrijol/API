@@ -11,7 +11,7 @@ import json, os, requests, time
 from flask.ext.heroku import Heroku
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy.ext.mutable import Mutable
-from sqlalchemy import types, desc, or_
+from sqlalchemy import types, desc
 from dictalchemy import make_class_dictable
 from dateutil.tz import tzoffset
 from mimetypes import guess_type
@@ -705,11 +705,14 @@ def get_orgs_issues(organization_name, labels=None):
         # Create the filter for each label
         labels = [Label.name.ilike('%%%s%%' % label) for label in labels]
 
-        # Create the query object by joining on Issue.labels
+        # Create the base query object by joining on Issue.labels
         query = query.join(Issue.labels)
 
-        # Filter by all of the given labels
-        query = query.filter(or_(*labels))        
+        # Filter for issues with each individual label
+        label_queries = [query.filter(L) for L in labels]
+
+        # Intersect filters to find issues with all labels
+        query = query.intersect(*label_queries)     
 
     response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)))
     return jsonify(response)
@@ -782,11 +785,14 @@ def get_issues_by_labels(labels):
     # Create the filter for each label
     labels = [Label.name.ilike('%%%s%%' % label) for label in labels]
 
-    # Create the query object by joining on Issue.labels
-    query = db.session.query(Issue).join(Issue.labels)
+    # Create the base query object by joining on Issue.labels
+    base_query = db.session.query(Issue).join(Issue.labels)
 
-    # Filter by all of the given labels
-    query = query.filter(or_(*labels))
+    # Filter for issues with each individual label
+    label_queries = [base_query.filter(L) for L in labels]
+
+    # Intersect filters to find issues with all labels
+    query = base_query.intersect(*label_queries)
 
     # Return the paginated reponse
     response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)))
