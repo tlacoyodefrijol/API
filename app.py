@@ -19,6 +19,8 @@ from copy import deepcopy
 from os.path import join
 from math import ceil
 from urllib import urlencode
+from flask.ext.script import Manager
+from flask.ext.migrate import Migrate, MigrateCommand
 
 # -------------------
 # Init
@@ -27,6 +29,11 @@ from urllib import urlencode
 app = Flask(__name__)
 heroku = Heroku(app)
 db = SQLAlchemy(app)
+
+migrate = Migrate(app, db)
+manager = Manager(app)
+manager.add_command('db', MigrateCommand)
+
 make_class_dictable(db.Model)
 
 # -------------------
@@ -908,4 +915,4 @@ def api_static_file(path):
     return response
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    manager.run()
