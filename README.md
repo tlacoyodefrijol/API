@@ -129,7 +129,7 @@ The standard is still very much in planning phases, and we [welcome discussion](
 
 ### Installation
 
-The CFAPI is built on [Flask](http://flask.pocoo.org/) and Python. The `app.py` file describes the models and routes. The `run_update.py` file runs once an hour and collects all the data about the different Brigades. Both `tests.py` and `run_update_test.py` are automatically run by [Travis-CI](https://travis-ci.org/codeforamerica/cfapi) whenever a new commit is made. The production service lives on Heroku. Please contact Andrew and Eric in the "Contribute" section below to get involved.
+The CFAPI is built on [Flask](http://flask.pocoo.org/) and Python. The `app.py` file describes the models and routes. The `run_update.py` file runs once an hour and collects all the data about the different Brigades. Both `tests.py` and `run_update_test.py` are automatically run by [Travis-CI](https://travis-ci.org/codeforamerica/cfapi) whenever a new commit is made. The production service lives on Heroku. Please contact Andrew and Erica in the "Contribute" section below to get involved.
 
 #### Prerequirements - Set your environmental variables.
 
@@ -174,10 +174,10 @@ There is a line near the top of run_update.py that sets the `gdocs_url` variable
 * Start the API
 
 ```
-python app.py
+python app.py runserver
 ```
 
-* Visit http://localhost:5000/api/organizations/Code_for_America to see your results.
+* Visit http://localhost:5000/api/organizations/Code-for-America to see your results.
 
 
 ### Tests
@@ -185,6 +185,8 @@ python app.py
 `python tests.py` to test the API.
 
 
+### Migrations
+Migrations are handled through [flask-migrate](https://github.com/miguelgrinberg/Flask-Migrate#flask-migrate)
 
 Contacts
 --------
@@ -232,8 +234,10 @@ Submitting a Pull Request
 1. Fork the project.
 2. Create a topic branch.
 3. Implement your feature or bug fix.
-4. Commit and push your changes.
-5. Submit a pull request.
+4. Write tests!
+5. Run a migration if needed.
+6. Commit and push your changes.
+7. Submit a pull request.
 
 
 Copyright
