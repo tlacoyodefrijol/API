@@ -214,7 +214,7 @@ class RunUpdateTestCase(unittest.TestCase):
         old_organization = OrganizationFactory(name='Old Organization')
         old_project = ProjectFactory(name='Old Project', organization_name='Old Organization')
         old_event = EventFactory(name='Old Event', organization_name='Old Organization')
-        old_issue = IssueFactory(title='Old Issue')
+        old_issue = IssueFactory(title='Old Issue', project_id=1)
         self.db.session.flush()
 
         self.mock_rss_response()
