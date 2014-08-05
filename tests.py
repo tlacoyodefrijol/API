@@ -5,7 +5,7 @@ import unittest, requests, json, os
 from datetime import datetime, timedelta
 from urlparse import urlparse
 
-from app import app, db
+from app import app, db, Organization, Project, Event, Story, Issue, Label
 from factories import OrganizationFactory, ProjectFactory, EventFactory, StoryFactory, IssueFactory, LabelFactory
 
 class ApiTest(unittest.TestCase):
@@ -17,6 +17,7 @@ class ApiTest(unittest.TestCase):
         self.app = app.test_client()
 
     def tearDown(self):
+        db.session.close()
         db.drop_all()
 
     # Test API -----------------------
@@ -507,8 +508,8 @@ class ApiTest(unittest.TestCase):
         response = json.loads(response.data)
 
         self.assertEqual(response['total'], 1)
-        self.assertEqual(response['objects'][0]['title'], 'Civic Issue 1')
-        self.assertEqual(response['objects'][0]['body'], 'Civic Issue blah blah blah 1')
+        self.assertEqual(response['objects'][0]['title'], 'Civic Issue 2')
+        self.assertEqual(response['objects'][0]['body'], 'Civic Issue blah blah blah 2')
 
         # Check for linked issues in linked project
         self.assertTrue('project' in response['objects'][0])
@@ -529,15 +530,18 @@ class ApiTest(unittest.TestCase):
         Test that /api/issues/labels works as expected.
         Should return issues with any of the passed in label names
         '''
-        ProjectFactory()
-        issue = IssueFactory()
-        issue2 = IssueFactory()
+        project = ProjectFactory()
+        db.session.flush()
+
+        issue = IssueFactory(project_id=project.id)
+        issue2 = IssueFactory(project_id=project.id)
+
         label1 = LabelFactory(name="enhancement")
         label2 = LabelFactory(name="hack")
         issue.labels = [label1]
         issue2.labels = [label2]
 
-        db.session.commit()
+        db.session.flush()
 
         response = self.app.get('/api/issues/labels/enhancement')
         self.assertEqual(response.status_code, 200)
@@ -640,6 +644,65 @@ class ApiTest(unittest.TestCase):
         self.assertEqual(response['total'], 3)
 
         self.assertEqual(response["objects"][0]["title"], "Civic Issue 1.1")
+
+    def test_cascading_delete(self):
+        '''
+        Test that when an organization is deleted, all of it's projects, issues, stories, events are deleted
+        '''
+        # Create an organization
+        organization = OrganizationFactory()
+        db.session.flush()
+
+        # Create a project, an event and a story
+        project = ProjectFactory(organization_name=organization.name)
+        EventFactory(organization_name=organization.name)
+        StoryFactory(organization_name=organization.name)
+        db.session.flush()
+
+        # Create an issue and give it a label
+        issue = IssueFactory(project_id=project.id)
+        db.session.flush()
+
+        label = LabelFactory()
+        issue.labels = [label]
+        db.session.flush()
+
+        # Get all of the stuff
+        orgs = Organization.query.all()
+        eve = Event.query.all()
+        sto = Story.query.all()
+        proj = Project.query.all()
+        iss = Issue.query.all()
+        lab = Label.query.all()
+
+        # Verify they are there
+        self.assertEqual(len(orgs), 1)
+        self.assertEqual(len(eve), 1)
+        self.assertEqual(len(sto), 1)
+        self.assertEqual(len(proj), 1)
+        self.assertEqual(len(iss), 1)
+        self.assertEqual(len(lab), 1)
+
+        # Delete the one organization
+        db.session.delete(orgs[0])
+        db.session.commit()
+
+        # Get all the stuff again
+        orgs = Organization.query.all()
+        eve = Event.query.all()
+        sto = Story.query.all()
+        proj = Project.query.all()
+        iss = Issue.query.all()
+        lab = Label.query.all()
+
+        # Make sure they are all gone
+        self.assertEqual(len(orgs), 0)
+        self.assertEqual(len(eve), 0)
+        self.assertEqual(len(sto), 0)
+        self.assertEqual(len(proj), 0)
+        self.assertEqual(len(iss), 0)
+        self.assertEqual(len(lab), 0)
+
 
 if __name__ == '__main__':
     unittest.main()

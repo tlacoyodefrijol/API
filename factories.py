@@ -69,7 +69,7 @@ class IssueFactory(SQLAlchemyModelFactory):
     html_url = factory.Sequence(lambda n: 'http://www.github.com/codeforamerica/cfapi/issues/{0}'.format(n))
     body = factory.Sequence(lambda n: 'Civic Issue blah blah blah {0}'.format(n))
 
-    project_id = 1
+    project_id = factory.LazyAttribute(lambda e: ProjectFactory().id)
 
 class LabelFactory(SQLAlchemyModelFactory):
     FACTORY_FOR = Label
