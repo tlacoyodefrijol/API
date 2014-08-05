@@ -197,24 +197,6 @@ def get_adjoined_json_lists(response):
 
     return result
 
-def beta_nyc_projects(projects, organization):
-    '''Map data to name, description, link_url, code_url (skip type, categories)
-       all keys don't always exist
-    '''
-    transformed_projects = []
-    for project in projects:
-        new_project = {}
-        new_project['organization_name'] = organization.name
-        if "name" in project:
-            new_project["name"] = project["name"]
-        if "description" in project:
-            new_project["description"] = project["description"]
-        if "homepage" in project:
-            new_project["link_url"] = project["homepage"]
-        if "html_url" in project:
-            new_project["code_url"] = project["html_url"]
-        transformed_projects.append(new_project)
-    return transformed_projects
 
 def get_projects(organization):
     '''
