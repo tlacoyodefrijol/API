@@ -11,7 +11,7 @@ import json, os, requests, time
 from flask.ext.heroku import Heroku
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy.ext.mutable import Mutable
-from sqlalchemy import types, desc, or_
+from sqlalchemy import types, desc
 from dictalchemy import make_class_dictable
 from dateutil.tz import tzoffset
 from mimetypes import guess_type
@@ -19,6 +19,8 @@ from copy import deepcopy
 from os.path import join
 from math import ceil
 from urllib import urlencode
+from flask.ext.script import Manager
+from flask.ext.migrate import Migrate, MigrateCommand
 
 # -------------------
 # Init
@@ -27,6 +29,11 @@ from urllib import urlencode
 app = Flask(__name__)
 heroku = Heroku(app)
 db = SQLAlchemy(app)
+
+migrate = Migrate(app, db)
+manager = Manager(app)
+manager.add_command('db', MigrateCommand)
+
 make_class_dictable(db.Model)
 
 # -------------------
@@ -89,8 +96,9 @@ class Organization(db.Model):
     keep = db.Column(db.Boolean())
 
     # Relationships
-    events = db.relationship('Event')
-    projects = db.relationship('Project')
+    events = db.relationship('Event', cascade='save-update, delete')
+    stories = db.relationship('Story', cascade='save-update, delete')
+    projects = db.relationship('Project', cascade='save-update, delete')
 
     def __init__(self, name, website=None, events_url=None,
                  rss=None, projects_list_url=None, type=None, city=None, latitude=None, longitude=None):
@@ -217,8 +225,8 @@ class Story(db.Model):
     keep = db.Column(db.Boolean())
 
     # Relationships
-    organization = db.relationship('Organization')
-    organization_name = db.Column(db.Unicode(), db.ForeignKey('organization.name'))
+    organization = db.relationship('Organization', single_parent=True, cascade='all, delete-orphan')
+    organization_name = db.Column(db.Unicode(), db.ForeignKey('organization.name', ondelete='CASCADE'))
 
     def __init__(self, title=None, link=None, type=None, organization_name=None):
         self.title = title
@@ -265,8 +273,8 @@ class Project(db.Model):
     keep = db.Column(db.Boolean())
 
     # Relationships
-    organization = db.relationship('Organization')
-    organization_name = db.Column(db.Unicode(), db.ForeignKey('organization.name'))
+    organization = db.relationship('Organization', single_parent=True, cascade='all, delete-orphan')
+    organization_name = db.Column(db.Unicode(), db.ForeignKey('organization.name', ondelete='CASCADE'))
 
     # Issue has cascade so issues are deleted with their parent projects
     issues = db.relationship('Issue', cascade='save-update, delete')
@@ -325,7 +333,7 @@ class Issue(db.Model):
     project = db.relationship('Project', single_parent=True, cascade='all, delete-orphan')
     project_id = db.Column(db.Integer(), db.ForeignKey('project.id', ondelete='CASCADE'))
 
-    labels = db.relationship('Label', backref='issue', cascade='save-update, delete')
+    labels = db.relationship('Label', cascade='save-update, delete')
 
     def __init__(self, title, project_id=None, html_url=None, labels=None, body=None):
         self.title = title
@@ -367,7 +375,8 @@ class Label(db.Model):
     color = db.Column(db.Unicode())
     url = db.Column(db.Unicode())
 
-    issue_id = db.Column(db.Integer, db.ForeignKey('issue.id'))
+    issue = db.relationship('Issue', single_parent=True, cascade='all, delete-orphan')
+    issue_id = db.Column(db.Integer, db.ForeignKey('issue.id', ondelete='CASCADE'))
 
     def __init__(self, name, color, url, issue_id=None):
         self.name = name
@@ -403,8 +412,8 @@ class Event(db.Model):
     keep = db.Column(db.Boolean())
 
     # Relationships
-    organization = db.relationship('Organization')
-    organization_name = db.Column(db.Unicode(), db.ForeignKey('organization.name'))
+    organization = db.relationship('Organization', single_parent=True, cascade='all, delete-orphan')
+    organization_name = db.Column(db.Unicode(), db.ForeignKey('organization.name', ondelete='CASCADE'))
 
     def __init__(self, name, event_url, start_time_notz, created_at, utc_offset,
                  organization_name, location=None, end_time_notz=None, description=None):
@@ -698,11 +707,14 @@ def get_orgs_issues(organization_name, labels=None):
         # Create the filter for each label
         labels = [Label.name.ilike('%%%s%%' % label) for label in labels]
 
-        # Create the query object by joining on Issue.labels
+        # Create the base query object by joining on Issue.labels
         query = query.join(Issue.labels)
 
-        # Filter by all of the given labels
-        query = query.filter(or_(*labels))        
+        # Filter for issues with each individual label
+        label_queries = [query.filter(L) for L in labels]
+
+        # Intersect filters to find issues with all labels
+        query = query.intersect(*label_queries)     
 
     response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)))
     return jsonify(response)
@@ -729,17 +741,21 @@ def get_projects(id=None):
             org_attr = attr.split('_')[1]
             query = query.join(Project.organization).filter(getattr(Organization, org_attr).ilike('%%%s%%' % value))
         else:
-            query = query.filter(getattr(Project, attr) == value)
+            query = query.filter(getattr(Project, attr).ilike('%%%s%%' % value))
 
     query = query.order_by(desc(Project.last_updated))
     response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)), querystring)
     return jsonify(response)
 
-@app.route('/api/issues/')
-@app.route('/api/issues/<int:id>/')
+@app.route('/api/issues')
+@app.route('/api/issues/<int:id>')
 def get_issues(id=None):
     '''Regular response option for issues.
     '''
+
+    filters = request.args
+    filters, querystring = get_query_params(request.args)
+
     if id:
         # Get one issue
         filter = Issue.id == id
@@ -748,7 +764,15 @@ def get_issues(id=None):
 
     # Get a bunch of issues
     query = db.session.query(Issue)
-    response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)))
+
+    for attr, value in filters.iteritems():
+        if 'project' in attr:
+            proj_attr = attr.split('_')[1]
+            query = query.join(Issue.project).filter(getattr(Project, proj_attr).ilike('%%%s%%' % value))
+        else:
+            query = query.filter(getattr(Issue, attr).ilike('%%%s%%' % value))
+
+    response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)), querystring)
     return jsonify(response)
 
 @app.route('/api/issues/labels/<labels>')
@@ -763,11 +787,14 @@ def get_issues_by_labels(labels):
     # Create the filter for each label
     labels = [Label.name.ilike('%%%s%%' % label) for label in labels]
 
-    # Create the query object by joining on Issue.labels
-    query = db.session.query(Issue).join(Issue.labels)
+    # Create the base query object by joining on Issue.labels
+    base_query = db.session.query(Issue).join(Issue.labels)
 
-    # Filter by all of the given labels
-    query = query.filter(or_(*labels))
+    # Filter for issues with each individual label
+    label_queries = [base_query.filter(L) for L in labels]
+
+    # Intersect filters to find issues with all labels
+    query = base_query.intersect(*label_queries)
 
     # Return the paginated reponse
     response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)))
@@ -778,6 +805,10 @@ def get_issues_by_labels(labels):
 def get_events(id=None):
     ''' Regular response option for events.
     '''
+
+    filters = request.args
+    filters, querystring = get_query_params(request.args)
+
     if id:
         # Get one named event.
         filter = Event.id == id
@@ -786,7 +817,15 @@ def get_events(id=None):
 
     # Get a bunch of events.
     query = db.session.query(Event)
-    response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 25)))
+
+    for attr, value in filters.iteritems():
+        if 'organization' in attr:
+            org_attr = attr.split('_')[1]
+            query = query.join(Event.organization).filter(getattr(Organization, org_attr).ilike('%%%s%%' % value))
+        else:
+            query = query.filter(getattr(Event, attr).ilike('%%%s%%' % value))
+
+    response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 25)), querystring)
     return jsonify(response)
 
 @app.route('/api/events/upcoming_events')
@@ -811,6 +850,10 @@ def get_all_upcoming_events(filter=None):
 def get_stories(id=None):
     ''' Regular response option for stories.
     '''
+
+    filters = request.args
+    filters, querystring = get_query_params(request.args)
+
     if id:
         # Get one named story.
         filter = Story.id == id
@@ -819,7 +862,15 @@ def get_stories(id=None):
 
     # Get a bunch of stories.
     query = db.session.query(Story)
-    response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 25)))
+
+    for attr, value in filters.iteritems():
+        if 'organization' in attr:
+            org_attr = attr.split('_')[1]
+            query = query.join(Story.organization).filter(getattr(Organization, org_attr).ilike('%%%s%%' % value))
+        else:
+            query = query.filter(getattr(Story, attr).ilike('%%%s%%' % value))
+
+    response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 25)), querystring)
     return jsonify(response)
 
 # -------------------
@@ -908,4 +959,4 @@ def api_static_file(path):
     return response
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    manager.run()

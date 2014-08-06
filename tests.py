@@ -5,7 +5,7 @@ import unittest, requests, json, os
 from datetime import datetime, timedelta
 from urlparse import urlparse
 
-from app import app, db
+from app import app, db, Organization, Project, Event, Story, Issue, Label
 from factories import OrganizationFactory, ProjectFactory, EventFactory, StoryFactory, IssueFactory, LabelFactory
 
 class ApiTest(unittest.TestCase):
@@ -17,6 +17,7 @@ class ApiTest(unittest.TestCase):
         self.app = app.test_client()
 
     def tearDown(self):
+        db.session.close()
         db.drop_all()
 
     # Test API -----------------------
@@ -507,8 +508,8 @@ class ApiTest(unittest.TestCase):
         response = json.loads(response.data)
 
         self.assertEqual(response['total'], 1)
-        self.assertEqual(response['objects'][0]['title'], 'Civic Issue 1')
-        self.assertEqual(response['objects'][0]['body'], 'Civic Issue blah blah blah 1')
+        self.assertEqual(response['objects'][0]['title'], 'Civic Issue 2')
+        self.assertEqual(response['objects'][0]['body'], 'Civic Issue blah blah blah 2')
 
         # Check for linked issues in linked project
         self.assertTrue('project' in response['objects'][0])
@@ -529,15 +530,18 @@ class ApiTest(unittest.TestCase):
         Test that /api/issues/labels works as expected.
         Should return issues with any of the passed in label names
         '''
-        ProjectFactory()
-        issue = IssueFactory()
-        issue2 = IssueFactory()
+        project = ProjectFactory()
+        db.session.flush()
+
+        issue = IssueFactory(project_id=project.id)
+        issue2 = IssueFactory(project_id=project.id)
+
         label1 = LabelFactory(name="enhancement")
         label2 = LabelFactory(name="hack")
         issue.labels = [label1]
         issue2.labels = [label2]
 
-        db.session.commit()
+        db.session.flush()
 
         response = self.app.get('/api/issues/labels/enhancement')
         self.assertEqual(response.status_code, 200)
@@ -548,9 +552,7 @@ class ApiTest(unittest.TestCase):
         response = self.app.get('/api/issues/labels/enhancement,hack')
         self.assertEqual(response.status_code, 200)
         response = json.loads(response.data)
-        self.assertEqual(response['total'], 2)
-        self.assertEqual(response['objects'][0]['labels'][0]['name'], "enhancement")
-        self.assertEqual(response['objects'][1]['labels'][0]['name'], "hack")
+        self.assertEqual(response['total'], 0)
 
     def test_organization_query_filter(self):
         '''
@@ -642,6 +644,178 @@ class ApiTest(unittest.TestCase):
         self.assertEqual(response['total'], 3)
 
         self.assertEqual(response["objects"][0]["title"], "Civic Issue 1.1")
+
+    def test_cascading_delete(self):
+        '''
+        Test that when an organization is deleted, all of it's projects, issues, stories, events are deleted
+        '''
+        # Create an organization
+        organization = OrganizationFactory()
+        db.session.flush()
+
+        # Create a project, an event and a story
+        project = ProjectFactory(organization_name=organization.name)
+        EventFactory(organization_name=organization.name)
+        StoryFactory(organization_name=organization.name)
+        db.session.flush()
+
+        # Create an issue and give it a label
+        issue = IssueFactory(project_id=project.id)
+        db.session.flush()
+
+        label = LabelFactory()
+        issue.labels = [label]
+        db.session.flush()
+
+        # Get all of the stuff
+        orgs = Organization.query.all()
+        eve = Event.query.all()
+        sto = Story.query.all()
+        proj = Project.query.all()
+        iss = Issue.query.all()
+        lab = Label.query.all()
+
+        # Verify they are there
+        self.assertEqual(len(orgs), 1)
+        self.assertEqual(len(eve), 1)
+        self.assertEqual(len(sto), 1)
+        self.assertEqual(len(proj), 1)
+        self.assertEqual(len(iss), 1)
+        self.assertEqual(len(lab), 1)
+
+        # Delete the one organization
+        db.session.delete(orgs[0])
+        db.session.commit()
+
+        # Get all the stuff again
+        orgs = Organization.query.all()
+        eve = Event.query.all()
+        sto = Story.query.all()
+        proj = Project.query.all()
+        iss = Issue.query.all()
+        lab = Label.query.all()
+
+        # Make sure they are all gone
+        self.assertEqual(len(orgs), 0)
+        self.assertEqual(len(eve), 0)
+        self.assertEqual(len(sto), 0)
+        self.assertEqual(len(proj), 0)
+        self.assertEqual(len(iss), 0)
+        self.assertEqual(len(lab), 0)
+
+    def test_story_query_filter(self):
+        org = OrganizationFactory(type="Brigade")
+        another_org = OrganizationFactory(type="Code for All")
+
+        awesome_story = StoryFactory(title="Awesome story")
+        sad_story = StoryFactory(title="Sad story", type="a video")
+
+        awesome_story.organization = org
+        sad_story.organization = another_org
+
+        db.session.commit()
+
+        # Make sure total number of stories is 2
+        response = self.app.get('/api/stories')
+        response = json.loads(response.data)
+        self.assertEqual(response['total'], 2)
+
+        # Filter by title should return only 1
+        response = self.app.get('/api/stories?title=awesome')
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+        self.assertEqual(response['total'], 1)
+        self.assertEqual(response['objects'][0]['title'], "Awesome story")
+
+        # Filter by type should return only 1
+        response = self.app.get('/api/stories?type=video')
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+        self.assertEqual(response['total'], 1)
+        self.assertEqual(response['objects'][0]['title'], "Sad story")
+
+        # Filter by deep searching organization type should return 1
+        response = self.app.get('/api/stories?organization_type=brigade')
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+        self.assertEqual(response['total'], 1)
+        self.assertEqual(response['objects'][0]['title'], "Awesome story")
+
+
+    def test_events_query_filter(self):
+        org = OrganizationFactory(type="Brigade")
+        another_org = OrganizationFactory(type="Code for All")
+        awesome_event = EventFactory(name="Awesome event")
+        sad_event = EventFactory(name="Sad event", description="sad stuff will happen")
+
+        awesome_event.organization = org
+        sad_event.organization = another_org
+
+        db.session.commit()
+
+        # Make sure total number of stories is 2
+        response = self.app.get('/api/events')
+        response = json.loads(response.data)
+        self.assertEqual(response['total'], 2)
+
+        # Filter by name should return only 1
+        response = self.app.get('/api/events?name=awesome')
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+        self.assertEqual(response['total'], 1)
+        self.assertEqual(response['objects'][0]['name'], "Awesome event")
+
+        # Filter by description should return only 1
+        response = self.app.get('/api/events?description=sad%20stuff')
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+        self.assertEqual(response['total'], 1)
+        self.assertEqual(response['objects'][0]['name'], "Sad event")
+
+        # Filter by deep searching organization type should return 1
+        response = self.app.get('/api/events?organization_type=brigade')
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+        self.assertEqual(response['total'], 1)
+        self.assertEqual(response['objects'][0]['name'], "Awesome event")
+
+    def test_issues_query_filter(self):
+        proj = ProjectFactory(type="web")
+        another_proj = ProjectFactory(type="mobile")
+        awesome_issue = IssueFactory(title="Awesome issue")
+        sad_issue = IssueFactory(title="Sad issue", body="learning swift is sad")
+        db.session.commit()
+
+        awesome_issue.project_id = proj.id
+        sad_issue.project_id = another_proj.id
+        db.session.commit()
+
+        # Make sure total number of stories is 2
+        response = self.app.get('/api/issues')
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+        self.assertEqual(response['total'], 2)
+
+        # Filter by title should return only 1
+        response = self.app.get('/api/issues?title=awesome')
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+        self.assertEqual(response['total'], 1)
+        self.assertEqual(response['objects'][0]['title'], "Awesome issue")
+
+        # Filter by type should return only 1
+        response = self.app.get('/api/issues?body=swift')
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+        self.assertEqual(response['total'], 1)
+        self.assertEqual(response['objects'][0]['title'], "Sad issue")
+
+        # Filter by deep searching organization type should return 1
+        response = self.app.get('/api/issues?project_type=web')
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+        self.assertEqual(response['total'], 1)
+        self.assertEqual(response['objects'][0]['title'], "Awesome issue")
 
 if __name__ == '__main__':
     unittest.main()
