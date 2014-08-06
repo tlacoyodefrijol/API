@@ -1,5 +1,3 @@
-\c cfapi;
-
 alter table story 
   drop constraint story_organization_name_fkey;
 
