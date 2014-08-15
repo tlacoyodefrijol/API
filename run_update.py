@@ -361,7 +361,7 @@ def update_project_info(project):
         github_details = {}
         for field in ('contributors_url', 'created_at', 'forks_count', 'homepage',
                       'html_url', 'id', 'language', 'open_issues', 'pushed_at',
-                      'updated_at', 'watchers_count','name', 'description'
+                      'updated_at', 'watchers_count','name', 'description', 'stargazers_count'
                      ):
             github_details[field] = all_github_attributes[field]
 
