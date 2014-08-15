@@ -7,19 +7,19 @@ The tools that the Brigades and other groups use to do their fine deeds are all 
 
 ### Projects powered by the CFAPI
 * The Code for America <a href="http://codeforamerica.org/brigade">Brigade</a> website
-<a href="http://codeforamerica.org/brigade"><img src="http://i.imgur.com/C96yBLE.png" width="500px"></a>
+<br/><a href="http://codeforamerica.org/brigade"><img src="http://i.imgur.com/C96yBLE.png" width="500px"></a>
 
 * The Brigade <a href="http://codeforamerica.org/brigade/projects">Projects</a> Page
-<a href="http://codeforamerica.org/brigade/projects"><img src="http://i.imgur.com/Zv2zKvp.png" width="500px"/></a>
+<br/><a href="http://codeforamerica.org/brigade/projects"><img src="http://i.imgur.com/Zv2zKvp.png" width="500px"/></a>
 
 * The Brigade <a href="http://codeforamerica.org/brigade/events">Events</a> Page
-<a href="http://codeforamerica.org/brigade/events"><img src="http://i.imgur.com/p29utjI.png" width="500px"/></a>
+<br/><a href="http://codeforamerica.org/brigade/events"><img src="http://i.imgur.com/p29utjI.png" width="500px"/></a>
 
 * The Code for America <a href="http://codeforamerica.org/geeks">Citizens</a> Page
-<a href="http://codeforamerica.org/geeks"><img src="http://i.imgur.com/5PZBBfQ.png" width="500px"/></a>
+<br/><a href="http://codeforamerica.org/geeks"><img src="http://i.imgur.com/5PZBBfQ.png" width="500px"/></a>
 
 * <a href="http://civicissues.herokuapp.com">The Civic Tech Issue Finder
-<img src="http://i.imgur.com/JdvkCLK.png" width="400px"/></a>
+<br/><img src="http://i.imgur.com/JdvkCLK.png" width="400px"/></a>
 
 * Lots of different Brigades websites
 
