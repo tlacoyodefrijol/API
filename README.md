@@ -1,13 +1,28 @@
 # The Code for America API
 
 ### What the CFAPI is
-Code for America has developed this API to track all the activity across the civic technology movement. Our goal is to measure and motivate the movement by recognizing participation. The CFAPI describes an organization's projects, stories, and events. 
+Code for America has developed this API to track all the activity across the civic technology movement. Our goal is to measure and motivate the movement by recognizing participation. The CFAPI describes an organization's projects, stories, and events.
 
 The tools that the Brigades and other groups use to do their fine deeds are all different. The CFAPI does the difficult job of being able to track these activities no matter what tools an organization is using. The participants don't need to change their activities to be included.
 
 ### Projects powered by the CFAPI
-The Code for America Brigade website
-<img src="http://i.imgur.com/C96yBLE.png" width="500px">
+* The Code for America <a href="http://codeforamerica.org/brigade">Brigade</a> website
+<a href="http://codeforamerica.org/brigade"><img src="http://i.imgur.com/C96yBLE.png" width="500px"></a>
+
+* The Brigade <a href="http://codeforamerica.org/brigade/projects">Projects</a> Page
+<a href="http://codeforamerica.org/brigade/projects"><img src="http://i.imgur.com/Zv2zKvp.png" width="500px"/></a>
+
+* The Brigade <a href="http://codeforamerica.org/brigade/events">Events</a> Page
+<a href="http://codeforamerica.org/brigade/events"><img src="http://i.imgur.com/p29utjI.png" width="500px"/></a>
+
+* The Code for America <a href="http://codeforamerica.org/geeks">Citizens</a> Page
+<a href="http://codeforamerica.org/geeks"><img src="http://i.imgur.com/5PZBBfQ.png" width="500px"/></a>
+
+* <a href="http://civicissues.herokuapp.com">The Civic Tech Issue Finder
+<img src="http://i.imgur.com/JdvkCLK.png" width="400px"/></a>
+
+* Lots of different Brigades websites
+
 
 ### Example Response
 See the full documentation at http://codeforamerica.org/api
