@@ -829,21 +829,24 @@ def get_events(id=None):
     return jsonify(response)
 
 @app.route('/api/events/upcoming_events')
-@app.route('/api/events/upcoming_events/<filter>')
-def get_all_upcoming_events(filter=None):
+def get_all_upcoming_events():
     ''' Show all upcoming events.
         Return them in chronological order.
     '''
-    query = Event.query.filter(Event.start_time_notz >= datetime.utcnow()).order_by(Event.start_time_notz)
-    if filter == 'all':
-        response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10000000)))
-        del response['pages']
-        return jsonify(response)
-    if not filter:
-        response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 25)))
-        return jsonify(response)
-    else:
-        return make_response("We haven't added /"+filter+" yet.", 404)
+    filters = request.args
+    filters, querystring = get_query_params(request.args)
+
+    query = db.session.query(Event).filter(Event.start_time_notz >= datetime.utcnow()).order_by(Event.start_time_notz)
+
+    for attr, value in filters.iteritems():
+        if 'organization' in attr:
+            org_attr = attr.split('_')[1]
+            query = query.join(Event.organization).filter(getattr(Organization, org_attr).ilike('%%%s%%' % value))
+        else:
+            query = query.filter(getattr(Event, attr).ilike('%%%s%%' % value))
+
+    response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 25)))
+    return jsonify(response)
 
 @app.route('/api/stories')
 @app.route('/api/stories/<int:id>')

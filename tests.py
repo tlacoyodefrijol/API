@@ -149,6 +149,51 @@ class ApiTest(unittest.TestCase):
         self.assertEqual(response_json['objects'][1]['name'], "Event Two")
         self.assertEqual(response_json['objects'][8]['name'], "Event Nine")
 
+    def test_all_upcoming_events_with_params(self):
+        '''
+        Test the /events/upcoming_events end point with params.
+        '''
+        # World Cup teams
+        organization = OrganizationFactory(name='USA USA USA', type='Code for All')
+        db.session.flush()
+
+        # Create multiple events, some in the future, one in the past
+        EventFactory(organization_name=organization.name, name="Past Event", start_time_notz=datetime.now() - timedelta(1000))
+        EventFactory(organization_name=organization.name, name="Event One", start_time_notz=datetime.now() + timedelta(10))
+        EventFactory(organization_name=organization.name, name="Event Four", start_time_notz=datetime.now() + timedelta(100))
+        EventFactory(organization_name=organization.name, name="Event Seven", start_time_notz=datetime.now() + timedelta(1000))
+        db.session.flush()
+
+        # World Cup teams
+        organization = OrganizationFactory(name='Brazil')
+        db.session.flush()
+
+        # Create multiple events, some in the future, one in the past
+        EventFactory(organization_name=organization.name, name="Past Event", start_time_notz=datetime.now() - timedelta(2000))
+        EventFactory(organization_name=organization.name, name="Event Two", start_time_notz=datetime.now() + timedelta(20))
+        EventFactory(organization_name=organization.name, name="Event Five", start_time_notz=datetime.now() + timedelta(200))
+        EventFactory(organization_name=organization.name, name="Event Eight", start_time_notz=datetime.now() + timedelta(2000))
+        db.session.flush()
+
+        # World Cup teams
+        organization = OrganizationFactory(name='GER', type='Code for All')
+        db.session.flush()
+
+        # Create multiple events, some in the future, one in the past
+        EventFactory(organization_name=organization.name, name="Past Event", start_time_notz=datetime.now() - timedelta(3000))
+        EventFactory(organization_name=organization.name, name="Event Three", start_time_notz=datetime.now() + timedelta(30))
+        EventFactory(organization_name=organization.name, name="Event Six", start_time_notz=datetime.now() + timedelta(300))
+        EventFactory(organization_name=organization.name, name="Event Nine", start_time_notz=datetime.now() + timedelta(3000))
+        db.session.flush()
+
+        response = self.app.get('/api/events/upcoming_events?organization_type=Code for All')
+        response_json = json.loads(response.data)
+
+        self.assertEqual(len(response_json['objects']), 6)
+        self.assertEqual(response_json['objects'][0]['name'], "Event One")
+        self.assertEqual(response_json['objects'][1]['name'], "Event Three")
+        self.assertEqual(response_json['objects'][5]['name'], "Event Nine")
+
     def test_current_stories(self):
         '''
         Test that only the two most recent stories are being returned
