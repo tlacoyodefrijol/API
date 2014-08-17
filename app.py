@@ -848,6 +848,27 @@ def get_all_upcoming_events():
     response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 25)))
     return jsonify(response)
 
+
+@app.route('/api/events/past_events')
+def get_all_past_events():
+    ''' Show all past events.
+        Return them in reverse chronological order.
+    '''
+    filters = request.args
+    filters, querystring = get_query_params(request.args)
+
+    query = db.session.query(Event).filter(Event.start_time_notz <= datetime.utcnow()).order_by(desc(Event.start_time_notz))
+
+    for attr, value in filters.iteritems():
+        if 'organization' in attr:
+            org_attr = attr.split('_')[1]
+            query = query.join(Event.organization).filter(getattr(Organization, org_attr).ilike('%%%s%%' % value))
+        else:
+            query = query.filter(getattr(Event, attr).ilike('%%%s%%' % value))
+
+    response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 25)))
+    return jsonify(response)
+
 @app.route('/api/stories')
 @app.route('/api/stories/<int:id>')
 def get_stories(id=None):

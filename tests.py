@@ -194,6 +194,42 @@ class ApiTest(unittest.TestCase):
         self.assertEqual(response_json['objects'][1]['name'], "Event Three")
         self.assertEqual(response_json['objects'][5]['name'], "Event Nine")
 
+
+    def test_all_past_events(self):
+        '''
+        Test the /events/past_events end point.
+        '''
+        # World Cup teams
+        organization = OrganizationFactory(name='USA USA USA', type='Code for All')
+        db.session.flush()
+
+        # Create multiple events, some in the future, one in the past
+        EventFactory(organization_name=organization.name, name="Past Event", start_time_notz=datetime.now() - timedelta(1000))
+        EventFactory(organization_name=organization.name, name="Event One", start_time_notz=datetime.now() + timedelta(10))
+        db.session.flush()
+
+        # World Cup teams
+        organization = OrganizationFactory(name='Brazil')
+        db.session.flush()
+
+        # Create multiple events, some in the future, one in the past
+        EventFactory(organization_name=organization.name, name="Past Event", start_time_notz=datetime.now() - timedelta(2000))
+        db.session.flush()
+
+        # World Cup teams
+        organization = OrganizationFactory(name='GER', type='Code for All')
+        db.session.flush()
+
+        # Create multiple events, some in the future, one in the past
+        EventFactory(organization_name=organization.name, name="Past Event", start_time_notz=datetime.now() - timedelta(3000))
+        EventFactory(organization_name=organization.name, name="Event Three", start_time_notz=datetime.now() + timedelta(30))
+        db.session.flush()
+
+        response = self.app.get('/api/events/past_events?organization_type=Code for All')
+        response_json = json.loads(response.data)
+
+        self.assertEqual(len(response_json['objects']), 2)
+
     def test_current_stories(self):
         '''
         Test that only the two most recent stories are being returned
