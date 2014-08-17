@@ -196,6 +196,13 @@ python app.py runserver
 
 
 ### Tests
+* Set up a new database
+
+```
+createdb civic_json_worker_test
+python -c 'from app import db; db.create_all()'
+```
+
 `python run_update_test.py` to test the run_update process.
 `python tests.py` to test the API.
 
