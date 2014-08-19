@@ -184,7 +184,14 @@ The `run_update.py` script will be run on Heroku once an hour and populate the d
 ``` 
 python run_update.py
 ```
-There is a line near the top of run_update.py that sets the `gdocs_url` variable. Change it to the testing one for a faster testing run through.
+
+You can update just one organization if you need by using:
+
+```
+python run_update.py --name "Beta NYC"
+```
+
+There is a line near the top of run_update.py that sets the `ORG_SOURCES` variable. Change the list of org sources to `test_org_sources.csv` for quicker update testing.
 
 * Start the API
 
