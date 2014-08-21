@@ -663,14 +663,9 @@ def get_event_group_identifier(events_url):
     else:
         return None
 
-def main(org_name=None, org_sources=None, minimum_age=3*3600):
+def main(org_name=None, org_sources=None):
     ''' Run update over all organizations. Optionally, update just one.
-
-        Also optionally, reset minimum age to trigger org update, in seconds.
     '''
-    # Set a single cutoff timestamp for orgs we'll look atself.
-    maximum_updated = time() - minimum_age
-
     # Keep a set of fresh organization names.
     organization_names = set()
 
@@ -698,12 +693,6 @@ def main(org_name=None, org_sources=None, minimum_age=3*3600):
         filter = Organization.name == org_info['name']
         existing_org = db.session.query(Organization).filter(filter).first()
         organization_names.add(org_info['name'])
-
-        if existing_org and not org_name:
-            if existing_org.last_updated > maximum_updated:
-                # Skip this organization, it's been updated too recently.
-                logging.info("Skipping update for {0}".format(org_info['name'].encode('utf8')))
-                continue
 
         # Mark everything in this organization for deletion at first.
         db.session.execute(db.update(Event, values={'keep': False}).where(Event.organization_name == org_info['name']))
