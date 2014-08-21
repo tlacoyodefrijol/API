@@ -106,7 +106,7 @@ This repository is forked from [Open City's Civic Json Worker](https://github.co
 ### How to add your Brigade to the API
 
 ##### Brigade Information
-The new site will be powered by this [Brigade Information](https://docs.google.com/spreadsheet/ccc?key=0ArHmv-6U1drqdGNCLWV5Q0d5YmllUzE5WGlUY3hhT2c&usp=sharing) Google Spreadsheet. This way you don't need yet another account for our Brigade site. Just keep your Brigade's info up to date and you're good. Email andrewh@codeforamerica.org if you want permission to add and edit groups. 
+The new site will be powered by this [Brigade Information](https://docs.google.com/spreadsheet/ccc?key=0ArHmv-6U1drqdGNCLWV5Q0d5YmllUzE5WGlUY3hhT2c&usp=sharing) Google Spreadsheet. This way you don't need yet another account for our Brigade site. Just keep your Brigade's info up to date and you're good. Email andrewh@codeforamerica.org if you want permission to add and edit groups.
 
 The columns are:
 * Name
@@ -164,7 +164,7 @@ virtualenv venv-cfapi
 source venv-cfapi/bin/activate
 ```
 
-* Install the required libraries 
+* Install the required libraries
 
 ```
 $ pip install -r requirements.txt
@@ -181,7 +181,7 @@ python -c 'from app import db; db.create_all()'
 
 The `run_update.py` script will be run on Heroku once an hour and populate the database. To run locally, try:
 
-``` 
+```
 python run_update.py
 ```
 There is a line near the top of run_update.py that sets the `gdocs_url` variable. Change it to the testing one for a faster testing run through.

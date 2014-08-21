@@ -260,7 +260,7 @@ def get_projects(organization):
             project['organization_name'] = organization.name
 
     return projects
-    
+
 
 def update_project_info(project):
     ''' Update info from Github, if it's missing.

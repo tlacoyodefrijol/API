@@ -860,6 +860,7 @@ class ApiTest(unittest.TestCase):
         self.assertEqual(response['total'], 1)
         self.assertEqual(response['objects'][0]['name'], "Awesome event")
 
+
     def test_issues_query_filter(self):
         proj = ProjectFactory(type="web")
         another_proj = ProjectFactory(type="mobile")

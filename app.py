@@ -131,7 +131,7 @@ class Organization(db.Model):
         '''
         current_projects = Project.query.filter_by(organization_name=self.name).order_by(desc(Project.last_updated)).limit(3)
         current_projects_json = [project.asdict() for project in current_projects]
-        
+
         return current_projects_json
 
     def current_stories(self):
@@ -557,7 +557,7 @@ def raw_name(name):
 def get_query_params(args):
     filters = {}
     for key,value in args.iteritems():
-        if 'page' not in key: 
+        if 'page' not in key:
             filters[key] = value
     return filters, urlencode(filters)
 
@@ -714,7 +714,7 @@ def get_orgs_issues(organization_name, labels=None):
         label_queries = [query.filter(L) for L in labels]
 
         # Intersect filters to find issues with all labels
-        query = query.intersect(*label_queries)     
+        query = query.intersect(*label_queries)
 
     response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)))
     return jsonify(response)
