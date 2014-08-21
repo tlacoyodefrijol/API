@@ -418,7 +418,7 @@ def update_project_info(project):
 
 def get_issues(org_name):
     '''
-        Get github issues associated to each Projects.
+        Get github issues associated to each Organization's Projects.
     '''
     issues = []
     labels = []
@@ -750,7 +750,7 @@ def main(org_name=None, org_sources=None, minimum_age=3*3600):
                     logging.error("%s does not have a valid events url" % organization.name)
 
         # Get issues for all of the projects
-        logging.info("Gathering all of %s's project's issues." % organization.name)
+        logging.info("Gathering all of %s's open GitHub issues." % organization.name)
         issues, labels = get_issues(organization.name)
         for i in range(0,len(issues)):
             save_issue_info(db.session, issues[i], labels[i])
