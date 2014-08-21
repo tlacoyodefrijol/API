@@ -738,6 +738,8 @@ def main(org_name=None, org_sources=None, minimum_age=3*3600):
         if organization.events_url:
             if not meetup_key:
                 logging.error("No Meetup.com key set.")
+            if 'meetup.com' not in organization.events_url:
+                logging.error("Only Meetup.com events work right now.")
             else:
                 logging.info("Gathering all of %s's events." % organization.name)
                 identifier = get_event_group_identifier(organization.events_url)
