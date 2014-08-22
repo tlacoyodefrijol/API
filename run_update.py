@@ -453,6 +453,9 @@ def get_issues(org_name):
             for issue in got.json():
                 # Type check the issue, we are expecting a dictionary
                 if type(issue) == type({}):
+                    # Pull requests are returned along with issues. Skip them.
+                    if "/pull/" in issue['html_url']:
+                        continue
                     issue_dict = dict(title=issue['title'], html_url=issue['html_url'],
                                       body=issue['body'], project_id=project.id)
                     issues.append(issue_dict)
