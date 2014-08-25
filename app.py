@@ -12,6 +12,7 @@ from flask.ext.heroku import Heroku
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy.ext.mutable import Mutable
 from sqlalchemy import types, desc
+from sqlalchemy.sql.expression import func
 from dictalchemy import make_class_dictable
 from dateutil.tz import tzoffset
 from mimetypes import guess_type
@@ -763,7 +764,7 @@ def get_issues(id=None):
         return jsonify(issue.asdict(True))
 
     # Get a bunch of issues
-    query = db.session.query(Issue)
+    query = db.session.query(Issue).order_by(func.random())
 
     for attr, value in filters.iteritems():
         if 'project' in attr:
@@ -794,7 +795,7 @@ def get_issues_by_labels(labels):
     label_queries = [base_query.filter(L) for L in labels]
 
     # Intersect filters to find issues with all labels
-    query = base_query.intersect(*label_queries)
+    query = base_query.intersect(*label_queries).order_by(func.random())
 
     # Return the paginated reponse
     response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)))
