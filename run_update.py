@@ -443,6 +443,7 @@ def get_issues(org_name):
 
         # Verify if content has not been modified since last run
         if got.status_code == 304:
+            db.session.execute(db.update(Issue, values={'keep': True}).where(Issue.project_id == project.id))
             logging.info('Issues %s have not changed since last update', issues_url)
 
         elif not got.status_code in range(400,499):
@@ -751,7 +752,7 @@ def main(org_name=None, org_sources=None):
         db.session.query(Event).filter(not Event.keep).delete()
         db.session.query(Story).filter(not Story.keep).delete()
         db.session.query(Project).filter(not Project.keep).delete()
-        db.session.query(Issue).filter(not Issue.keep).delete()
+        db.session.query(Issue).filter(Issue.keep == False).delete()
         db.session.query(Organization).filter(not Organization.keep).delete()
 
       except:
