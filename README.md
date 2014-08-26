@@ -27,8 +27,8 @@ The tools that the Brigades and other groups use to do their fine deeds are all 
 ### Example Response
 See the full documentation at http://codeforamerica.org/api
 
+Response for `http://codeforamerica.org/api/organizations/Code-for-San-Francisco`
 ```
-
 {
   "all_events": "http://codeforamerica.org/api/organizations/Code-for-San-Francisco/events",
   "all_issues": "http://codeforamerica.org/api/organizations/Code-for-San-Francisco/issues",
@@ -52,23 +52,23 @@ See the full documentation at http://codeforamerica.org/api
     ...
   ],
   "current_projects": [
-		{
-			api_url: "http://codeforamerica.org/api/projects/122",
-			categories: null,
-			code_url: "https://github.com/sfbrigade/localfreeweb.org",
-			description: "Front end for the Local Free Web project",
-			github_details: {},
-			id: 122,
-			issues: [],
-			last_updated: "Thu, 24 Jul 2014 22:01:17 GMT",
-			last_updated_issues: ""78589d3f95ad8fb4694d5e3c30550449"",
-			link_url: null,
-			name: "localfreeweb.org",
-			organization: {},
-			organization_name: "Code for San Francisco",
-			type: null
-		},
-		...
+    {
+      api_url: "http://codeforamerica.org/api/projects/122",
+      categories: null,
+      code_url: "https://github.com/sfbrigade/localfreeweb.org",
+      description: "Front end for the Local Free Web project",
+      github_details: {},
+      id: 122,
+      issues: [],
+      last_updated: "Thu, 24 Jul 2014 22:01:17 GMT",
+      last_updated_issues: ""78589d3f95ad8fb4694d5e3c30550449"",
+      link_url: null,
+      name: "localfreeweb.org",
+      organization: {},
+      organization_name: "Code for San Francisco",
+      type: null
+    },
+    ...
   ],
   "current_stories": [
     {
