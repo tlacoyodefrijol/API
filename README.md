@@ -28,65 +28,71 @@ The tools that the Brigades and other groups use to do their fine deeds are all 
 See the full documentation at http://codeforamerica.org/api
 
 ```
+
 {
-	all_events: "http://codeforamerica.org/api/organizations/Code_for_San_Francisco/events",
-	all_projects: "http://codeforamerica.org/api/organizations/Code_for_San_Francisco/projects",
-	all_stories: "http://codeforamerica.org/api/organizations/Code_for_San_Francisco/stories",
-	api_url: "http://codeforamerica.org/api/organizations/Code_for_San_Francisco",
-	city: "San Francisco, CA",
-	current_events: [
+  "all_events": "http://codeforamerica.org/api/organizations/Code-for-San-Francisco/events",
+  "all_issues": "http://codeforamerica.org/api/organizations/Code-for-San-Francisco/issues",
+  "all_projects": "http://codeforamerica.org/api/organizations/Code-for-San-Francisco/projects",
+  "all_stories": "http://codeforamerica.org/api/organizations/Code-for-San-Francisco/stories",
+  "api_url": "http://codeforamerica.org/api/organizations/Code-for-San-Francisco",
+  "city": "San Francisco, CA",
+  "current_events": [
+    {
+      "api_url": "http://codeforamerica.org/api/events/710",
+      "created_at": "2014-02-26 21:05:21",
+      "description": null,
+      "end_time": null,
+      "event_url": "http://www.meetup.com/Code-for-San-Francisco-Civic-Hack-Night/events/193535742/",
+      "id": 710,
+      "location": null,
+      "name": "Weekly Civic Hack Night",
+      "organization_name": "Code for San Francisco",
+      "start_time": "2014-08-27 18:30:00 -0700"
+    },
+    ...
+  ],
+  "current_projects": [
 		{
-			api_url: "http://codeforamerica.org/api/events/2010",
-			created_at: "2014-02-26 21:05:21",
-			description: "<p>Join Code for San Francisco for our weekly hack night focused on open government and civic tech in San Francisco. </p> ...",
-			end_time: null,
-			event_url: "http://www.meetup.com/Code-for-San-Francisco-Civic-Hack-Night/events/174976312/",
-			id: 2010,
-			location: null,
-			name: "Weekly Civic Hack Night",
-			organization_name: "Code for San Francisco",
-			start_time: "2014-04-09 18:30:00 -0700"
-		},
-	    ...
-	],
-	current_projects: [
-		{
-			api_url: "http://codeforamerica.org/api/projects/216",
+			api_url: "http://codeforamerica.org/api/projects/122",
 			categories: null,
-			code_url: "https://github.com/sfbrigade/open_ballot",
-			description: "An educational tool around ballot measures",
-			github_details: {...},
-			id: 216,
+			code_url: "https://github.com/sfbrigade/localfreeweb.org",
+			description: "Front end for the Local Free Web project",
+			github_details: {},
+			id: 122,
+			issues: [],
+			last_updated: "Thu, 24 Jul 2014 22:01:17 GMT",
+			last_updated_issues: ""78589d3f95ad8fb4694d5e3c30550449"",
 			link_url: null,
-			name: "open_ballot",
+			name: "localfreeweb.org",
+			organization: {},
 			organization_name: "Code for San Francisco",
-			type: null,
-			issues:[...]
+			type: null
 		},
 		...
-	],
-	current_stories: [
-		{
-			api_url: "http://codeforamerica.org/api/stories/4",
-			id: 4,
-			link: "https://groups.google.com/d/msg/code-for-san-francisco/sqkerXsrntY/yMhnsPhN6LwJ",
-			organization_name: "Code for San Francisco",
-			title: "Ethical Hacking with Guru99",
-			type: "blog"
-		},
-		...
-	],
-	events_url: "http://www.meetup.com/Code-for-San-Francisco-Civic-Hack-Night/",
-	last_updated: 1396969394,
-	latitude: 37.7749,
-	longitude: -122.4194,
-	name: "Code for San Francisco",
-	past_events: "http://codeforamerica.org/api/organizations/Code_for_San_Francisco/past_events",
-	projects_list_url: "https://github.com/sfbrigade",
-	rss: "https://groups.google.com/forum/feed/code-for-san-francisco/msgs/rss.xml?num=15",
-	type: "Brigade",
-	upcoming_events: "http://codeforamerica.org/api/organizations/Code_for_San_Francisco/upcoming_events",
-	website: "http://codeforsanfrancisco.org/"
+  ],
+  "current_stories": [
+    {
+      "api_url": "http://codeforamerica.org/api/stories/10",
+      "id": 10,
+      "link": "https://groups.google.com/d/msg/code-for-san-francisco/9OewkHV-D1M/0UW_ye9UXc8J",
+      "organization_name": "Code for San Francisco",
+      "title": "Hack Night Project Pick List",
+      "type": "blog"
+    },
+    ...
+  ],
+  "events_url": "http://www.meetup.com/Code-for-San-Francisco-Civic-Hack-Night/",
+  "last_updated": 1409087294,
+  "latitude": 37.7749,
+  "longitude": -122.4194,
+  "name": "Code for San Francisco",
+  "past_events": "http://codeforamerica.org/api/organizations/Code-for-San-Francisco/past_events",
+  "projects_list_url": "https://docs.google.com/spreadsheet/pub?key=0ArHmv-6U1drqdDVGZzdiMVlkMnRJLXp2cm1ZTUhMOFE&output=csv",
+  "rss": "",
+  "started_on": "2014-07-30",
+  "type": "Brigade",
+  "upcoming_events": "http://codeforamerica.org/api/organizations/Code-for-San-Francisco/upcoming_events",
+  "website": "http://codeforsanfrancisco.org/"
 }
 ```
 
