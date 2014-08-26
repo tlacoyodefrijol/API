@@ -18,8 +18,8 @@ The tools that the Brigades and other groups use to do their fine deeds are all 
 * The Code for America <a href="http://codeforamerica.org/geeks">Citizens</a> Page
 <br/><a href="http://codeforamerica.org/geeks"><img src="http://i.imgur.com/5PZBBfQ.png" width="500px"/></a>
 
-* <a href="http://civicissues.herokuapp.com">The Civic Tech Issue Finder
-<br/><img src="http://i.imgur.com/JdvkCLK.png" width="400px"/></a>
+* <a href="http://www.codeforamerica.org/geeks/civicissues/embed">The Civic Tech Issue Finder
+<br/><img src="http://i.imgur.com/9aWV25e.png" width="400px"/></a>
 
 * Lots of different Brigades websites
 
