@@ -119,17 +119,17 @@ The columns are:
 * Website
 * Events Url - Point us to where ever you schedule your events. Only Meetup.com events are working right now.
 * RSS - If you have a blog, point us to it. It's pretty smart and can find the feed on its own. To show off your Google Group discussions, use a link like `https://groups.google.com/forum/feed/code-for-san-francisco/msgs/rss.xml?num=15`
-* Projects List Url - Can either be a GitHub organization url like `https://github.com/sfbrigade` or a link to a list of project urls, described below.
+* Projects list URL - Can either be a GitHub organization url like `https://github.com/sfbrigade` or a link to a list of project URLs, described below.
 
 
 ##### Projects List
 This projects list you point us to will need the following columns:
-* name - filled in by GitHub if left blank
-* description - filled in by GitHub if left blank
-* link_url - filled in by GitHub if left blank
-* code_url - Only GitHub links work for now. Others will be added as needed later.
-* type - Is this project an app, an open data policy, a webservice?
-* categories - Write your own separated by commas. "Education, digital literacy"
+* `name` - filled in by GitHub if left blank
+* `description` - filled in by GitHub if left blank
+* `link_url` - filled in by GitHub if left blank
+* `code_url` - Only GitHub links work for now. Others will be added as needed later.
+* `type` - Is this project an app, an open data policy, a webservice?
+* `categories` - Write your own separated by commas. "Education, digital literacy"
 
 An example:
 ```
@@ -137,30 +137,32 @@ name, description, link_url, code_url, type, categories
 South Bend Voices, "A redeploy of CityVoice for South Bend, IN.", http://www.southbendvoices.com/, https://github.com/codeforamerica/cityvoice, web service, "community engagement, housing"
 ```
 
-That projects list URL can be any flavor of csv. The easiest way is to make a Google Spreadsheet like [my example](https://docs.google.com/spreadsheet/ccc?key=0ArHmv-6U1drqdDBzNXpSZkVzRDJUQnpOS0RJM0FDWGc&usp=sharing) and then ```File > Publish it to the web```. Grab the published link and change ```?output=html to ?output=csv```. Put that in the Brigade Information sheet and you're done.
+That projects list URL can be any flavor of csv. The easiest way is to make a Google Spreadsheet like [my example](https://docs.google.com/spreadsheet/ccc?key=0ArHmv-6U1drqdDBzNXpSZkVzRDJUQnpOS0RJM0FDWGc&usp=sharing) and then select **File > Publish it to the web**. Grab the published link and change `?output=html` to `?output=csv`. Put that in the Brigade Information sheet and you're done.
 
-The projects list URL can also be a JSON file, with a list of strings containing Github project URLs.
+The projects list URL can also be a JSON file, with a list of strings containing GitHub project URLs.
 
-Lastly, the projects list URL can be a Github organization URL, like http://github.com/codeforamerica.
+Lastly, the projects list URL can be a GitHub organization URL, like http://github.com/codeforamerica.
 
 ### Civic.json data standard
 The `/projects` endpoint is structure is influenced by [Civic.json](https://github.com/BetaNYC/civic.json), a proposed meta-data standard for describing civic tech projects. The goal is for this standard to be simple, and for the data fields that describe projects to be largely assembled programatically.
 
 The standard is still very much in planning phases, and we [welcome discussion](https://github.com/BetaNYC/civic.json/issues).
 
-### Installation
+## Installation
 
 The CFAPI is built on [Flask](http://flask.pocoo.org/) and Python. The `app.py` file describes the models and routes. The `run_update.py` file runs once an hour and collects all the data about the different Brigades. Both `tests.py` and `run_update_test.py` are automatically run by [Travis-CI](https://travis-ci.org/codeforamerica/cfapi) whenever a new commit is made. The production service lives on Heroku. Please contact Andrew and Erica in the "Contribute" section below to get involved.
 
-#### Prerequirements - Set your environmental variables.
+### Development setup
 
-* `DATABASE_URL=[db connection string]` — On Heroku with Postgres, this will be set for you. My local example is `postgres://hackyourcity@localhost/cfapi` When testing locally, “sqlite:///data.db” is a great way to skip Postgres installation.
-* `GITHUB_TOKEN=[Github API token]` — Read about setting that up here: http://developer.github.com/v3/oauth/
+#### Environmental variables
+
+* `DATABASE_URL=[db connection string]` — My local example is `postgres://hackyourcity@localhost/cfapi` When testing locally, `sqlite:///data.db` is a great way to skip Postgres installation.
+* `GITHUB_TOKEN=[GitHub API token]` — Read about setting that up here: http://developer.github.com/v3/oauth/
 * `MEETUP_KEY=[Meetup API Key]` — Read about setting that up here: https://secure.meetup.com/meetup_api/key/
 
 Set these environment variables in your `.bash_profile`. Then run `source ~/.bash_profile`.
 
-#### Here's how to get set up for development:
+#### Project setup
 
 * Set up a [virtualenv](https://pypi.python.org/pypi/virtualenv)
 
@@ -207,6 +209,27 @@ python app.py runserver
 
 * Visit http://localhost:5000/api/organizations/Code-for-America to see your results.
 
+### Deployment
+
+Deployment is typically on Heroku. Follow [this tutorial](https://devcenter.heroku.com/articles/getting-started-with-python) for basic information on how to setup the project.
+
+#### Environmental variables
+
+These must be set:
+
+* `GITHUB_TOKEN`
+* `MEETUP_KEY` (if used)
+
+`DATABASE_URL` will be handled by Heroku.
+
+#### Project setup
+
+* Initialize the database
+
+```
+heroku console
+python -c 'from app import db; db.create_all()'
+```
 
 ### Tests
 * Set up a new database
