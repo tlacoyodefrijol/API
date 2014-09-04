@@ -764,7 +764,7 @@ def get_issues(id=None):
         return jsonify(issue.asdict(True))
 
     # Get a bunch of issues
-    query = db.session.query(Issue).order_by(func.random())
+    query = db.session.query(Issue).order_by(desc(Issue.id))
 
     for attr, value in filters.iteritems():
         if 'project' in attr:
