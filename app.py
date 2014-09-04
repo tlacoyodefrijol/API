@@ -770,6 +770,9 @@ def get_issues(id=None):
         if 'project' in attr:
             proj_attr = attr.split('_')[1]
             query = query.join(Issue.project).filter(getattr(Project, proj_attr).ilike('%%%s%%' % value))
+        elif 'organization' in attr:
+            org_attr = attr.split('_')[1]
+            query = query.join(Issue.project).join(Project.organization).filter(getattr(Organization, org_attr).ilike('%%%s%%' % value))
         else:
             query = query.filter(getattr(Issue, attr).ilike('%%%s%%' % value))
 

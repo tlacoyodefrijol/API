@@ -862,8 +862,10 @@ class ApiTest(unittest.TestCase):
 
 
     def test_issues_query_filter(self):
-        proj = ProjectFactory(type="web")
-        another_proj = ProjectFactory(type="mobile")
+        org1 = OrganizationFactory(name="Code for Africa", type="Code for All")
+        org2 = OrganizationFactory(name="Code for San Francisco", type="Brigade")
+        proj = ProjectFactory(type="web", organization_name="Code for Africa")
+        another_proj = ProjectFactory(type="mobile", organization_name="Code for San Francisco")
         awesome_issue = IssueFactory(title="Awesome issue")
         sad_issue = IssueFactory(title="Sad issue", body="learning swift is sad")
         db.session.commit()
@@ -892,12 +894,26 @@ class ApiTest(unittest.TestCase):
         self.assertEqual(response['total'], 1)
         self.assertEqual(response['objects'][0]['title'], "Sad issue")
 
-        # Filter by deep searching organization type should return 1
+        # Filter by deep searching project type should return 1
         response = self.app.get('/api/issues?project_type=web')
         self.assertEqual(response.status_code, 200)
         response = json.loads(response.data)
         self.assertEqual(response['total'], 1)
         self.assertEqual(response['objects'][0]['title'], "Awesome issue")
+
+        # Filter by deep searching organization type should return 1
+        response = self.app.get('/api/issues?organization_type=Code for All')
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+        self.assertEqual(response['total'], 1)
+        self.assertEqual(response['objects'][0]['title'], "Awesome issue")
+
+        # Filter by deep searching organization type should return 1
+        response = self.app.get('/api/issues?organization_type=Brigade')
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.data)
+        self.assertEqual(response['total'], 1)
+        self.assertEqual(response['objects'][0]['title'], "Sad issue")
 
 if __name__ == '__main__':
     unittest.main()
