@@ -794,11 +794,24 @@ def get_issues_by_labels(labels):
     # Create the base query object by joining on Issue.labels
     base_query = db.session.query(Issue).join(Issue.labels)
 
+    # Check for parameters
+    filters = request.args
+    filters, querystring = get_query_params(request.args)
+    for attr, value in filters.iteritems():
+        if 'project' in attr:
+            proj_attr = attr.split('_')[1]
+            base_query = base_query.join(Issue.project).filter(getattr(Project, proj_attr).ilike('%%%s%%' % value))
+        elif 'organization' in attr:
+            org_attr = attr.split('_')[1]
+            base_query = base_query.join(Issue.project).join(Project.organization).filter(getattr(Organization, org_attr).ilike('%%%s%%' % value))
+        else:
+            base_query = base_query.filter(getattr(Issue, attr).ilike('%%%s%%' % value))
+
     # Filter for issues with each individual label
     label_queries = [base_query.filter(L) for L in labels]
 
     # Intersect filters to find issues with all labels
-    query = base_query.intersect(*label_queries).order_by(func.random())
+    query = base_query.intersect(*label_queries).order_by(desc(Issue.id))
 
     # Return the paginated reponse
     response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)))
