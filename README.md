@@ -5,6 +5,9 @@ Code for America has developed this API to track all the activity across the civ
 
 The tools that the Brigades and other groups use to do their fine deeds are all different. The CFAPI does the difficult job of being able to track these activities no matter what tools an organization is using. The participants don't need to change their activities to be included.
 
+### How it works
+To get the information for the CfAPI, Code for America maintains a [list of civic tech organizations](https://docs.google.com/a/codeforamerica.org/spreadsheet/ccc?key=0ArHmv-6U1drqdGNCLWV5Q0d5YmllUzE5WGlUY3hhT2c&usp=drive_web#gid=0) and once an hour checks their activity on Meetup.com, their blog, and their GitHub projects. Other services and support for noncode projects are slowly being added. More technical details [below](https://github.com/codeforamerica/cfapi#installation).
+
 ### Projects powered by the CFAPI
 * The Code for America <a href="http://codeforamerica.org/brigade">Brigade</a> website
 <br/><a href="http://codeforamerica.org/brigade"><img src="http://i.imgur.com/C96yBLE.png" width="500px"></a>
@@ -153,7 +156,7 @@ The projects list URL can also be a JSON file, with a list of strings containing
 Lastly, the projects list URL can be a GitHub organization URL, like http://github.com/codeforamerica.
 
 ### Civic Tech Issue Finder
-Once you've got your organization's GitHub projects on the API, all of your groups open GitHub Issues will be seen in the [Civic Tech Issue Finder](http://www.codeforamerica.org/geeks/civicissues). Use the label "help wanted" to get the most exposure. More info on that [project's README](https://github.com/codeforamerica/civic-issue-finder#civic-issue-finder). 
+Once you've got your organization's GitHub projects on the API, all of your groups open GitHub Issues will be seen in the [Civic Tech Issue Finder](http://www.codeforamerica.org/geeks/civicissues). Use the label "help wanted" to get the most exposure. More info on that [project's README](https://github.com/codeforamerica/civic-issue-finder#civic-issue-finder).
 
 ### Civic.json data standard
 The `/projects` endpoint is structure is influenced by [Civic.json](https://github.com/BetaNYC/civic.json), a proposed meta-data standard for describing civic tech projects. The goal is for this standard to be simple, and for the data fields that describe projects to be largely assembled programatically.
