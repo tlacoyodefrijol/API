@@ -143,6 +143,9 @@ The projects list URL can also be a JSON file, with a list of strings containing
 
 Lastly, the projects list URL can be a GitHub organization URL, like http://github.com/codeforamerica.
 
+### Civic Tech Issue Finder
+Once you've got your organization's GitHub projects on the API, all of your groups open GitHub Issues will be seen in the [Civic Tech Issue Finder](http://www.codeforamerica.org/geeks/civicissues). Use the label "help wanted" to get the most exposure. More info on that [project's README](https://github.com/codeforamerica/civic-issue-finder#civic-issue-finder). 
+
 ### Civic.json data standard
 The `/projects` endpoint is structure is influenced by [Civic.json](https://github.com/BetaNYC/civic.json), a proposed meta-data standard for describing civic tech projects. The goal is for this standard to be simple, and for the data fields that describe projects to be largely assembled programatically.
 
