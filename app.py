@@ -328,6 +328,7 @@ class Issue(db.Model):
     html_url = db.Column(db.Unicode())
     labels = db.Column(JsonType())
     body = db.Column(db.Unicode())
+    featured = db.Column(db.Boolean())
     keep = db.Column(db.Boolean())
 
     # Relationships
@@ -341,6 +342,7 @@ class Issue(db.Model):
         self.html_url = html_url
         self.body = body
         self.project_id = project_id
+        self.featured = False
         self.keep = True
 
     def api_url(self):
@@ -361,6 +363,8 @@ class Issue(db.Model):
             del issue_dict['project_id']
 
         del issue_dict['keep']
+        del issue_dict['featured']
+        
         issue_dict['api_url'] = self.api_url()
         issue_dict['labels'] = [l.asdict() for l in self.labels]
 
@@ -812,6 +816,16 @@ def get_issues_by_labels(labels):
 
     # Intersect filters to find issues with all labels
     query = base_query.intersect(*label_queries).order_by(func.random())
+
+    # Return the paginated reponse
+    response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)))
+    return jsonify(response)
+
+@app.route('/api/issues/featured')
+def get_featured_issues():
+    ''' Only return labels that are featured
+    '''
+    query = db.session.query(Issue).filter(Issue.featured)
 
     # Return the paginated reponse
     response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)))
