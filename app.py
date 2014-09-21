@@ -825,7 +825,7 @@ def get_issues_by_labels(labels):
 def get_featured_issues():
     ''' Only return labels that are featured
     '''
-    query = db.session.query(Issue).filter(Issue.featured)
+    query = db.session.query(Issue).filter(Issue.featured).order_by(func.random())
 
     # Return the paginated reponse
     response = paged_results(query, int(request.args.get('page', 1)), int(request.args.get('per_page', 10)))
