@@ -5,7 +5,7 @@ from csv import DictReader, Sniffer
 from itertools import groupby
 from operator import itemgetter
 from StringIO import StringIO
-from requests import get
+from requests import get, exceptions
 from datetime import datetime
 from dateutil.tz import tzoffset
 from unidecode import unidecode
@@ -212,25 +212,44 @@ def get_projects(organization):
     matched = match(r'(/orgs)?/(?P<name>[^/]+)/?$', path)
     if host in ('www.github.com', 'github.com') and matched:
         projects_url = 'https://api.github.com/users/%s/repos' % matched.group('name')
-        response = get_github_api(projects_url)
-        if response.status_code == '404':
+
+        try:
+            response = get_github_api(projects_url)
+
+            # Consider any status other than 2xx an error
+            if not response.status_code // 100 == 2:
+                return []
+
+            projects = get_adjoined_json_lists(response)
+
+        except exceptions.RequestException as e:
+            # Something has gone wrong, probably a bad URL or site is down.
             return []
-        projects = get_adjoined_json_lists(response)
 
     # Else its a csv or json of projects
     else:
         projects_url = organization.projects_list_url
         logging.info('Asking for ' + projects_url)
-        response = get(projects_url)
 
-        # If its a csv
-        if "csv" in organization.projects_list_url:
-            data = response.content.splitlines()
-            projects = list(DictReader(data, dialect='excel'))
+        try:
+            response = get(projects_url)
 
-        # Else just grab it as json
-        else:
-            projects = response.json()
+            # Consider any status other than 2xx an error
+            if not response.status_code // 100 == 2:
+                return []
+
+            # If its a csv
+            if "csv" in organization.projects_list_url:
+                data = response.content.splitlines()
+                projects = list(DictReader(data, dialect='excel'))
+
+            # Else just grab it as json
+            else:
+                projects = response.json()
+
+        except exceptions.RequestException as e:
+            # Something has gone wrong, probably a bad URL or site is down.
+            return []
 
     # If projects is just a list of GitHub urls, like Open Gov Hack Night
     # turn it into a dict with
