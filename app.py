@@ -960,8 +960,8 @@ def well_known_status():
             else:
                 status = 'ok' # is this really okay?
 
-        elif time_since_updated > 6 * 60 * 60:
-            status = 'Oldest organization (%s) updated more than 6 hours ago' % org.name
+        elif time_since_updated > 16 * 60 * 60:
+            status = 'Oldest organization (%s) updated more than 16 hours ago' % org.name
 
         elif remaining_github < 1000:
             status = 'Only %d remaining Github requests' % remaining_github
