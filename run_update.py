@@ -245,7 +245,11 @@ def get_projects(organization):
 
             # Else just grab it as json
             else:
-                projects = response.json()
+                try:
+                    projects = response.json()
+                except ValueError:
+                    # Not a json file.
+                    return []
 
         except exceptions.RequestException as e:
             # Something has gone wrong, probably a bad URL or site is down.
