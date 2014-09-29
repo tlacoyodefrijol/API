@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/codeforamerica/cfapi.svg?branch=master)](https://travis-ci.org/codeforamerica/cfapi)
+
 # The Code for America API
 
 ### What the CFAPI is
