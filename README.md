@@ -287,7 +287,7 @@ Here are some ways *you* can contribute:
 * by reviewing patches
 * [financially][]
 
-[issues]: https://github.com/codeforamerica/brigade-alpha/issues
+[issues]: https://github.com/codeforamerica/cfapi/issues
 [financially]: https://secure.codeforamerica.org/page/contribute
 
 
