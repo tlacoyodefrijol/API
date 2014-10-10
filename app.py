@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 # -------------------
 # Imports
 # -------------------
@@ -28,6 +31,7 @@ from flask.ext.migrate import Migrate, MigrateCommand
 # -------------------
 
 app = Flask(__name__)
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///sand.db"
 heroku = Heroku(app)
 db = SQLAlchemy(app)
 

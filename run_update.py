@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import os, sys, csv, yaml
 import logging
 from urlparse import urlparse
@@ -31,7 +34,7 @@ requests_log.setLevel(logging.WARNING)
 ORG_SOURCES = 'org_sources.csv'
 
 if 'GITHUB_TOKEN' in os.environ:
-    github_auth = (os.environ['GITHUB_TOKEN'], '')
+    github_auth = (os.environ['fb2cbd5bd331e84035dd4cd132adfe8d879d14ae'], '')
 else:
     github_auth = None
 
@@ -72,6 +75,7 @@ def format_location(venue):
         return "{address}, {city}, {country}".format(address=address,
                 city=venue['city'], country=venue['country'])
 
+#Desactivado
 def get_meetup_events(organization, group_urlname):
     '''
         Get events associated with a group
