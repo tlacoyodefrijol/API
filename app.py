@@ -4,6 +4,8 @@
 # -------------------
 # Imports
 # -------------------
+import newrelic.agent
+newrelic.agent.initialize('newrelic.ini')
 
 from __future__ import division
 
