@@ -25,10 +25,11 @@
     <p>Read more about me at <a href="https://github.com/codeforamerica/cfapi#readme">codeforamerica/cfapi</a>.</p>
     <p>Some data:</p>
     <ul>
-    <li><a href="#api-organizations">Organizations</a> (also in <a href="#api-organizations-geojson">GeoJSON</a>)</li>
-    <li><a href="#api-projects">Projects</a></li>
-    <li><a href="#api-events">Events</a></li>
-    <li><a href="#api-stories">Stories</a></li>
+    <li><a href="#api-organizations">Organizacione
+			s</a> (also in <a href="#api-organizations-geojson">GeoJSON</a>)</li>
+    <li><a href="#api-projects">Proyectos</a></li>
+    <li><a href="#api-events">Eventos</a></li>
+    <li><a href="#api-stories">Hitorias</a></li>
     <li><a href="#api-issues">Issues</a></li>
     </ul>
     <p>Parameters:</p>
@@ -37,13 +38,13 @@
     </ul>
 
     <h3>
-        Organizations
+        Organizaciones
         <a id="api-organizations" href="#api-organizations">¶</a>
     </h3>
     <div class="clearfix">
         <div class="half column">
             <p>
-                Retrieve a list of organizations, also called brigades.
+                Recupera datos de una lista de organizaciones.
             </p>
             <h4>Endpoint</h4>
             <p>
@@ -52,22 +53,22 @@
             <p>
                 /api/organizations?param=value&amp;param2=value2
             </p>
-            <h4>Url parameters</h4>
+            <h4>Parámetros de URL</h4>
             <dl>
-                You can add any of the <a href="#organization-properties">Organization properties</a> as a parameter and the API will filter by Organizations that have that property.
+                Puedes agregar cualquier de las <a href="#organization-properties">Propiedades de Organización</a> como parámetro y la API filtrará por organizaciones con esa propiedad.
             </dl>
-            <h4>Response Properties</h4>
+            <h4>Propiedades de respuesta</h4>
             <dl>
-                <dt>pages</dt>
-                <dd>Dictionary of pagination links, optionally including <i>first</i>, <i>prev</i>, <i>next</i>, and <i>last</i>.</dd>
+                <dt>páginas</dt>
+                <dd>Diccionario de enlaces de paginación, incluyendo opcionalmente <i>first</i>, <i>prev</i>, <i>next</i>, and <i>last</i>.</dd>
                 <dt>objects</dt>
-                <dd>List of <a href="#organization-properties">individual organizations</a>.</dd>
+                <dd>List of <a href="#organization-properties">organizaciones individuales</a>.</dd>
             </dl>
         </div>
         <div class="half column">
-            <h4>Sample Request</h4>
+            <h4>Solicitud de muestra</h4>
             <p><code><a href="{{ api_base }}/api/organizations">{{ api_base }}/api/organizations</a></code></p>
-            <h4>Sample Response</h4>
+            <h4>Respuesta de muestra</h4>
             <pre>{
   "pages": {
     "next": …,
