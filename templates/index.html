@@ -65,9 +65,9 @@
             </dl>
         </div>
         <div class="half column">
-            <h4>Solicitud de muestra</h4>
+            <h4>Solicitud muestra</h4>
             <p><code><a href="{{ api_base }}/api/organizations">{{ api_base }}/api/organizations</a></code></p>
-            <h4>Respuesta de muestra</h4>
+            <h4>Respuesta muestra</h4>
             <pre>{
   "pages": {
     "next": …,
@@ -87,9 +87,9 @@
    …
   ]
 }</pre>
-            <h4>Sample Request with query params</h4>
+            <h4>Solicitud muestra con parámetros de llamada</h4>
             <p><code><a href="{{ api_base }}/api/organizations?type=Code for All">{{ api_base }}/api/organizations?type=Code for All</a></code></p>
-            <h4>Sample Response</h4>
+            <h4>Respuesta de muestra</h4>
             <pre>{
   "pages": {
     "next": …,
@@ -113,21 +113,21 @@
     </div>
 
     <h3>
-        Organizations GeoJSON
+        GeoJSON de organizaciones
         <a id="api-organizations-geojson" href="#api-organizations-geojson">¶</a>
     </h3>
     <div class="clearfix">
         <div class="half column">
             <p>
-                Retrieve a list of organizations, in
-                <a href="http://geojson.org">GeoJSON format</a>
-                for geographic applications..
+                Obtiene una lista de organizaciones, en
+                <a href="http://geojson.org"> formato GeoJSON</a>
+                para aplicaciones geográficas..
             </p>
             <h4>Endpoint</h4>
             <p>
                 /api/organizations.geojson
             </p>
-            <h4>Response Properties</h4>
+            <h4>Propiedades de respuesta</h4>
             <dl>
                 <dt>type</dt>
                 <dd><q>GeometryCollection</q></dd>
@@ -139,19 +139,19 @@
                         <dt>type</dt>
                         <dd><q>Feature</q></dd>
                         <dt>id</dt>
-                        <dd>Unique identifier for organization.</dd>
+                        <dd>Identificador único para la organización.</dd>
                         <dt>geometry</dt>
-                        <dd>Point <a href="http://geojson.org/geojson-spec.html#geometry-objects">geometry object</a> with organization location.</dd>
+                        <dd>Punto <a href="http://geojson.org/geojson-spec.html#geometry-objects">objeto geométrico</a> con la ubicación de la organización.</dd>
                         <dt>properties</dt>
-                        <dd>Feature properties, selected from <a href="#organization-properties">properties for a single organization</a>.</dd>
+                        <dd>Propiedades de características, seleccionadas de <a href="#organization-properties"> propiedades para una sola organización</a>.</dd>
                     </dl>
                 </dd>
             </dl>
         </div>
         <div class="half column">
-            <h4>Sample Request</h4>
+            <h4>Solicitud muestra</h4>
             <p><code><a href="{{ api_base }}/api/organizations.geojson">{{ api_base }}/api/organizations.geojson</a></code></p>
-            <h4>Sample Response</h4>
+            <h4>Respuesta muestra</h4>
             <pre>{
   "type": "GeometryCollection",
   "features": [
@@ -176,20 +176,20 @@
     </div>
 
     <h3>
-        One Organization
+        Una Organización
         <a id="api-one-organization" href="#api-one-organization">¶</a>
     </h3>
     <div class="clearfix">
         <div class="half column">
             <p>
-                Retrieve a single organization.
+                Devuelve una sola organización.
             </p>
             <h4>Endpoint</h4>
             <p>
                 /api/organization/{organization id}
             </p>
             <h4>
-                Organization Properties
+                Propiedades de Organización
                 <a id="organization-properties" href="#organization-properties">¶</a>
             </h4>
             <dl>
